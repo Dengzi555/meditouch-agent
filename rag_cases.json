@@ -1,0 +1,10 @@
+[
+  {"id":"salt","question":"高血压患者减钠控盐，食盐摄入有什么建议？","expected_page":6,"anchor":"每人每日食盐摄入量逐步降至 5g 以下"},
+  {"id":"potassium","question":"肾功能不全者补钾前需要注意什么？","expected_page":7,"anchor":"肾功能不全者补钾前应咨询医生"},
+  {"id":"diet","question":"高血压患者合理膳食，蔬菜和水果能相互替代吗？","expected_page":7,"anchor":"蔬菜和水果不能相互替代"},
+  {"id":"weight","question":"高血压患者控制体重，对超重和肥胖有什么建议？","expected_page":8,"anchor":"建议所有超重和肥胖高血压患者减重"},
+  {"id":"smoking","question":"高血压患者如何戒烟限酒、避免被动吸烟？","expected_page":9,"anchor":"不吸烟，彻底戒烟，避免被动吸烟"},
+  {"id":"monitor","question":"高血压患者如何定期监测血压和自我管理？","expected_page":9,"anchor":"定期监测血压，了解血压数值及达标状态"},
+  {"id":"audience","question":"本指南主要面向哪些人，合并症患者如何制定食养方案？","expected_page":4,"anchor":"本指南主要面向成人高血压患者以及基层卫生工作者"},
+  {"id":"dash","question":"得舒饮食DASH有哪些特点？","expected_page":10,"anchor":"得舒饮食（DASH）"}
+]

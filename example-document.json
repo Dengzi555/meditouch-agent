@@ -1,0 +1,18 @@
+{
+  "id": "demo-example",
+  "title": "虚构导入示例（非医学知识）",
+  "publisher": "虚构教学资料",
+  "date": "2025-03-01",
+  "demo": true,
+  "supersedes": [],
+  "text": "对演示人群 Q，在演示条件下支持措施 Y。",
+  "claims": [
+    {
+      "topic": "演示措施Y",
+      "population": "Q",
+      "condition": "演示条件",
+      "stance": "support",
+      "quote": "对演示人群 Q，在演示条件下支持措施 Y。"
+    }
+  ]
+}

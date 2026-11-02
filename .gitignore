@@ -1,0 +1,31 @@
+data/
+__pycache__/
+.env
+.venv-craft/
+.venv-eval/
+
+# Local secrets and configuration
+.env.*
+!.env.example
+*.dpapi
+*.pem
+*.key
+
+# Downloads, private notes, generated datasets and execution traces
+/knowledge_sources/
+/tmp/
+/eval_results/*
+!/eval_results/README.md
+/rag_data/**/*.json
+*.docx
+/append_rag_interview.py
+/update_interview_doc.py
+
+# Python build artifacts
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.DS_Store
+Thumbs.db

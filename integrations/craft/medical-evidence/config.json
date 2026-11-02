@@ -1,0 +1,16 @@
+{
+  "id": "zhi-heng-evidence-local",
+  "name": "知衡医疗证据",
+  "slug": "medical-evidence",
+  "enabled": true,
+  "provider": "zhi-heng",
+  "type": "mcp",
+  "tagline": "本地证据检索与规则比较 原型资料尚无审核发布门禁",
+  "mcp": {
+    "transport": "stdio",
+    "command": "D:\\demo\\.venv-craft\\Scripts\\python.exe",
+    "args": ["D:\\demo\\medical_mcp.py"],
+    "env": {"PYTHONIOENCODING": "utf-8"}
+  },
+  "connectionStatus": "untested"
+}

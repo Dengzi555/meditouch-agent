@@ -1,0 +1,13 @@
+# Credentials are supplied only by start_with_model.ps1 -Action Claw.
+model:
+  api_key: ${CLAW_EVAL_API_KEY}
+  base_url: ${CLAW_EVAL_BASE_URL}
+  model_id: ${CLAW_EVAL_MODEL}
+  temperature: 0
+  extra_body:
+    enable_thinking: false
+judge:
+  enabled: false
+defaults:
+  trace_dir: eval_results/model_traces
+  tasks_dir: eval_tasks
