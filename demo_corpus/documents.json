@@ -1,0 +1,7 @@
+[
+  {"id":"demo-old","title":"演示资料 A · 历史版本","publisher":"虚构教学资料","date":"2024-01-01","demo":true,"text":"对演示人群 P，支持措施 X。","claims":[{"topic":"演示措施X","population":"P","condition":"演示条件","stance":"support","quote":"对演示人群 P，支持措施 X。"}]},
+  {"id":"demo-new","title":"演示资料 B · 替代版本","publisher":"虚构教学资料","date":"2025-01-01","demo":true,"supersedes":["demo-old"],"text":"对演示人群 P，不支持措施 X。此版本替代演示资料 A。","claims":[{"topic":"演示措施X","population":"P","condition":"演示条件","stance":"oppose","quote":"对演示人群 P，不支持措施 X。"}]},
+  {"id":"demo-other","title":"演示资料 C · 平行观点","publisher":"另一虚构来源","date":"2025-02-01","demo":true,"text":"对演示人群 P，支持措施 X。","claims":[{"topic":"演示措施X","population":"P","condition":"演示条件","stance":"support","quote":"对演示人群 P，支持措施 X。"}]},
+  {"id":"demo-scope","title":"演示资料 D · 场景限制","publisher":"虚构教学资料","date":"2025-02-01","demo":true,"text":"符号 Y 只在虚构条件 B 下使用。"},
+  {"id":"demo-observation","title":"演示资料 E · 观察记录","publisher":"虚构教学资料","date":"2025-02-02","demo":true,"text":"虚构观察 Z 记录时间和环境，供流程演示。"}
+]
