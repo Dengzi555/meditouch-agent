@@ -31,3 +31,5 @@ dist/
 .DS_Store
 Thumbs.db
 /rag_data/respiratory_reference/
+/HANDOFF.md
+/vendor/claw-eval/
