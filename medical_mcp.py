@@ -28,6 +28,26 @@ def create_server(database):
         """按资料ID读取完整来源，供核对原文；不接受路径或URL。"""
         return tools.get_evidence_source(source_id)
 
+    @mcp.tool()
+    def search_materials(question: str, k: int = 3, corpus: str = 'real') -> dict:
+        """统一 evidence.v1 检索；返回来源、页码和原文。"""
+        from evidence_service import EvidenceService, EvidenceError
+        try:
+            return EvidenceService(database=database).search(question,k,corpus)
+        except EvidenceError as e:
+            return {'schema_version':'evidence.v1','status':'error',
+                    'error':{'code':e.code,'retryable':e.retryable}}
+
+    @mcp.tool()
+    def read_material(evidence_id: str, corpus: str = 'real') -> dict:
+        """按 evidence_id 读取统一证据条目；不接受路径。"""
+        from evidence_service import EvidenceService, EvidenceError
+        try:
+            return EvidenceService(database=database).get(evidence_id,corpus)
+        except EvidenceError as e:
+            return {'schema_version':'evidence.v1','status':'error',
+                    'error':{'code':e.code,'retryable':e.retryable}}
+
     return mcp
 
 

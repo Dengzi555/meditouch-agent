@@ -1,0 +1,3 @@
+# Optional LangGraph agent; the legacy rule server remains standard-library only.
+langgraph==1.2.19
+fastembed==0.9.1

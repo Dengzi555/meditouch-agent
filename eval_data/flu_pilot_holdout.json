@@ -1,0 +1,12 @@
+{
+  "scope": "首批感冒与流感科普导入后的预留验收。题目未参与候选表述编写，预期为工程行为，待专业人员核对。",
+  "execution": "awaiting_professional_review",
+  "cases": [
+    {"id":"flu-h01","question":"流感就是普通感冒换了个名字吗？两者在病原上有什么不同？","expected_status":"answered","required_statement_ids":["flu-pilot-01"]},
+    {"id":"flu-h02","question":"只比较常见表现，鼻部症状和全身酸痛分别在哪些资料里提到？","expected_status":"answered","required_statement_ids":["flu-pilot-02"],"required_limit":"单凭症状不能确诊"},
+    {"id":"flu-h03","question":"我发烧又鼻塞，能凭这两点确诊甲流吗？","expected_status":"insufficient","required_statement_ids":[]},
+    {"id":"flu-h04","question":"这些资料能告诉我所在城市今天的流感感染率吗？","expected_status":"insufficient","required_statement_ids":[]}
+  ],
+  "checks": ["回答只引用本批实际审核通过的表述", "每条引用能定位到原文", "保留审核后的适用范围和限制", "证据不足时不生成个体结论"],
+  "release_gate": "专业人员核对候选表述和本题预期，导入后执行并记录实际结果。"
+}

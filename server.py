@@ -2,6 +2,7 @@ import json, os, re, sqlite3, time, urllib.request, urllib.error
 from pathlib import Path
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from uuid import uuid4
+from contextlib import contextmanager
 
 ROOT = Path(__file__).parent
 DB = ROOT / 'data' / 'agent.db'
@@ -12,10 +13,15 @@ SEEDS = [
  {'id':'demo-other','title':'演示资料 C · 平行观点','publisher':'另一虚构来源','date':'2025-02-01','demo':True,'text':'对演示人群 P，支持措施 X。','claims':[{'topic':'演示措施X','population':'P','condition':'演示条件','stance':'support','quote':'对演示人群 P，支持措施 X。'}]},
 ]
 
+@contextmanager
 def connect():
     c = sqlite3.connect(DB)
     c.row_factory = sqlite3.Row
-    return c
+    try:
+        with c:
+            yield c
+    finally:
+        c.close()
 
 def init():
     DB.parent.mkdir(exist_ok=True)
@@ -24,6 +30,8 @@ def init():
         c.execute('CREATE TABLE IF NOT EXISTS runs (id TEXT PRIMARY KEY, body TEXT NOT NULL)')
         if not c.execute('SELECT COUNT(*) FROM docs').fetchone()[0]:
             for d in SEEDS: c.execute('INSERT INTO docs VALUES (?,?)',(d['id'],json.dumps(d,ensure_ascii=False)))
+    from consultation import ConsultationStore
+    ConsultationStore(DB).initialize()
 
 def documents():
     with connect() as c: return [json.loads(r['body']) for r in c.execute('SELECT body FROM docs ORDER BY id')]
@@ -139,6 +147,11 @@ class Handler(BaseHTTPRequestHandler):
     def send_json(self,data,status=200):
         body=json.dumps(data,ensure_ascii=False).encode(); self.send_response(status); self.send_header('Content-Type','application/json; charset=utf-8'); self.send_header('Content-Length',str(len(body))); self.end_headers(); self.wfile.write(body)
     def do_GET(self):
+        if self.path.startswith('/api/session/'):
+            from consultation import ConsultationStore, SessionError
+            try: return self.send_json(ConsultationStore(DB).view(self.path.removeprefix('/api/session/')))
+            except SessionError as e: return self.send_json({'error':e.code},e.status)
+            except ValueError as e: return self.send_json({'error':str(e)},400)
         if self.path=='/api/state':
             cfg=model_config(); cfg['model']=cfg['model'] or ('gpt-4.1-mini' if cfg['enabled'] else '')
             return self.send_json({'documents':documents(),'config':cfg})
@@ -156,6 +169,26 @@ class Handler(BaseHTTPRequestHandler):
             if not 0<length<=2_000_000: raise ValueError('请求体为空或超过 2 MB')
             data=json.loads(self.rfile.read(length))
             if not isinstance(data,dict): raise ValueError('请求必须为对象')
+            if self.path=='/api/agent':
+                try:
+                    from consultation import ConsultationStore, run_consultation, SessionError
+                    r=run_consultation(ConsultationStore(DB),question=data.get('question'),corpus=data.get('corpus'),
+                                known_context=data.get('known_context'),session_id=data.get('session_id'),
+                                revision=data.get('revision'))
+                except SessionError as e:
+                    return self.send_json({'error':e.code},e.status)
+                except ImportError:
+                    return self.send_json({'error':'请使用 .venv-agent 启动服务并安装 requirements-agent.txt'},503)
+                # Structured slots persist per consultation; model drafts are not stored.
+                with connect() as c: c.execute('INSERT INTO runs VALUES (?,?)',(r['id'],json.dumps(r,ensure_ascii=False)))
+                return self.send_json(r)
+            if self.path=='/api/evidence/search':
+                from evidence_service import EvidenceService, EvidenceError
+                try:
+                    return self.send_json(EvidenceService().search(data.get('question'),data.get('k',3),data.get('corpus','real')))
+                except EvidenceError as e:
+                    return self.send_json({'schema_version':'evidence.v1','status':'error',
+                                           'error':{'code':e.code,'retryable':e.retryable}},503)
             if self.path=='/api/chat':
                 r=run_agent(data.get('question'),data.get('mode','qa'))
                 with connect() as c: c.execute('INSERT INTO runs VALUES (?,?)',(r['id'],json.dumps(r,ensure_ascii=False)))
@@ -167,6 +200,12 @@ class Handler(BaseHTTPRequestHandler):
                 with connect() as c:
                     for d in docs: c.execute('INSERT OR REPLACE INTO docs VALUES (?,?)',(d['id'],json.dumps(d,ensure_ascii=False)))
                 return self.send_json({'imported':len(docs)})
+            if self.path=='/api/patient/evaluate':
+                try:
+                    from patient_acceptance import evaluate_suite
+                    return self.send_json(evaluate_suite(False))
+                except ImportError:
+                    return self.send_json({'error':'请使用 .venv-agent 启动服务运行患者流程验收'},503)
             if self.path=='/api/evaluate': return self.send_json(evaluate())
             return self.send_json({'error':'Not found'},404)
         except (ValueError,TypeError,KeyError) as e: return self.send_json({'error':str(e)},400)

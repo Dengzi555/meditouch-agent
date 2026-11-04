@@ -26,7 +26,7 @@ async def main():
                 await session.initialize()
                 listing = await session.list_tools()
                 assert {t.name for t in listing.tools} == {
-                    'search_evidence', 'analyze_evidence', 'get_evidence_source'}
+                    'search_evidence', 'analyze_evidence', 'get_evidence_source', 'search_materials', 'read_material'}
                 async def call(name, args):
                     result = await session.call_tool(name, args)
                     assert not result.isError, result
@@ -38,6 +38,12 @@ async def main():
                 assert answer['trace'][1]['result']['groups'][0]['retired'] == ['demo-old']
                 source = await call('get_evidence_source', {'source_id': 'demo-new'})
                 assert source['source']['id'] == 'demo-new'
+                unified = await call('search_materials', {'question':'演示措施X', 'corpus':'demo', 'k':1})
+                assert unified['schema_version']=='evidence.v1'
+                assert len(unified['items'])==1 and len(unified['related_items'])==2
+                material = await call('read_material', {'evidence_id':'demo-new', 'corpus':'demo'})
+                assert material['item']['review_status']=='pending'
+                assert material['item']['pdf_pages']==[]
                 empty = await call('analyze_evidence', {'question': 'zzzzunknown'})
                 assert empty['status'] == 'insufficient'
                 for name, args in [('analyze_evidence', {'question': ''}),
@@ -46,7 +52,7 @@ async def main():
                     error = await session.call_tool(name, args)
                     assert error.isError
         assert database.read_bytes() == before
-        print('PASS: MCP initialize/list, 3 tools, conflict/retirement, insufficient, errors, read-only')
+        print('PASS: MCP initialize/list, 5 tools, unified contract, conflict/retirement, insufficient, errors, read-only')
 
 
 if __name__ == '__main__':

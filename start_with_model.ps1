@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('Server', 'Check', 'Claw')]
+    [ValidateSet('Server', 'Check', 'Claw', 'Agent', 'AgentCheck', 'AgentEval', 'AgentPreview', 'PatientEval')]
     [string]$Action = 'Server',
     [string[]]$EvalArguments = @('--help')
 )
@@ -22,6 +22,19 @@ $env:PYTHONUTF8 = '1'
 try {
     if ($Action -eq 'Claw') {
         & (Join-Path $PSScriptRoot '.venv-eval\Scripts\python.exe') -m claw_eval.cli @EvalArguments
+    } elseif ($Action -in @('Agent', 'AgentCheck', 'AgentEval', 'AgentPreview', 'PatientEval')) {
+        $agentPython = Join-Path $PSScriptRoot '.venv-agent\Scripts\python.exe'
+        if ($Action -eq 'Agent') {
+            & $agentPython (Join-Path $PSScriptRoot 'server.py')
+        } elseif ($Action -eq 'AgentCheck') {
+            & $agentPython (Join-Path $PSScriptRoot 'agent_acceptance.py') --ping
+        } elseif ($Action -eq 'AgentPreview') {
+            & $agentPython (Join-Path $PSScriptRoot 'agent_acceptance.py') --real-preview
+        } elseif ($Action -eq 'PatientEval') {
+            & $agentPython (Join-Path $PSScriptRoot 'patient_acceptance.py') --live
+        } else {
+            & $agentPython (Join-Path $PSScriptRoot 'agent_acceptance.py') --live
+        }
     } elseif ($Action -eq 'Check') {
         & python (Join-Path $PSScriptRoot 'check_model_connection.py')
     } else {

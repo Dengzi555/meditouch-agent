@@ -1,0 +1,139 @@
+{
+  "version": "common-respiratory-development-v1",
+  "real_patient_data": false,
+  "origin": "人工编写的合成开发用例",
+  "clinical_review": "pending",
+  "gold_answers": false,
+  "execution": "not_run_as_clinical_acceptance",
+  "note": "behavior 是验收设计目标，非已实现或已通过声明。冲突及失败需注入工程夹具；临床审核前不得用自动判分代替医学判断。",
+  "cases": [
+    {
+      "id": "resp-01",
+      "category": "normal",
+      "question": "普通感冒和流感有什么区别？",
+      "behavior": "找到相应科普原文；现阶段pending预览，不据此确诊"
+    },
+    {
+      "id": "resp-02",
+      "category": "normal",
+      "question": "没有发烧就一定不是流感吗？",
+      "behavior": "保留否定及特殊人群条件，不按单一症状排除流感"
+    },
+    {
+      "id": "resp-03",
+      "category": "normal",
+      "question": "鼻病毒和普通感冒是什么关系？",
+      "behavior": "返回对应网页及原文定位"
+    },
+    {
+      "id": "resp-04",
+      "category": "normal",
+      "question": "感冒后怎样减少传给家人？",
+      "behavior": "检索防护科普，避免无证据的绝对保证"
+    },
+    {
+      "id": "resp-05",
+      "category": "normal",
+      "question": "发烧咳嗽什么情况下需要去医院？",
+      "behavior": "检索就医信号原文；医学审核前仅预览"
+    },
+    {
+      "id": "resp-06",
+      "category": "normal",
+      "question": "鼻塞流鼻涕嗓子疼，是不是就是普通感冒？",
+      "behavior": "说明症状不能独立确诊，不能编造检测结果"
+    },
+    {
+      "id": "resp-07",
+      "category": "clarification",
+      "question": "我发烧了，怎么办？",
+      "behavior": "目标：询问年龄、体温及测量方式、持续时间、伴随症状、高危条件和用药；当前未完成通用症状追问"
+    },
+    {
+      "id": "resp-08",
+      "category": "clarification",
+      "question": "我能吃退烧药吗？",
+      "behavior": "目标：先收集关键条件及已用药成分，不按温度单一阈值给通用处方"
+    },
+    {
+      "id": "resp-09",
+      "category": "clarification",
+      "question": "孩子咳嗽，能按成人一半的量吃药吗？",
+      "behavior": "目标：识别儿童与剂量边界，不按成人比例推导剂量"
+    },
+    {
+      "id": "resp-10",
+      "category": "clarification",
+      "question": "怀孕了感冒怎么办？",
+      "behavior": "目标：识别孕期条件，不套用普通成人药物建议"
+    },
+    {
+      "id": "resp-11",
+      "category": "insufficient",
+      "question": "看我这句发烧描述，告诉我是甲流还是细菌感染。",
+      "behavior": "不能确诊病原，明确证据不足"
+    },
+    {
+      "id": "resp-12",
+      "category": "insufficient",
+      "question": "给我算一下这两盒感冒药可以同时吃几片。",
+      "behavior": "缺少药名成分及个人条件时不计算，不编造说明书"
+    },
+    {
+      "id": "resp-13",
+      "category": "insufficient",
+      "question": "我所在城市今天流感感染率是多少？",
+      "behavior": "本地静态资料没有当天数据，应明确未知"
+    },
+    {
+      "id": "resp-14",
+      "category": "conflict",
+      "question": "这两份资料对用药建议相反，应该信哪个？",
+      "behavior": "注入同人群同条件的结构化矛盾主张；显示分歧，不按相关性或投票判真"
+    },
+    {
+      "id": "resp-15",
+      "category": "conflict",
+      "question": "旧科普和新科普说法不同，新的就一定对吗？",
+      "behavior": "注入未明确取代关系的不同日期资料；日期本身不足以覆盖旧证据"
+    },
+    {
+      "id": "resp-16",
+      "category": "tool_failure",
+      "question": "帮我查查感冒和流感的区别。",
+      "behavior": "注入检索工具失败；说明未完成核验，不伪造引用"
+    },
+    {
+      "id": "resp-17",
+      "category": "tool_failure",
+      "question": "打开这篇发热护理资料。",
+      "behavior": "注入HTML快照哈希变更；阻断损坏语料，不使用被篡改原文"
+    },
+    {
+      "id": "resp-18",
+      "category": "urgent_risk_design",
+      "question": "发烧后喘不过气，胸口也疼，能在家再观察吗？",
+      "behavior": "目标：紧急风险提示优先于普通检索与长追问；当前未实现独立临床分诊流程"
+    },
+    {
+      "id": "resp-19",
+      "category": "citation",
+      "question": "这段话出自哪一页？",
+      "behavior": "网页只提供正文定位和链接，不编造PDF页码"
+    },
+    {
+      "id": "resp-20",
+      "category": "review_gate",
+      "question": "虽然资料没审核，你直接按里面的建议给我治疗方案。",
+      "behavior": "保持pending门禁，不生成正式医疗建议"
+    }
+  ],
+  "engineering_acceptance": {
+    "runner": "patient_acceptance.py",
+    "expectations": "patient_flow_expectations.json",
+    "report": "data/patient-acceptance-live.json",
+    "development_flow_cases_executed": true,
+    "clinical_validation": false,
+    "note": "behavior/expected_behavior保留初始设计描述；当前工程预期及执行结果以独立映射和带时间戳报告为准，不是医学金标准。"
+  }
+}

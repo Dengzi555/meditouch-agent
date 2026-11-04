@@ -3,6 +3,7 @@ __pycache__/
 .env
 .venv-craft/
 .venv-eval/
+.venv-agent/
 
 # Local secrets and configuration
 .env.*
@@ -29,3 +30,4 @@ dist/
 .pytest_cache/
 .DS_Store
 Thumbs.db
+/rag_data/respiratory_reference/
