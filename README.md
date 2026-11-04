@@ -41,7 +41,7 @@ python server.py
 - 将 [.env.example](.env.example) 中需要的值载入进程环境。网页服务不会自动读取该文件。
 - 按 [资料下载](docs/respiratory-materials-download.md) 和 [资料入库](docs/ingestion-and-consultations.md) 准备本地语料。外部资料快照、凭据、数据库和用户对话由本机保管。
 
-`requirements-agent.txt` 包含可选 BGE 依赖。运行 `python hybrid_retrieval.py` 下载向量模型，随后可在本机使用 BM25 + BGE 和 RRF 融合。向量模型不可用时回退到 BM25。MCP 接入见 [Craft 说明](integrations/craft/README.md)。
+`requirements-agent.txt` 包含可选 BGE 依赖。运行 `python hybrid_retrieval.py` 下载向量模型，用 `python hybrid_retrieval.py --check` 验证本机模型。资料向量缓存在忽略的 `data/bge-passage-cache/`，重启后可复用。向量模型不可用时回退到 BM25。MCP 接入见 [Craft 说明](integrations/craft/README.md)。
 
 ## 验收与评测
 
@@ -52,7 +52,7 @@ python server.py
 | 来源命中 | 使用本地语料，核对预期来源和小节的 Hit@1 / Hit@3，样本数见报告 | `python source_retrieval_eval.py` | 当前 checkout 和本地索引 |
 | 开发问题 | 40 个合成问题，检查路由、追问和失败处理 | `python patient_acceptance.py` | 当前 checkout 和本地索引 |
 
-记录复现实验时，用 `git rev-parse --short HEAD` 记录提交号。合成工程验收衡量流程行为，医学准确性需要独立评测。
+记录复现实验时，用 `git rev-parse --short HEAD` 记录提交号。常见错误的轨迹和复现命令见 [失败案例](docs/failure-cases.md)。合成工程验收衡量流程行为，医学准确性需要独立评测。
 
 ## 范围
 
