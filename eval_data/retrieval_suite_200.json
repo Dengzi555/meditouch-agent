@@ -1,0 +1,2286 @@
+{
+  "version": 1,
+  "scope": "200 条合成检索题，覆盖 10 类症状；段落级金标；开发 160 / 回归 40。语料为虚构工程夹具，只用于管线回归，不代表医学准确率。",
+  "questions": [
+    {
+      "id": "eye-r01",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "standard",
+      "split": "development",
+      "question": "眼皮肿的常见伴随表现有哪些？",
+      "gold": [
+        "eye-a-p2"
+      ]
+    },
+    {
+      "id": "eye-r02",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "standard",
+      "split": "development",
+      "question": "眼皮肿需要记录哪些时间信息？",
+      "gold": [
+        "eye-a-p3"
+      ]
+    },
+    {
+      "id": "eye-r03",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "standard",
+      "split": "development",
+      "question": "眼皮肿出现哪些情况需要尽快就医？",
+      "gold": [
+        "eye-a-p4"
+      ]
+    },
+    {
+      "id": "eye-r04",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "standard",
+      "split": "development",
+      "question": "眼皮肿一般指什么？",
+      "gold": [
+        "eye-a-p1"
+      ]
+    },
+    {
+      "id": "eye-r05",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "standard",
+      "split": "regression",
+      "question": "眼皮肿需要和哪些情况区分？",
+      "gold": [
+        "eye-b-p1",
+        "eye-b-p2",
+        "eye-b-p3",
+        "eye-b-p4"
+      ]
+    },
+    {
+      "id": "eye-r06",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "standard",
+      "split": "development",
+      "question": "眼皮肿和麦粒肿怎么区分？",
+      "gold": [
+        "eye-b-p1"
+      ]
+    },
+    {
+      "id": "eye-r07",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "standard",
+      "split": "development",
+      "question": "眼皮肿和过敏性眼睑皮炎怎么区分？",
+      "gold": [
+        "eye-b-p2"
+      ]
+    },
+    {
+      "id": "eye-r08",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "standard",
+      "split": "development",
+      "question": "眼皮肿和肾脏相关水肿怎么区分？",
+      "gold": [
+        "eye-b-p3"
+      ]
+    },
+    {
+      "id": "eye-r09",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "眼皮肿和甲状腺相关眼病怎么区分？",
+      "gold": [
+        "eye-b-p4"
+      ]
+    },
+    {
+      "id": "eye-r10",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "colloquial",
+      "split": "regression",
+      "question": "眼皮肿就诊前应该记录什么？",
+      "gold": [
+        "eye-c-p1"
+      ]
+    },
+    {
+      "id": "eye-r11",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "眼皮肿什么情况下不要自行处理？",
+      "gold": [
+        "eye-c-p2"
+      ]
+    },
+    {
+      "id": "eye-r12",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "眼皮肿医生一般会看哪些信息？",
+      "gold": [
+        "eye-c-p3"
+      ]
+    },
+    {
+      "id": "eye-r13",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "我妈眼皮肿，需要看哪些表现？",
+      "gold": [
+        "eye-a-p2"
+      ]
+    },
+    {
+      "id": "eye-r14",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "眼皮肿好几天了，什么时候该去医院？",
+      "gold": [
+        "eye-a-p4"
+      ]
+    },
+    {
+      "id": "eye-r15",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "反复眼皮肿两个月了，可能和哪些情况有关？",
+      "gold": [
+        "eye-b-p1",
+        "eye-b-p2",
+        "eye-b-p3",
+        "eye-b-p4"
+      ]
+    },
+    {
+      "id": "eye-r16",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "一觉醒来眼皮肿，到下午好点，需要查什么？",
+      "gold": [
+        "eye-a-p3",
+        "eye-c-p3"
+      ]
+    },
+    {
+      "id": "eye-r17",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "孩子眼皮肿，要不要紧？",
+      "gold": [
+        "eye-a-p4"
+      ]
+    },
+    {
+      "id": "eye-r18",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "体检发现眼皮肿，没有不舒服，还需要看吗？",
+      "gold": [
+        "eye-a-p1",
+        "eye-a-p3"
+      ]
+    },
+    {
+      "id": "eye-r19",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "吃完海鲜后眼皮肿，是过敏吗？",
+      "gold": [
+        "eye-b-p2"
+      ]
+    },
+    {
+      "id": "eye-r20",
+      "symptom": "eyelid_swelling",
+      "label": "眼皮肿",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "眼皮肿按压会疼，需要记录吗？",
+      "gold": [
+        "eye-a-p2"
+      ]
+    },
+    {
+      "id": "abd-r01",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "腹痛的常见伴随表现有哪些？",
+      "gold": [
+        "abd-a-p2"
+      ]
+    },
+    {
+      "id": "abd-r02",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "腹痛需要记录哪些时间信息？",
+      "gold": [
+        "abd-a-p3"
+      ]
+    },
+    {
+      "id": "abd-r03",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "腹痛出现哪些情况需要尽快就医？",
+      "gold": [
+        "abd-a-p4"
+      ]
+    },
+    {
+      "id": "abd-r04",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "腹痛一般指什么？",
+      "gold": [
+        "abd-a-p1"
+      ]
+    },
+    {
+      "id": "abd-r05",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "standard",
+      "split": "regression",
+      "question": "腹痛需要和哪些情况区分？",
+      "gold": [
+        "abd-b-p1",
+        "abd-b-p2",
+        "abd-b-p3",
+        "abd-b-p4"
+      ]
+    },
+    {
+      "id": "abd-r06",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "腹痛和急性胃肠炎怎么区分？",
+      "gold": [
+        "abd-b-p1"
+      ]
+    },
+    {
+      "id": "abd-r07",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "腹痛和阑尾炎怎么区分？",
+      "gold": [
+        "abd-b-p2"
+      ]
+    },
+    {
+      "id": "abd-r08",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "腹痛和胆囊炎或胆结石怎么区分？",
+      "gold": [
+        "abd-b-p3"
+      ]
+    },
+    {
+      "id": "abd-r09",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "腹痛和泌尿系结石怎么区分？",
+      "gold": [
+        "abd-b-p4"
+      ]
+    },
+    {
+      "id": "abd-r10",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "colloquial",
+      "split": "regression",
+      "question": "腹痛就诊前应该记录什么？",
+      "gold": [
+        "abd-c-p1"
+      ]
+    },
+    {
+      "id": "abd-r11",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "腹痛什么情况下不要自行处理？",
+      "gold": [
+        "abd-c-p2"
+      ]
+    },
+    {
+      "id": "abd-r12",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "腹痛医生一般会看哪些信息？",
+      "gold": [
+        "abd-c-p3"
+      ]
+    },
+    {
+      "id": "abd-r13",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "我妈腹痛，需要看哪些表现？",
+      "gold": [
+        "abd-a-p2"
+      ]
+    },
+    {
+      "id": "abd-r14",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "腹痛好几天了，什么时候该去医院？",
+      "gold": [
+        "abd-a-p4"
+      ]
+    },
+    {
+      "id": "abd-r15",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "反复腹痛两个月了，可能和哪些情况有关？",
+      "gold": [
+        "abd-b-p1",
+        "abd-b-p2",
+        "abd-b-p3",
+        "abd-b-p4"
+      ]
+    },
+    {
+      "id": "abd-r16",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "一觉醒来腹痛，到下午好点，需要查什么？",
+      "gold": [
+        "abd-a-p3",
+        "abd-c-p3"
+      ]
+    },
+    {
+      "id": "abd-r17",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "孩子腹痛，要不要紧？",
+      "gold": [
+        "abd-a-p4"
+      ]
+    },
+    {
+      "id": "abd-r18",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "体检发现腹痛，没有不舒服，还需要看吗？",
+      "gold": [
+        "abd-a-p1",
+        "abd-a-p3"
+      ]
+    },
+    {
+      "id": "abd-r19",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "吃完海鲜后腹痛，是过敏吗？",
+      "gold": [
+        "abd-b-p2"
+      ]
+    },
+    {
+      "id": "abd-r20",
+      "symptom": "abdominal_pain",
+      "label": "腹痛",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "腹痛按压会疼，需要记录吗？",
+      "gold": [
+        "abd-a-p2"
+      ]
+    },
+    {
+      "id": "head-r01",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "头痛的常见伴随表现有哪些？",
+      "gold": [
+        "head-a-p2"
+      ]
+    },
+    {
+      "id": "head-r02",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "头痛需要记录哪些时间信息？",
+      "gold": [
+        "head-a-p3"
+      ]
+    },
+    {
+      "id": "head-r03",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "头痛出现哪些情况需要尽快就医？",
+      "gold": [
+        "head-a-p4"
+      ]
+    },
+    {
+      "id": "head-r04",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "头痛一般指什么？",
+      "gold": [
+        "head-a-p1"
+      ]
+    },
+    {
+      "id": "head-r05",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "standard",
+      "split": "regression",
+      "question": "头痛需要和哪些情况区分？",
+      "gold": [
+        "head-b-p1",
+        "head-b-p2",
+        "head-b-p3",
+        "head-b-p4"
+      ]
+    },
+    {
+      "id": "head-r06",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "头痛和偏头痛怎么区分？",
+      "gold": [
+        "head-b-p1"
+      ]
+    },
+    {
+      "id": "head-r07",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "头痛和紧张型头痛怎么区分？",
+      "gold": [
+        "head-b-p2"
+      ]
+    },
+    {
+      "id": "head-r08",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "头痛和鼻窦炎相关头痛怎么区分？",
+      "gold": [
+        "head-b-p3"
+      ]
+    },
+    {
+      "id": "head-r09",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "头痛和蛛网膜下腔出血怎么区分？",
+      "gold": [
+        "head-b-p4"
+      ]
+    },
+    {
+      "id": "head-r10",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "colloquial",
+      "split": "regression",
+      "question": "头痛就诊前应该记录什么？",
+      "gold": [
+        "head-c-p1"
+      ]
+    },
+    {
+      "id": "head-r11",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "头痛什么情况下不要自行处理？",
+      "gold": [
+        "head-c-p2"
+      ]
+    },
+    {
+      "id": "head-r12",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "头痛医生一般会看哪些信息？",
+      "gold": [
+        "head-c-p3"
+      ]
+    },
+    {
+      "id": "head-r13",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "我妈头痛，需要看哪些表现？",
+      "gold": [
+        "head-a-p2"
+      ]
+    },
+    {
+      "id": "head-r14",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "头痛好几天了，什么时候该去医院？",
+      "gold": [
+        "head-a-p4"
+      ]
+    },
+    {
+      "id": "head-r15",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "反复头痛两个月了，可能和哪些情况有关？",
+      "gold": [
+        "head-b-p1",
+        "head-b-p2",
+        "head-b-p3",
+        "head-b-p4"
+      ]
+    },
+    {
+      "id": "head-r16",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "一觉醒来头痛，到下午好点，需要查什么？",
+      "gold": [
+        "head-a-p3",
+        "head-c-p3"
+      ]
+    },
+    {
+      "id": "head-r17",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "孩子头痛，要不要紧？",
+      "gold": [
+        "head-a-p4"
+      ]
+    },
+    {
+      "id": "head-r18",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "体检发现头痛，没有不舒服，还需要看吗？",
+      "gold": [
+        "head-a-p1",
+        "head-a-p3"
+      ]
+    },
+    {
+      "id": "head-r19",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "吃完海鲜后头痛，是过敏吗？",
+      "gold": [
+        "head-b-p2"
+      ]
+    },
+    {
+      "id": "head-r20",
+      "symptom": "headache",
+      "label": "头痛",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "头痛按压会疼，需要记录吗？",
+      "gold": [
+        "head-a-p2"
+      ]
+    },
+    {
+      "id": "ankle-r01",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "standard",
+      "split": "development",
+      "question": "脚踝肿的常见伴随表现有哪些？",
+      "gold": [
+        "ankle-a-p2"
+      ]
+    },
+    {
+      "id": "ankle-r02",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "standard",
+      "split": "development",
+      "question": "脚踝肿需要记录哪些时间信息？",
+      "gold": [
+        "ankle-a-p3"
+      ]
+    },
+    {
+      "id": "ankle-r03",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "standard",
+      "split": "development",
+      "question": "脚踝肿出现哪些情况需要尽快就医？",
+      "gold": [
+        "ankle-a-p4"
+      ]
+    },
+    {
+      "id": "ankle-r04",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "standard",
+      "split": "development",
+      "question": "脚踝肿一般指什么？",
+      "gold": [
+        "ankle-a-p1"
+      ]
+    },
+    {
+      "id": "ankle-r05",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "standard",
+      "split": "regression",
+      "question": "脚踝肿需要和哪些情况区分？",
+      "gold": [
+        "ankle-b-p1",
+        "ankle-b-p2",
+        "ankle-b-p3",
+        "ankle-b-p4"
+      ]
+    },
+    {
+      "id": "ankle-r06",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "standard",
+      "split": "development",
+      "question": "脚踝肿和踝关节扭伤怎么区分？",
+      "gold": [
+        "ankle-b-p1"
+      ]
+    },
+    {
+      "id": "ankle-r07",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "standard",
+      "split": "development",
+      "question": "脚踝肿和心源性水肿怎么区分？",
+      "gold": [
+        "ankle-b-p2"
+      ]
+    },
+    {
+      "id": "ankle-r08",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "standard",
+      "split": "development",
+      "question": "脚踝肿和肾源性水肿怎么区分？",
+      "gold": [
+        "ankle-b-p3"
+      ]
+    },
+    {
+      "id": "ankle-r09",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "脚踝肿和下肢深静脉血栓怎么区分？",
+      "gold": [
+        "ankle-b-p4"
+      ]
+    },
+    {
+      "id": "ankle-r10",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "colloquial",
+      "split": "regression",
+      "question": "脚踝肿就诊前应该记录什么？",
+      "gold": [
+        "ankle-c-p1"
+      ]
+    },
+    {
+      "id": "ankle-r11",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "脚踝肿什么情况下不要自行处理？",
+      "gold": [
+        "ankle-c-p2"
+      ]
+    },
+    {
+      "id": "ankle-r12",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "脚踝肿医生一般会看哪些信息？",
+      "gold": [
+        "ankle-c-p3"
+      ]
+    },
+    {
+      "id": "ankle-r13",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "我妈脚踝肿，需要看哪些表现？",
+      "gold": [
+        "ankle-a-p2"
+      ]
+    },
+    {
+      "id": "ankle-r14",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "脚踝肿好几天了，什么时候该去医院？",
+      "gold": [
+        "ankle-a-p4"
+      ]
+    },
+    {
+      "id": "ankle-r15",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "反复脚踝肿两个月了，可能和哪些情况有关？",
+      "gold": [
+        "ankle-b-p1",
+        "ankle-b-p2",
+        "ankle-b-p3",
+        "ankle-b-p4"
+      ]
+    },
+    {
+      "id": "ankle-r16",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "一觉醒来脚踝肿，到下午好点，需要查什么？",
+      "gold": [
+        "ankle-a-p3",
+        "ankle-c-p3"
+      ]
+    },
+    {
+      "id": "ankle-r17",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "孩子脚踝肿，要不要紧？",
+      "gold": [
+        "ankle-a-p4"
+      ]
+    },
+    {
+      "id": "ankle-r18",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "体检发现脚踝肿，没有不舒服，还需要看吗？",
+      "gold": [
+        "ankle-a-p1",
+        "ankle-a-p3"
+      ]
+    },
+    {
+      "id": "ankle-r19",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "吃完海鲜后脚踝肿，是过敏吗？",
+      "gold": [
+        "ankle-b-p2"
+      ]
+    },
+    {
+      "id": "ankle-r20",
+      "symptom": "ankle_swelling",
+      "label": "脚踝肿",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "脚踝肿按压会疼，需要记录吗？",
+      "gold": [
+        "ankle-a-p2"
+      ]
+    },
+    {
+      "id": "cold-r01",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "standard",
+      "split": "development",
+      "question": "感冒的常见伴随表现有哪些？",
+      "gold": [
+        "cold-a-p2"
+      ]
+    },
+    {
+      "id": "cold-r02",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "standard",
+      "split": "development",
+      "question": "感冒需要记录哪些时间信息？",
+      "gold": [
+        "cold-a-p3"
+      ]
+    },
+    {
+      "id": "cold-r03",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "standard",
+      "split": "development",
+      "question": "感冒出现哪些情况需要尽快就医？",
+      "gold": [
+        "cold-a-p4"
+      ]
+    },
+    {
+      "id": "cold-r04",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "standard",
+      "split": "development",
+      "question": "感冒一般指什么？",
+      "gold": [
+        "cold-a-p1"
+      ]
+    },
+    {
+      "id": "cold-r05",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "standard",
+      "split": "regression",
+      "question": "感冒需要和哪些情况区分？",
+      "gold": [
+        "cold-b-p1",
+        "cold-b-p2",
+        "cold-b-p3",
+        "cold-b-p4"
+      ]
+    },
+    {
+      "id": "cold-r06",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "standard",
+      "split": "development",
+      "question": "感冒和普通感冒怎么区分？",
+      "gold": [
+        "cold-b-p1"
+      ]
+    },
+    {
+      "id": "cold-r07",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "standard",
+      "split": "development",
+      "question": "感冒和流感怎么区分？",
+      "gold": [
+        "cold-b-p2"
+      ]
+    },
+    {
+      "id": "cold-r08",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "standard",
+      "split": "development",
+      "question": "感冒和过敏性鼻炎怎么区分？",
+      "gold": [
+        "cold-b-p3"
+      ]
+    },
+    {
+      "id": "cold-r09",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "感冒和新型冠状病毒感染怎么区分？",
+      "gold": [
+        "cold-b-p4"
+      ]
+    },
+    {
+      "id": "cold-r10",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "colloquial",
+      "split": "regression",
+      "question": "感冒就诊前应该记录什么？",
+      "gold": [
+        "cold-c-p1"
+      ]
+    },
+    {
+      "id": "cold-r11",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "感冒什么情况下不要自行处理？",
+      "gold": [
+        "cold-c-p2"
+      ]
+    },
+    {
+      "id": "cold-r12",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "感冒医生一般会看哪些信息？",
+      "gold": [
+        "cold-c-p3"
+      ]
+    },
+    {
+      "id": "cold-r13",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "我妈感冒，需要看哪些表现？",
+      "gold": [
+        "cold-a-p2"
+      ]
+    },
+    {
+      "id": "cold-r14",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "感冒好几天了，什么时候该去医院？",
+      "gold": [
+        "cold-a-p4"
+      ]
+    },
+    {
+      "id": "cold-r15",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "反复感冒两个月了，可能和哪些情况有关？",
+      "gold": [
+        "cold-b-p1",
+        "cold-b-p2",
+        "cold-b-p3",
+        "cold-b-p4"
+      ]
+    },
+    {
+      "id": "cold-r16",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "一觉醒来感冒，到下午好点，需要查什么？",
+      "gold": [
+        "cold-a-p3",
+        "cold-c-p3"
+      ]
+    },
+    {
+      "id": "cold-r17",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "孩子感冒，要不要紧？",
+      "gold": [
+        "cold-a-p4"
+      ]
+    },
+    {
+      "id": "cold-r18",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "体检发现感冒，没有不舒服，还需要看吗？",
+      "gold": [
+        "cold-a-p1",
+        "cold-a-p3"
+      ]
+    },
+    {
+      "id": "cold-r19",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "吃完海鲜后感冒，是过敏吗？",
+      "gold": [
+        "cold-b-p2"
+      ]
+    },
+    {
+      "id": "cold-r20",
+      "symptom": "common_cold",
+      "label": "感冒",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "感冒按压会疼，需要记录吗？",
+      "gold": [
+        "cold-a-p2"
+      ]
+    },
+    {
+      "id": "fever-r01",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "standard",
+      "split": "development",
+      "question": "发烧的常见伴随表现有哪些？",
+      "gold": [
+        "fever-a-p2"
+      ]
+    },
+    {
+      "id": "fever-r02",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "standard",
+      "split": "development",
+      "question": "发烧需要记录哪些时间信息？",
+      "gold": [
+        "fever-a-p3"
+      ]
+    },
+    {
+      "id": "fever-r03",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "standard",
+      "split": "development",
+      "question": "发烧出现哪些情况需要尽快就医？",
+      "gold": [
+        "fever-a-p4"
+      ]
+    },
+    {
+      "id": "fever-r04",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "standard",
+      "split": "development",
+      "question": "发烧一般指什么？",
+      "gold": [
+        "fever-a-p1"
+      ]
+    },
+    {
+      "id": "fever-r05",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "standard",
+      "split": "regression",
+      "question": "发烧需要和哪些情况区分？",
+      "gold": [
+        "fever-b-p1",
+        "fever-b-p2",
+        "fever-b-p3",
+        "fever-b-p4"
+      ]
+    },
+    {
+      "id": "fever-r06",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "standard",
+      "split": "development",
+      "question": "发烧和病毒性上呼吸道感染怎么区分？",
+      "gold": [
+        "fever-b-p1"
+      ]
+    },
+    {
+      "id": "fever-r07",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "standard",
+      "split": "development",
+      "question": "发烧和流感怎么区分？",
+      "gold": [
+        "fever-b-p2"
+      ]
+    },
+    {
+      "id": "fever-r08",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "standard",
+      "split": "development",
+      "question": "发烧和尿路感染怎么区分？",
+      "gold": [
+        "fever-b-p3"
+      ]
+    },
+    {
+      "id": "fever-r09",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "发烧和肺炎怎么区分？",
+      "gold": [
+        "fever-b-p4"
+      ]
+    },
+    {
+      "id": "fever-r10",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "colloquial",
+      "split": "regression",
+      "question": "发烧就诊前应该记录什么？",
+      "gold": [
+        "fever-c-p1"
+      ]
+    },
+    {
+      "id": "fever-r11",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "发烧什么情况下不要自行处理？",
+      "gold": [
+        "fever-c-p2"
+      ]
+    },
+    {
+      "id": "fever-r12",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "发烧医生一般会看哪些信息？",
+      "gold": [
+        "fever-c-p3"
+      ]
+    },
+    {
+      "id": "fever-r13",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "我妈发烧，需要看哪些表现？",
+      "gold": [
+        "fever-a-p2"
+      ]
+    },
+    {
+      "id": "fever-r14",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "发烧好几天了，什么时候该去医院？",
+      "gold": [
+        "fever-a-p4"
+      ]
+    },
+    {
+      "id": "fever-r15",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "反复发烧两个月了，可能和哪些情况有关？",
+      "gold": [
+        "fever-b-p1",
+        "fever-b-p2",
+        "fever-b-p3",
+        "fever-b-p4"
+      ]
+    },
+    {
+      "id": "fever-r16",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "一觉醒来发烧，到下午好点，需要查什么？",
+      "gold": [
+        "fever-a-p3",
+        "fever-c-p3"
+      ]
+    },
+    {
+      "id": "fever-r17",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "孩子发烧，要不要紧？",
+      "gold": [
+        "fever-a-p4"
+      ]
+    },
+    {
+      "id": "fever-r18",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "体检发现发烧，没有不舒服，还需要看吗？",
+      "gold": [
+        "fever-a-p1",
+        "fever-a-p3"
+      ]
+    },
+    {
+      "id": "fever-r19",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "吃完海鲜后发烧，是过敏吗？",
+      "gold": [
+        "fever-b-p2"
+      ]
+    },
+    {
+      "id": "fever-r20",
+      "symptom": "fever",
+      "label": "发烧",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "发烧按压会疼，需要记录吗？",
+      "gold": [
+        "fever-a-p2"
+      ]
+    },
+    {
+      "id": "child-r01",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "standard",
+      "split": "development",
+      "question": "儿童发热的常见伴随表现有哪些？",
+      "gold": [
+        "child-a-p2"
+      ]
+    },
+    {
+      "id": "child-r02",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "standard",
+      "split": "development",
+      "question": "儿童发热需要记录哪些时间信息？",
+      "gold": [
+        "child-a-p3"
+      ]
+    },
+    {
+      "id": "child-r03",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "standard",
+      "split": "development",
+      "question": "儿童发热出现哪些情况需要尽快就医？",
+      "gold": [
+        "child-a-p4"
+      ]
+    },
+    {
+      "id": "child-r04",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "standard",
+      "split": "development",
+      "question": "儿童发热一般指什么？",
+      "gold": [
+        "child-a-p1"
+      ]
+    },
+    {
+      "id": "child-r05",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "standard",
+      "split": "regression",
+      "question": "儿童发热需要和哪些情况区分？",
+      "gold": [
+        "child-b-p1",
+        "child-b-p2",
+        "child-b-p3",
+        "child-b-p4"
+      ]
+    },
+    {
+      "id": "child-r06",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "standard",
+      "split": "development",
+      "question": "儿童发热和病毒性上呼吸道感染怎么区分？",
+      "gold": [
+        "child-b-p1"
+      ]
+    },
+    {
+      "id": "child-r07",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "standard",
+      "split": "development",
+      "question": "儿童发热和幼儿急疹怎么区分？",
+      "gold": [
+        "child-b-p2"
+      ]
+    },
+    {
+      "id": "child-r08",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "standard",
+      "split": "development",
+      "question": "儿童发热和手足口病怎么区分？",
+      "gold": [
+        "child-b-p3"
+      ]
+    },
+    {
+      "id": "child-r09",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "儿童发热和尿路感染怎么区分？",
+      "gold": [
+        "child-b-p4"
+      ]
+    },
+    {
+      "id": "child-r10",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "colloquial",
+      "split": "regression",
+      "question": "儿童发热就诊前应该记录什么？",
+      "gold": [
+        "child-c-p1"
+      ]
+    },
+    {
+      "id": "child-r11",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "儿童发热什么情况下不要自行处理？",
+      "gold": [
+        "child-c-p2"
+      ]
+    },
+    {
+      "id": "child-r12",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "儿童发热医生一般会看哪些信息？",
+      "gold": [
+        "child-c-p3"
+      ]
+    },
+    {
+      "id": "child-r13",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "我妈儿童发热，需要看哪些表现？",
+      "gold": [
+        "child-a-p2"
+      ]
+    },
+    {
+      "id": "child-r14",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "儿童发热好几天了，什么时候该去医院？",
+      "gold": [
+        "child-a-p4"
+      ]
+    },
+    {
+      "id": "child-r15",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "反复儿童发热两个月了，可能和哪些情况有关？",
+      "gold": [
+        "child-b-p1",
+        "child-b-p2",
+        "child-b-p3",
+        "child-b-p4"
+      ]
+    },
+    {
+      "id": "child-r16",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "一觉醒来儿童发热，到下午好点，需要查什么？",
+      "gold": [
+        "child-a-p3",
+        "child-c-p3"
+      ]
+    },
+    {
+      "id": "child-r17",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "孩子儿童发热，要不要紧？",
+      "gold": [
+        "child-a-p4"
+      ]
+    },
+    {
+      "id": "child-r18",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "体检发现儿童发热，没有不舒服，还需要看吗？",
+      "gold": [
+        "child-a-p1",
+        "child-a-p3"
+      ]
+    },
+    {
+      "id": "child-r19",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "吃完海鲜后儿童发热，是过敏吗？",
+      "gold": [
+        "child-b-p2"
+      ]
+    },
+    {
+      "id": "child-r20",
+      "symptom": "pediatric_fever",
+      "label": "儿童发热",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "儿童发热按压会疼，需要记录吗？",
+      "gold": [
+        "child-a-p2"
+      ]
+    },
+    {
+      "id": "rash-r01",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "standard",
+      "split": "development",
+      "question": "皮疹的常见伴随表现有哪些？",
+      "gold": [
+        "rash-a-p2"
+      ]
+    },
+    {
+      "id": "rash-r02",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "standard",
+      "split": "development",
+      "question": "皮疹需要记录哪些时间信息？",
+      "gold": [
+        "rash-a-p3"
+      ]
+    },
+    {
+      "id": "rash-r03",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "standard",
+      "split": "development",
+      "question": "皮疹出现哪些情况需要尽快就医？",
+      "gold": [
+        "rash-a-p4"
+      ]
+    },
+    {
+      "id": "rash-r04",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "standard",
+      "split": "development",
+      "question": "皮疹一般指什么？",
+      "gold": [
+        "rash-a-p1"
+      ]
+    },
+    {
+      "id": "rash-r05",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "standard",
+      "split": "regression",
+      "question": "皮疹需要和哪些情况区分？",
+      "gold": [
+        "rash-b-p1",
+        "rash-b-p2",
+        "rash-b-p3",
+        "rash-b-p4"
+      ]
+    },
+    {
+      "id": "rash-r06",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "standard",
+      "split": "development",
+      "question": "皮疹和湿疹怎么区分？",
+      "gold": [
+        "rash-b-p1"
+      ]
+    },
+    {
+      "id": "rash-r07",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "standard",
+      "split": "development",
+      "question": "皮疹和荨麻疹怎么区分？",
+      "gold": [
+        "rash-b-p2"
+      ]
+    },
+    {
+      "id": "rash-r08",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "standard",
+      "split": "development",
+      "question": "皮疹和接触性皮炎怎么区分？",
+      "gold": [
+        "rash-b-p3"
+      ]
+    },
+    {
+      "id": "rash-r09",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "皮疹和药疹怎么区分？",
+      "gold": [
+        "rash-b-p4"
+      ]
+    },
+    {
+      "id": "rash-r10",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "colloquial",
+      "split": "regression",
+      "question": "皮疹就诊前应该记录什么？",
+      "gold": [
+        "rash-c-p1"
+      ]
+    },
+    {
+      "id": "rash-r11",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "皮疹什么情况下不要自行处理？",
+      "gold": [
+        "rash-c-p2"
+      ]
+    },
+    {
+      "id": "rash-r12",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "皮疹医生一般会看哪些信息？",
+      "gold": [
+        "rash-c-p3"
+      ]
+    },
+    {
+      "id": "rash-r13",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "我妈皮疹，需要看哪些表现？",
+      "gold": [
+        "rash-a-p2"
+      ]
+    },
+    {
+      "id": "rash-r14",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "皮疹好几天了，什么时候该去医院？",
+      "gold": [
+        "rash-a-p4"
+      ]
+    },
+    {
+      "id": "rash-r15",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "反复皮疹两个月了，可能和哪些情况有关？",
+      "gold": [
+        "rash-b-p1",
+        "rash-b-p2",
+        "rash-b-p3",
+        "rash-b-p4"
+      ]
+    },
+    {
+      "id": "rash-r16",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "一觉醒来皮疹，到下午好点，需要查什么？",
+      "gold": [
+        "rash-a-p3",
+        "rash-c-p3"
+      ]
+    },
+    {
+      "id": "rash-r17",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "孩子皮疹，要不要紧？",
+      "gold": [
+        "rash-a-p4"
+      ]
+    },
+    {
+      "id": "rash-r18",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "体检发现皮疹，没有不舒服，还需要看吗？",
+      "gold": [
+        "rash-a-p1",
+        "rash-a-p3"
+      ]
+    },
+    {
+      "id": "rash-r19",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "吃完海鲜后皮疹，是过敏吗？",
+      "gold": [
+        "rash-b-p2"
+      ]
+    },
+    {
+      "id": "rash-r20",
+      "symptom": "rash",
+      "label": "皮疹",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "皮疹按压会疼，需要记录吗？",
+      "gold": [
+        "rash-a-p2"
+      ]
+    },
+    {
+      "id": "knee-r01",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "膝关节痛的常见伴随表现有哪些？",
+      "gold": [
+        "knee-a-p2"
+      ]
+    },
+    {
+      "id": "knee-r02",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "膝关节痛需要记录哪些时间信息？",
+      "gold": [
+        "knee-a-p3"
+      ]
+    },
+    {
+      "id": "knee-r03",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "膝关节痛出现哪些情况需要尽快就医？",
+      "gold": [
+        "knee-a-p4"
+      ]
+    },
+    {
+      "id": "knee-r04",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "膝关节痛一般指什么？",
+      "gold": [
+        "knee-a-p1"
+      ]
+    },
+    {
+      "id": "knee-r05",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "standard",
+      "split": "regression",
+      "question": "膝关节痛需要和哪些情况区分？",
+      "gold": [
+        "knee-b-p1",
+        "knee-b-p2",
+        "knee-b-p3",
+        "knee-b-p4"
+      ]
+    },
+    {
+      "id": "knee-r06",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "膝关节痛和骨关节炎怎么区分？",
+      "gold": [
+        "knee-b-p1"
+      ]
+    },
+    {
+      "id": "knee-r07",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "膝关节痛和半月板或韧带损伤怎么区分？",
+      "gold": [
+        "knee-b-p2"
+      ]
+    },
+    {
+      "id": "knee-r08",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "standard",
+      "split": "development",
+      "question": "膝关节痛和痛风怎么区分？",
+      "gold": [
+        "knee-b-p3"
+      ]
+    },
+    {
+      "id": "knee-r09",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "膝关节痛和感染性关节炎怎么区分？",
+      "gold": [
+        "knee-b-p4"
+      ]
+    },
+    {
+      "id": "knee-r10",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "colloquial",
+      "split": "regression",
+      "question": "膝关节痛就诊前应该记录什么？",
+      "gold": [
+        "knee-c-p1"
+      ]
+    },
+    {
+      "id": "knee-r11",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "膝关节痛什么情况下不要自行处理？",
+      "gold": [
+        "knee-c-p2"
+      ]
+    },
+    {
+      "id": "knee-r12",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "膝关节痛医生一般会看哪些信息？",
+      "gold": [
+        "knee-c-p3"
+      ]
+    },
+    {
+      "id": "knee-r13",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "我妈膝关节痛，需要看哪些表现？",
+      "gold": [
+        "knee-a-p2"
+      ]
+    },
+    {
+      "id": "knee-r14",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "膝关节痛好几天了，什么时候该去医院？",
+      "gold": [
+        "knee-a-p4"
+      ]
+    },
+    {
+      "id": "knee-r15",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "反复膝关节痛两个月了，可能和哪些情况有关？",
+      "gold": [
+        "knee-b-p1",
+        "knee-b-p2",
+        "knee-b-p3",
+        "knee-b-p4"
+      ]
+    },
+    {
+      "id": "knee-r16",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "一觉醒来膝关节痛，到下午好点，需要查什么？",
+      "gold": [
+        "knee-a-p3",
+        "knee-c-p3"
+      ]
+    },
+    {
+      "id": "knee-r17",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "孩子膝关节痛，要不要紧？",
+      "gold": [
+        "knee-a-p4"
+      ]
+    },
+    {
+      "id": "knee-r18",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "体检发现膝关节痛，没有不舒服，还需要看吗？",
+      "gold": [
+        "knee-a-p1",
+        "knee-a-p3"
+      ]
+    },
+    {
+      "id": "knee-r19",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "吃完海鲜后膝关节痛，是过敏吗？",
+      "gold": [
+        "knee-b-p2"
+      ]
+    },
+    {
+      "id": "knee-r20",
+      "symptom": "knee_pain",
+      "label": "膝关节痛",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "膝关节痛按压会疼，需要记录吗？",
+      "gold": [
+        "knee-a-p2"
+      ]
+    },
+    {
+      "id": "chest-r01",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "standard",
+      "split": "development",
+      "question": "胸闷的常见伴随表现有哪些？",
+      "gold": [
+        "chest-a-p2"
+      ]
+    },
+    {
+      "id": "chest-r02",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "standard",
+      "split": "development",
+      "question": "胸闷需要记录哪些时间信息？",
+      "gold": [
+        "chest-a-p3"
+      ]
+    },
+    {
+      "id": "chest-r03",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "standard",
+      "split": "development",
+      "question": "胸闷出现哪些情况需要尽快就医？",
+      "gold": [
+        "chest-a-p4"
+      ]
+    },
+    {
+      "id": "chest-r04",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "standard",
+      "split": "development",
+      "question": "胸闷一般指什么？",
+      "gold": [
+        "chest-a-p1"
+      ]
+    },
+    {
+      "id": "chest-r05",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "standard",
+      "split": "regression",
+      "question": "胸闷需要和哪些情况区分？",
+      "gold": [
+        "chest-b-p1",
+        "chest-b-p2",
+        "chest-b-p3",
+        "chest-b-p4"
+      ]
+    },
+    {
+      "id": "chest-r06",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "standard",
+      "split": "development",
+      "question": "胸闷和焦虑或惊恐发作怎么区分？",
+      "gold": [
+        "chest-b-p1"
+      ]
+    },
+    {
+      "id": "chest-r07",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "standard",
+      "split": "development",
+      "question": "胸闷和胃食管反流怎么区分？",
+      "gold": [
+        "chest-b-p2"
+      ]
+    },
+    {
+      "id": "chest-r08",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "standard",
+      "split": "development",
+      "question": "胸闷和肋软骨炎怎么区分？",
+      "gold": [
+        "chest-b-p3"
+      ]
+    },
+    {
+      "id": "chest-r09",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "胸闷和心绞痛或心肌梗死怎么区分？",
+      "gold": [
+        "chest-b-p4"
+      ]
+    },
+    {
+      "id": "chest-r10",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "colloquial",
+      "split": "regression",
+      "question": "胸闷就诊前应该记录什么？",
+      "gold": [
+        "chest-c-p1"
+      ]
+    },
+    {
+      "id": "chest-r11",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "胸闷什么情况下不要自行处理？",
+      "gold": [
+        "chest-c-p2"
+      ]
+    },
+    {
+      "id": "chest-r12",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "胸闷医生一般会看哪些信息？",
+      "gold": [
+        "chest-c-p3"
+      ]
+    },
+    {
+      "id": "chest-r13",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "我妈胸闷，需要看哪些表现？",
+      "gold": [
+        "chest-a-p2"
+      ]
+    },
+    {
+      "id": "chest-r14",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "colloquial",
+      "split": "development",
+      "question": "胸闷好几天了，什么时候该去医院？",
+      "gold": [
+        "chest-a-p4"
+      ]
+    },
+    {
+      "id": "chest-r15",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "反复胸闷两个月了，可能和哪些情况有关？",
+      "gold": [
+        "chest-b-p1",
+        "chest-b-p2",
+        "chest-b-p3",
+        "chest-b-p4"
+      ]
+    },
+    {
+      "id": "chest-r16",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "一觉醒来胸闷，到下午好点，需要查什么？",
+      "gold": [
+        "chest-a-p3",
+        "chest-c-p3"
+      ]
+    },
+    {
+      "id": "chest-r17",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "孩子胸闷，要不要紧？",
+      "gold": [
+        "chest-a-p4"
+      ]
+    },
+    {
+      "id": "chest-r18",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "体检发现胸闷，没有不舒服，还需要看吗？",
+      "gold": [
+        "chest-a-p1",
+        "chest-a-p3"
+      ]
+    },
+    {
+      "id": "chest-r19",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "long_tail",
+      "split": "development",
+      "question": "吃完海鲜后胸闷，是过敏吗？",
+      "gold": [
+        "chest-b-p2"
+      ]
+    },
+    {
+      "id": "chest-r20",
+      "symptom": "chest_tightness",
+      "label": "胸闷",
+      "variant": "long_tail",
+      "split": "regression",
+      "question": "胸闷按压会疼，需要记录吗？",
+      "gold": [
+        "chest-a-p2"
+      ]
+    }
+  ]
+}

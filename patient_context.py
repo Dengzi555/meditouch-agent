@@ -1,7 +1,14 @@
 """Structured user declarations for consultation intake, not a diagnostic system."""
 import re
 
+NAMED_DRUG = r'布洛芬|对乙酰氨基酚|奥司他韦|头孢|阿莫西林'
+DRUG_REFERENCE = rf'药|{NAMED_DRUG}'
+MEDICATION_USE = r'吃|服|用|剂量|几片|多少|叠加|一起|混|过敏'
+PRODUCT_SPECIFIC = r'一起吃|一起服|同时(?:吃|用|服)|合用|叠加|混用|重复成分|几片|几粒|多少毫|剂量|用量|规格|成人.{0,4}一半|半片|这一盒|这两种'
+PERSONAL_SUBJECT = r'我|本人|自己|家人|父亲|母亲|爸爸|妈妈|孩子|宝宝|爱人|怀孕|孕期|哺乳'
+
 QUESTIONS={
+    'public_signal':'是否出现刚才询问的情况？',
     'fever_intent':'你是想问发烧时吃什么食物，还是想了解退烧用药？',
     'population':'请说明年龄段，以及是否为儿童、孕产妇或老人；不清楚可填写“不清楚”。',
     'renal_function':'是否存在肾功能问题？不清楚可填写“不清楚”。',
@@ -20,13 +27,18 @@ QUESTIONS={
 }
 # Kept as the complete supported intake field list for clients and fixtures.
 # Required fields are selected per consultation by missing_context below.
+# Structured clarification answers are an internal slot, not a user-facing prompt.
+CONTEXT_LIMITS = {'clarification': 4000}
+ALLOWED_CONTEXT = set(QUESTIONS) | set(CONTEXT_LIMITS)
 INTAKE_FIELDS=['population','symptoms','duration','temperature','temperature_method',
                'associated_symptoms','risk_factors','drug_name','drug_ingredients','medications']
 
 
 def validate_context(context,keep_empty=False):
-    if not isinstance(context,dict) or any(k not in QUESTIONS or not isinstance(v,str) or len(v)>300 for k,v in context.items()):
-        raise ValueError('补充信息字段无效；每项须为不超过300字符的字符串')
+    if (not isinstance(context,dict)
+            or any(k not in ALLOWED_CONTEXT or not isinstance(v,str)
+                   or len(v) > CONTEXT_LIMITS.get(k,300) for k,v in context.items())):
+        raise ValueError('补充信息字段无效；文本长度超出限制')
     return {k:v.strip() for k,v in context.items() if keep_empty or v.strip()}
 
 
@@ -46,16 +58,43 @@ def normalize_cough_question(question):
     return question
 
 
+def is_general_cold_question(question):
+    """Recognize broad cold questions without assuming personal details."""
+    topic = r'(?:普通感冒|感冒|流感)(?:了|时)?'
+    separator = r'[\s，,。！？?！、]*'
+    care = r'(?:怎么办|怎么处理|怎么缓解|怎么护理)'
+    medication = r'(?:吃什么药|用什么药|要不要吃药|需要吃药吗)'
+    return bool(re.fullmatch(
+        rf'\s*{topic}\s*(?:{care}(?:{separator}{medication})?|{medication}){separator}',
+        question,
+    ))
+
+
+def is_general_medication_question(question, context):
+    """A general use question can go straight to evidence without patient intake."""
+    question = resolve_fever_intent(question, context)
+    if not question or set(context) - {'fever_intent'}:
+        return False
+    return bool(re.search(DRUG_REFERENCE, question) and re.search(MEDICATION_USE, question)
+                and not re.search(PERSONAL_SUBJECT + '|' + PRODUCT_SPECIFIC
+                                  + r'|儿童|老年|肾病|肾功能|基础病|过敏|已经|刚吃|刚服|\d+',
+                                  question))
+
+
 def missing_context(question,context):
     # These rules select questions; they do not diagnose, score severity, or
     # declare that missing/unknown facts are normal or that medication is safe.
+    if is_general_cold_question(question):
+        return []
     question=resolve_fever_intent(question,context)
     if question is None:
         return ['fever_intent']
+    if is_general_medication_question(question, context):
+        return []
     question=normalize_cough_question(question)
     if re.search(r'预防|防护|减少.*(?:传给|传染|传播)',question) and not re.search(r'怎么办|我现在|我已经|吃.*药|用.*药',question):
         return []
-    personal=bool(re.search(r'我|本人|自己|家人|父亲|母亲|爸爸|妈妈|孩子|宝宝|爱人|怀孕|孕期|哺乳',question))
+    personal=bool(re.search(PERSONAL_SUBJECT,question))
     action=bool(re.search(r'怎么办|怎么处理|吃什么药|能不能|可以|适合|应该|该不该|要不要|怎么吃|如何吃|能吃|能换|能用|能服|能补',question))
     education=bool(re.search(r'科普|区别|原理|是什么|为什么|了解|指南原文|说明书原文|原话|查一下|查查|查.*资料|有哪些症状|常见症状',question))
     complaint=bool(re.search(r'(?:我|本人|自己|家人|父亲|母亲|爸爸|妈妈|孩子|宝宝|爱人).{0,8}(?:发烧了|发热了|咳嗽了|不舒服|咳了|烧了)',question))
@@ -65,12 +104,13 @@ def missing_context(question,context):
     details=question+' '+context.get('symptoms','')
     symptom=bool(re.search(r'发烧|发热|感冒|流感|咳嗽|咽痛|喉咙痛|嗓子疼|鼻塞|流鼻涕|腹泻|拉肚子|头痛|头疼|不舒服',details))
     consultation=personal or bool(re.search(r'怎么办|怎么处理|吃什么药|发烧了|发热了',question))
-    drug=bool(re.search(r'药|布洛芬|对乙酰氨基酚|奥司他韦|头孢|阿莫西林',question))
-    drug_decision=drug and (consultation or action or bool(re.search(r'几片|多少毫|一起吃|一起服|叠加|混用',question))) and bool(re.search(r'吃|服|用|剂量|几片|多少|叠加|一起|混|过敏',question))
+    product_specific = bool(re.search(PRODUCT_SPECIFIC, question))
+    drug_decision = bool(re.search(DRUG_REFERENCE, question) and re.search(MEDICATION_USE, question)
+                         and (consultation or action or product_specific))
     required=[]
     if re.search(r'钠|盐',question) and re.search(r'算|换算',question) and re.search(r'包装|标签|一袋|含量|营养',question):
         required.extend(['label_sodium','label_basis','consumed_amount'])
-    if (symptom and consultation) or drug_decision:
+    if symptom and consultation and not drug_decision:
         required.extend(['population','symptoms','duration'])
         # A negative mention alone must not turn cough intake into fever intake.
         fever_text=re.sub(r'(?:没有|没|无|不)(?:出现)?(?:发烧|发热)', '', details)
@@ -78,8 +118,12 @@ def missing_context(question,context):
             required.append('temperature')
             if not re.search(r'未测|没有测|没测',context.get('temperature','')):
                 required.append('temperature_method')
-        if drug_decision:
-            required.extend(['drug_name','drug_ingredients','medications','risk_factors'])
+    elif drug_decision:
+        required.extend(['population', 'risk_factors', 'medications'])
+        if product_specific or not re.search(NAMED_DRUG, question):
+            required.append('drug_name')
+        if product_specific:
+            required.append('drug_ingredients')
     elif personal and action and re.search(r'补钾|钾盐|低钠盐|换盐',question):
         required.append('population')
     # Renal information remains specific to the original potassium/salt topic.

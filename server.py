@@ -3,6 +3,7 @@ from pathlib import Path
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from uuid import uuid4
 from contextlib import contextmanager
+import accounts
 
 ROOT = Path(__file__).parent
 DB = ROOT / 'data' / 'agent.db'
@@ -28,6 +29,7 @@ def init():
     with connect() as c:
         c.execute('CREATE TABLE IF NOT EXISTS docs (id TEXT PRIMARY KEY, body TEXT NOT NULL)')
         c.execute('CREATE TABLE IF NOT EXISTS runs (id TEXT PRIMARY KEY, body TEXT NOT NULL)')
+        accounts.initialize(c)
         if not c.execute('SELECT COUNT(*) FROM docs').fetchone()[0]:
             for d in SEEDS: c.execute('INSERT INTO docs VALUES (?,?)',(d['id'],json.dumps(d,ensure_ascii=False)))
     from consultation import ConsultationStore
@@ -144,21 +146,102 @@ def evaluate():
     return {'cases':rows,'passed':sum(x['pass'] for x in rows),'total':len(rows),'scope':'合成规则回归测试；不代表医学准确率或临床验证'}
 
 class Handler(BaseHTTPRequestHandler):
-    def send_json(self,data,status=200):
-        body=json.dumps(data,ensure_ascii=False).encode(); self.send_response(status); self.send_header('Content-Type','application/json; charset=utf-8'); self.send_header('Content-Length',str(len(body))); self.end_headers(); self.wfile.write(body)
+    def send_json(self,data,status=200,*,cookie=None):
+        body=json.dumps(data,ensure_ascii=False).encode()
+        self.send_response(status)
+        self.send_header('Content-Type','application/json; charset=utf-8')
+        self.send_header('Content-Length',str(len(body)))
+        self.send_header('Cache-Control','no-store')
+        if cookie is not None:
+            self.send_header('Set-Cookie',cookie)
+        self.end_headers()
+        self.wfile.write(body)
+
+    def browser_token(self):
+        return accounts.request_token(self.headers.get('Cookie'))
+
+    def record_guest_run(self, result):
+        with connect() as db:
+            db.execute(
+                "INSERT INTO runs SELECT ?,? WHERE EXISTS "
+                "(SELECT 1 FROM consultations WHERE id=? AND owner_id='')",
+                (result['id'], json.dumps({k: v for k, v in result.items() if k != 'prior_turns'},
+                                          ensure_ascii=False), result['session_id']),
+            )
+
+    def stream_consultation(self, store, runner, data):
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/x-ndjson; charset=utf-8')
+        self.send_header('Cache-Control', 'no-store')
+        self.send_header('Connection', 'close')
+        self.end_headers()
+        self.close_connection = True
+        disconnected = False
+
+        def emit(event, **fields):
+            nonlocal disconnected
+            if disconnected:
+                return
+            try:
+                self.wfile.write((json.dumps({'event': event, **fields}, ensure_ascii=False) + '\n').encode())
+                self.wfile.flush()
+            except (ConnectionError, TimeoutError):
+                disconnected = True
+
+        try:
+            emit('intake')
+            result = runner(store, **data, on_progress=emit)
+            if not store.owner_id:
+                self.record_guest_run(result)
+            emit('answer', status=result['status'], sources=result.get('sources', []),
+                 citations=result.get('citations', []),
+                 risk_references=result.get('risk_references', []),
+                 guidance_references=result.get('guidance_references', []))
+            sections = result.get('answer_sections', [])
+            for section in sections:
+                emit('section', section={**section, 'excerpts': []})
+                for point in section['excerpts']:
+                    emit('point', point=point)
+            if not sections and result['status'] != 'needs_clarification':
+                for paragraph in result['answer'].split('\n\n'):
+                    emit('paragraph', text=paragraph)
+            emit('done', result=result)
+        except (ValueError, TypeError) as exc:
+            emit('error', message=str(exc))
+        except ImportError:
+            emit('error', message='服务缺少 Agent 依赖')
+        except Exception as exc:
+            from consultation import SessionError
+            emit('error', message=exc.code if isinstance(exc, SessionError) else '服务器异常，请查看本地日志')
+
+    def account(self):
+        with connect() as db:
+            return accounts.current_account(db,self.browser_token())
+
+    def consultation_store(self):
+        from consultation import ConsultationStore, SessionError
+        account = self.account()
+        owner_id = account['id'] if account else ''
+        expected = self.headers.get('X-Account-Context')
+        if expected is not None and expected != (owner_id or 'guest'):
+            raise SessionError('账号已切换，请刷新页面',409)
+        return ConsultationStore(DB,owner_id)
+
     def do_GET(self):
-        if self.path.startswith('/api/session/'):
-            from consultation import ConsultationStore, SessionError
-            try: return self.send_json(ConsultationStore(DB).view(self.path.removeprefix('/api/session/')))
+        if self.path=='/api/account':
+            return self.send_json({'account':self.account()})
+        if self.path=='/api/sessions' or self.path.startswith('/api/session/'):
+            from consultation import SessionError
+            try:
+                store = self.consultation_store()
+                result = store.history() if self.path=='/api/sessions' else store.view(self.path.removeprefix('/api/session/'))
+                return self.send_json(result)
             except SessionError as e: return self.send_json({'error':e.code},e.status)
             except ValueError as e: return self.send_json({'error':str(e)},400)
         if self.path=='/api/state':
             cfg=model_config(); cfg['model']=cfg['model'] or ('gpt-4.1-mini' if cfg['enabled'] else '')
             return self.send_json({'documents':documents(),'config':cfg})
-        if self.path=='/api/runs':
-            with connect() as c: rows=[json.loads(r['body']) for r in c.execute('SELECT body FROM runs ORDER BY rowid DESC LIMIT 30')]
-            return self.send_json(rows)
-        assets={'/':('index.html','text/html; charset=utf-8'),'/app.js':('app.js','text/javascript; charset=utf-8'),'/style.css':('style.css','text/css; charset=utf-8')}
+        assets={'/':('index.html','text/html; charset=utf-8'),'/app.js':('app.js','text/javascript; charset=utf-8'),'/style.css':('style.css','text/css; charset=utf-8'),'/brand.png':('brand.png','image/png')}
         if self.path not in assets: return self.send_json({'error':'Not found'},404)
         name,kind=assets[self.path]; body=(ROOT/'web'/name).read_bytes(); self.send_response(200); self.send_header('Content-Type',kind); self.send_header('Content-Length',str(len(body))); self.end_headers(); self.wfile.write(body)
     def do_POST(self):
@@ -169,18 +252,39 @@ class Handler(BaseHTTPRequestHandler):
             if not 0<length<=2_000_000: raise ValueError('请求体为空或超过 2 MB')
             data=json.loads(self.rfile.read(length))
             if not isinstance(data,dict): raise ValueError('请求必须为对象')
-            if self.path=='/api/agent':
+            if self.path in ('/api/account/register','/api/account/login'):
+                with connect() as db:
+                    account,token = accounts.sign_in(db,data.get('username'),data.get('password'),
+                        register=self.path.endswith('/register'),previous_token=self.browser_token())
+                return self.send_json({'account':account},cookie=accounts.session_cookie(token))
+            if self.path=='/api/account/logout':
+                with connect() as db:
+                    accounts.revoke(db,self.browser_token())
+                return self.send_json({'account':None},cookie=accounts.session_cookie())
+            if self.path=='/api/sessions/manage':
+                from consultation import SessionError
                 try:
-                    from consultation import ConsultationStore, run_consultation, SessionError
-                    r=run_consultation(ConsultationStore(DB),question=data.get('question'),corpus=data.get('corpus'),
-                                known_context=data.get('known_context'),session_id=data.get('session_id'),
-                                revision=data.get('revision'))
+                    entries = self.consultation_store().manage_history(
+                        data.get('ids'), data.get('action'), data.get('value'))
+                except SessionError as e:
+                    return self.send_json({'error':e.code},e.status)
+                return self.send_json({'entries':entries})
+            if self.path in ('/api/agent', '/api/agent/stream'):
+                try:
+                    from consultation import run_consultation, SessionError
+                    store = self.consultation_store()
+                    arguments = {key: data.get(key) for key in
+                                 ('question', 'corpus', 'known_context', 'session_id', 'revision', 'append_turn')}
+                    if self.path.endswith('/stream'):
+                        return self.stream_consultation(store, run_consultation, arguments)
+                    r=run_consultation(store, **arguments)
                 except SessionError as e:
                     return self.send_json({'error':e.code},e.status)
                 except ImportError:
                     return self.send_json({'error':'请使用 .venv-agent 启动服务并安装 requirements-agent.txt'},503)
                 # Structured slots persist per consultation; model drafts are not stored.
-                with connect() as c: c.execute('INSERT INTO runs VALUES (?,?)',(r['id'],json.dumps(r,ensure_ascii=False)))
+                if not store.owner_id:
+                    self.record_guest_run(r)
                 return self.send_json(r)
             if self.path=='/api/evidence/search':
                 from evidence_service import EvidenceService, EvidenceError

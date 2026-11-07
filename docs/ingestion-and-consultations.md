@@ -22,6 +22,10 @@ python -B reference_ingestion.py
 
 默认 `EvidenceService` 已合并新索引，HTTP、MCP统一入口与单Agent均可检索。自定义PDF语料不会自动混入新包；测试可显式注入reference_paths。新机器需先下载资料再构建，原件和派生内容仍被Git忽略，不随源码分发。
 
+10 类症状的 NHS 公开资料仍保存在本机索引中，仅用于资料检索，尚未进入咨询回答池。可用 `python symptom_reference_pack.py --download` 更新原文与清单。
+
+Information from the NHS website is licensed under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/). See the [NHS website terms](https://www.nhs.uk/our-policies/terms-and-conditions/).
+
 ## 会话与追问
 
 `consultation.py` 使用现有本机SQLite库新增 `consultations` 表，保持已有docs/runs。每次咨询包含随机session_id、原问题、固定语料、人群及症状等结构化字段、来源声明、更新时间、revision和运行状态。不会把“不清楚”转换为“无异常”，不会自行从自然语言猜出未提供的体温或持续时间。

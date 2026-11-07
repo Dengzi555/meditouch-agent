@@ -21,13 +21,22 @@ class ContextRoutingTests(unittest.TestCase):
         fields=missing_context('我咳嗽怎么办？',{'symptoms':'今天又发热'})
         self.assertIn('temperature_method',fields);self.assertNotIn('symptoms',fields)
 
-    def test_drug_question_collects_identity_components_and_taken_doses(self):
-        for question in ['我能吃布洛芬吗？','布洛芬和感冒药能不能一起吃？']:
-            with self.subTest(question=question):
-                fields=missing_context(question,{})
-                for key in ['population','symptoms','duration','drug_name','drug_ingredients','medications','risk_factors']:
-                    self.assertIn(key,fields)
-                self.assertNotIn('renal_function',fields)
+    def test_drug_questions_collect_details_only_when_needed(self):
+        from consultation_flow import route
+        from query_plan import display_points, matching_intents, requested_intents
+
+        question = '发烧可以吃布洛芬吗'
+        self.assertEqual(route(question, {})['kind'], 'education')
+        self.assertEqual(missing_context(question, {}), [])
+        self.assertEqual(requested_intents(question), ['medication'])
+        self.assertEqual(matching_intents({'text': '抗生素对病毒无效。'}, question, ['medication']), [])
+        irrelevant = '布洛芬在文中另有提及。疑似流感时，医生会根据情况指导用药。'
+        self.assertEqual(matching_intents({'text': irrelevant}, question, ['medication']), [])
+        self.assertEqual(list(display_points(irrelevant, 'medication', question)), [])
+        self.assertEqual(missing_context('我能吃布洛芬吗？', {}),
+                         ['population', 'risk_factors', 'medications'])
+        self.assertEqual(missing_context('布洛芬和感冒药能不能一起吃？', {}),
+                         ['population', 'risk_factors', 'medications', 'drug_name', 'drug_ingredients'])
 
     def test_relevant_background_is_selected_without_universal_kidney_field(self):
         self.assertIn('risk_factors',missing_context('我有哮喘，现在咳嗽怎么办？',{}))

@@ -60,7 +60,7 @@ python -m venv .venv-craft
 
 ## 演示步骤
 
-1. 在 Craft 中启用“知衡医疗证据”Source。
+1. 在 Craft 中启用“医点通医疗证据”Source。
 2. 提问：“请调用 analyze_evidence 查询演示措施X存在什么分歧，保留原文和人群条件。”
 3. 检查结果为 unresolved，demo-old 被排除，demo-new 与 demo-other 两方观点保留。
 4. 调用 get_evidence_source，输入 demo-new，核对原文。

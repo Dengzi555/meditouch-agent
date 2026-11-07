@@ -1,4 +1,4 @@
-# 知衡医疗证据 Agent
+# 医点通医疗证据 Agent
 
 一个本地运行的中文健康资料助手，用 LangGraph 调用检索工具，校验原文引用，并在条件缺失、证据冲突或工具失败时给出明确结果。
 
@@ -49,14 +49,17 @@ python server.py
 | --- | --- | --- | --- |
 | 离线对话 | 5 个合成场景，按终止状态核对 | `python demo.py` | 当前 checkout |
 | 自动化回归 | 测试发现计数由 runner 输出。缺可选资料或依赖时会标注跳过 | `python -m unittest -v` | 当前 checkout |
-| 来源命中 | 使用本地语料，核对预期来源和小节的 Hit@1 / Hit@3，样本数见报告 | `python source_retrieval_eval.py` | 当前 checkout 和本地索引 |
+| 检索 A/B | 真实资料 24 道开发题、60 道验证题（40 新题 + 20 历史题），分开报告段落级与历史口径 | `python eval_retrieval_ab.py --mode source` | 当前 checkout 和本地索引 |
+| 检索夹具 | 200 条段落级金标题（10 类症状 / 120 段虚构夹具），含口语与长尾 | `python eval_retrieval_symptom_200.py` | 当前 checkout |
 | 开发问题 | 40 个合成问题，检查路由、追问和失败处理 | `python patient_acceptance.py` | 当前 checkout 和本地索引 |
 
-记录复现实验时，用 `git rev-parse --short HEAD` 记录提交号。常见错误的轨迹和复现命令见 [失败案例](docs/failure-cases.md)。合成工程验收衡量流程行为，医学准确性需要独立评测。
+记录复现实验时，用 `git rev-parse --short HEAD` 记录提交号。检索 A/B 的口径、代价和局限见 [检索评测报告](docs/eval-report.md)；常见错误的轨迹和复现命令见 [失败案例](docs/failure-cases.md)。合成工程验收衡量流程行为，医学准确性需要独立评测。
 
 ## 范围
 
 - 提供健康科普资料、出处、缺失条件追问和有限风险提醒。
+- 宽泛症状（眼皮肿、腹痛、头痛、脚踝肿、皮疹、膝关节痛、胸闷、感冒、发烧、儿童发热）先按鉴别要点给出动态多选追问，再继续检索；卡片刻意不展示病名，红旗选项直接给就医提醒。见 [症状鉴别追问](docs/symptom-clarification.md)。
+- “发烧怎么办”“感冒吃什么药”等行动型问题仍走既有发热/感冒流程；裸症状描述（“发烧”“孩子发烧”“皮疹”）进入鉴别追问。
 - 不提供诊断、个体用药剂量或处方。冲突检查覆盖已结构化的主张。
 - 适用性校验检查资料声明的范围。人工审核记录不是运行问答的前置条件。
 

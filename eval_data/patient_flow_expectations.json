@@ -6,7 +6,7 @@
   "resp-05":{"status":"insufficient", "real_retrieval":true},
   "resp-06":{"status":"insufficient", "real_retrieval":true},
   "resp-07":{"status":"needs_clarification","missing":["population","symptoms","duration","temperature"]},
-  "resp-08":{"status":"needs_clarification","missing":["drug_name","drug_ingredients","medications"]},
+  "resp-08":{"status":"needs_clarification","missing":["population","drug_name","medications"]},
   "resp-09":{"status":"needs_clarification","missing":["population","drug_name"]},
   "resp-10":{"status":"needs_clarification","missing":["population","risk_factors"]},
   "resp-11":{"status":"insufficient"},

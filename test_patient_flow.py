@@ -14,6 +14,24 @@ from agent_acceptance import fixture_service
 
 
 class RoutingTests(unittest.TestCase):
+    def test_shared_plan_keeps_negation_and_unknown_temperature(self):
+        from query_plan import understand_question
+        question = '脑袋发沉，身上发冷，没发烧，没拿体温计量，咋回事？'
+        plan = understand_question(question, {})
+        self.assertEqual(plan.reported, ('头发沉', '畏寒'))
+        self.assertEqual(plan.denied, ('发热',))
+        self.assertEqual(plan.unknown, ('体温',))
+        result = route(question, {}, plan=plan)
+        self.assertEqual(result['kind'], 'guidance')
+        self.assertEqual(result['guidance']['followup']['field'], 'duration')
+        self.assertNotEqual(route('脑袋发沉，不确定有没有怕冷，咋回事？', {})['kind'], 'guidance')
+
+    def test_subjectless_request_for_help_routes_to_risk(self):
+        self.assertEqual(route('呼吸困难怎么办？', {})['kind'], 'risk')
+        for question in ('没有呼吸困难怎么办？', '如果呼吸困难怎么办？', '呼吸困难是什么意思？'):
+            with self.subTest(question=question):
+                self.assertNotEqual(route(question, {})['kind'], 'risk')
+
     def test_current_risk_overrides_missing_and_never_calls_model(self):
         with tempfile.TemporaryDirectory() as temp:
             store=ConsultationStore(Path(temp)/'test.db');store.initialize()

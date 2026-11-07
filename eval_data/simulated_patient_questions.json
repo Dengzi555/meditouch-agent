@@ -1,0 +1,933 @@
+[
+  {
+    "id": "Q01",
+    "group": 1,
+    "split": "development",
+    "topic": "成人感冒",
+    "intent": "护理",
+    "kind": "direct",
+    "question": "我感冒了，在家怎么缓解？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q02",
+    "group": 1,
+    "split": "development",
+    "topic": "成人感冒",
+    "intent": "护理",
+    "kind": "colloquial",
+    "question": "鼻子堵得睡不着，感冒了能咋整？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q03",
+    "group": 1,
+    "split": "development",
+    "topic": "成人感冒",
+    "intent": "护理",
+    "kind": "followup",
+    "prior_question": "我感冒了，在家怎么缓解？",
+    "question": "我感冒第三天，主要是鼻塞，没发烧。护理上要注意啥？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q04",
+    "group": 1,
+    "split": "development",
+    "topic": "成人感冒",
+    "intent": "护理",
+    "kind": "direct",
+    "question": "普通感冒居家护理要做些什么？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q05",
+    "group": 2,
+    "split": "development",
+    "topic": "成人感冒",
+    "intent": "对症用药",
+    "kind": "direct",
+    "question": "大人普通感冒吃什么药？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q06",
+    "group": 2,
+    "split": "development",
+    "topic": "成人感冒",
+    "intent": "对症用药",
+    "kind": "colloquial",
+    "question": "感冒了又头疼又嗓子疼，有啥药能缓解？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q07",
+    "group": 2,
+    "split": "development",
+    "topic": "成人感冒",
+    "intent": "对症用药",
+    "kind": "followup",
+    "prior_question": "大人普通感冒吃什么药？",
+    "question": "刚才忘了说，我没有发烧，就是鼻塞流鼻涕。还是一样吗？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q08",
+    "group": 2,
+    "split": "development",
+    "topic": "成人感冒",
+    "intent": "对症用药",
+    "kind": "direct",
+    "question": "成人普通感冒的复方感冒药有什么注意事项？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q09",
+    "group": 3,
+    "split": "development",
+    "topic": "成人感冒",
+    "intent": "用药误区",
+    "kind": "direct",
+    "question": "感冒有脓鼻涕，非得吃抗生素吗？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q10",
+    "group": 3,
+    "split": "development",
+    "topic": "成人感冒",
+    "intent": "用药误区",
+    "kind": "colloquial",
+    "question": "普通感冒吃抗病毒药有用吗？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q11",
+    "group": 3,
+    "split": "development",
+    "topic": "成人感冒",
+    "intent": "用药误区",
+    "kind": "followup",
+    "prior_question": "感冒有脓鼻涕，非得吃抗生素吗？",
+    "question": "不是流感，我说的是普通感冒，可以拿流感的药吃吗？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q12",
+    "group": 3,
+    "split": "development",
+    "topic": "成人感冒",
+    "intent": "用药误区",
+    "kind": "direct",
+    "question": "成人普通感冒时抗生素和抗病毒药分别适不适用？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q13",
+    "group": 4,
+    "split": "legacy_validation",
+    "topic": "成人感冒",
+    "intent": "就医",
+    "kind": "direct",
+    "question": "感冒一直不好，什么情况下该去医院？",
+    "original_split": "holdout"
+  },
+  {
+    "id": "Q14",
+    "group": 4,
+    "split": "legacy_validation",
+    "topic": "成人感冒",
+    "intent": "就医",
+    "kind": "colloquial",
+    "question": "开始好点了，这两天又严重了，咋办？",
+    "original_split": "holdout"
+  },
+  {
+    "id": "Q15",
+    "group": 4,
+    "split": "legacy_validation",
+    "topic": "成人感冒",
+    "intent": "就医",
+    "kind": "followup",
+    "prior_question": "感冒一直不好，什么情况下该去医院？",
+    "question": "我说的是普通感冒，差不多十天了，还没好，需要检查吗？",
+    "original_split": "holdout"
+  },
+  {
+    "id": "Q16",
+    "group": 4,
+    "split": "legacy_validation",
+    "topic": "成人感冒",
+    "intent": "就医",
+    "kind": "direct",
+    "question": "普通感冒持续不缓解或加重时，指南怎么说？",
+    "original_split": "holdout"
+  },
+  {
+    "id": "Q17",
+    "group": 5,
+    "split": "development",
+    "topic": "儿童腹泻",
+    "intent": "护理",
+    "kind": "direct",
+    "question": "小孩拉肚子，在家怎么照顾？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q18",
+    "group": 5,
+    "split": "development",
+    "topic": "儿童腹泻",
+    "intent": "护理",
+    "kind": "colloquial",
+    "question": "娃今天拉稀好几次，怎么防脱水？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q19",
+    "group": 5,
+    "split": "development",
+    "topic": "儿童腹泻",
+    "intent": "护理",
+    "kind": "followup",
+    "prior_question": "小孩拉肚子，在家怎么照顾？",
+    "question": "他能喝水，但一喝多就想吐，还能怎么补液？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q20",
+    "group": 5,
+    "split": "development",
+    "topic": "儿童腹泻",
+    "intent": "护理",
+    "kind": "direct",
+    "question": "儿童急性腹泻期间怎么补液、怎么吃饭？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q21",
+    "group": 6,
+    "split": "legacy_validation",
+    "topic": "儿童腹泻",
+    "intent": "就医",
+    "kind": "direct",
+    "question": "孩子腹泻什么情况下要去医院？",
+    "original_split": "holdout"
+  },
+  {
+    "id": "Q22",
+    "group": 6,
+    "split": "legacy_validation",
+    "topic": "儿童腹泻",
+    "intent": "就医",
+    "kind": "colloquial",
+    "question": "娃拉稀后小便少了，应该继续在家观察吗？",
+    "original_split": "holdout"
+  },
+  {
+    "id": "Q23",
+    "group": 6,
+    "split": "legacy_validation",
+    "topic": "儿童腹泻",
+    "intent": "就医",
+    "kind": "followup",
+    "prior_question": "孩子腹泻什么情况下要去医院？",
+    "question": "补充一下，喝了补液盐还是越来越蔫。",
+    "original_split": "holdout"
+  },
+  {
+    "id": "Q24",
+    "group": 6,
+    "split": "legacy_validation",
+    "topic": "儿童腹泻",
+    "intent": "就医",
+    "kind": "direct",
+    "question": "孩子腹泻后出现哪些变化需要尽快就医？",
+    "original_split": "holdout"
+  },
+  {
+    "id": "Q25",
+    "group": 7,
+    "split": "development",
+    "topic": "流感",
+    "intent": "鉴别",
+    "kind": "direct",
+    "question": "流感和普通感冒有啥区别？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q26",
+    "group": 7,
+    "split": "development",
+    "topic": "流感",
+    "intent": "鉴别",
+    "kind": "colloquial",
+    "question": "一下子浑身酸疼，是普通感冒还是流感常见？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q27",
+    "group": 7,
+    "split": "development",
+    "topic": "流感",
+    "intent": "鉴别",
+    "kind": "followup",
+    "prior_question": "流感和普通感冒有啥区别？",
+    "question": "我想问的是，没发烧就肯定不是流感吗？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q28",
+    "group": 7,
+    "split": "development",
+    "topic": "流感",
+    "intent": "鉴别",
+    "kind": "direct",
+    "question": "从一般表现看，怎么区分流感和普通感冒？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q29",
+    "group": 8,
+    "split": "development",
+    "topic": "流感",
+    "intent": "就医",
+    "kind": "direct",
+    "question": "得了流感，哪些人更应该早点去医院？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q30",
+    "group": 8,
+    "split": "development",
+    "topic": "流感",
+    "intent": "就医",
+    "kind": "colloquial",
+    "question": "家里老人疑似甲流，需要尽早就医吗？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q31",
+    "group": 8,
+    "split": "development",
+    "topic": "流感",
+    "intent": "就医",
+    "kind": "followup",
+    "prior_question": "得了流感，哪些人更应该早点去医院？",
+    "question": "是我爸，有慢性肺病。我想知道哪些情况应该就医。",
+    "original_split": "development"
+  },
+  {
+    "id": "Q32",
+    "group": 8,
+    "split": "development",
+    "topic": "流感",
+    "intent": "就医",
+    "kind": "direct",
+    "question": "疑似流感时，哪些人群属于重症高风险？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q33",
+    "group": 9,
+    "split": "legacy_validation",
+    "topic": "发热",
+    "intent": "测量与护理",
+    "kind": "direct",
+    "question": "额头摸着热，怎么知道是不是发烧？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q34",
+    "group": 9,
+    "split": "legacy_validation",
+    "topic": "发热",
+    "intent": "测量与护理",
+    "kind": "colloquial",
+    "question": "我感觉脑门发烫，但手边没测体温，能先判断吗？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q35",
+    "group": 9,
+    "split": "legacy_validation",
+    "topic": "发热",
+    "intent": "测量与护理",
+    "kind": "followup",
+    "prior_question": "额头摸着热，怎么知道是不是发烧？",
+    "question": "前面没说清楚，我还没用体温计测过。",
+    "original_split": "development"
+  },
+  {
+    "id": "Q36",
+    "group": 9,
+    "split": "legacy_validation",
+    "topic": "发热",
+    "intent": "测量与护理",
+    "kind": "direct",
+    "question": "觉得头热时应该怎么测体温、记录哪些信息？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q37",
+    "group": 10,
+    "split": "legacy_validation",
+    "topic": "咳嗽",
+    "intent": "护理与就医",
+    "kind": "direct",
+    "question": "咳嗽在家可以观察什么？",
+    "original_split": "holdout"
+  },
+  {
+    "id": "Q38",
+    "group": 10,
+    "split": "legacy_validation",
+    "topic": "咳嗽",
+    "intent": "护理与就医",
+    "kind": "colloquial",
+    "question": "我今天才开始咳，平时要留意啥？",
+    "original_split": "holdout"
+  },
+  {
+    "id": "Q39",
+    "group": 10,
+    "split": "legacy_validation",
+    "topic": "咳嗽",
+    "intent": "护理与就医",
+    "kind": "followup",
+    "prior_question": "咳嗽在家可以观察什么？",
+    "question": "成人，咳了不到一天，还没测体温。",
+    "original_split": "holdout"
+  },
+  {
+    "id": "Q40",
+    "group": 10,
+    "split": "legacy_validation",
+    "topic": "咳嗽",
+    "intent": "护理与就医",
+    "kind": "direct",
+    "question": "呼吸道感染咳嗽时，居家监测应关注哪些变化？",
+    "original_split": "holdout"
+  },
+  {
+    "id": "Q41",
+    "group": 11,
+    "split": "legacy_validation",
+    "topic": "成人高血压",
+    "intent": "饮食",
+    "kind": "direct",
+    "question": "有高血压，平常吃饭该注意什么？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q42",
+    "group": 11,
+    "split": "legacy_validation",
+    "topic": "成人高血压",
+    "intent": "饮食",
+    "kind": "colloquial",
+    "question": "外卖吃得多，血压偏高，怎么吃少一点盐？",
+    "original_split": "development"
+  },
+  {
+    "id": "Q43",
+    "group": 11,
+    "split": "legacy_validation",
+    "topic": "成人高血压",
+    "intent": "饮食",
+    "kind": "followup",
+    "prior_question": "有高血压，平常吃饭该注意什么？",
+    "question": "我说的不是吃药，是想问日常吃饭。",
+    "original_split": "development"
+  },
+  {
+    "id": "Q44",
+    "group": 11,
+    "split": "legacy_validation",
+    "topic": "成人高血压",
+    "intent": "饮食",
+    "kind": "direct",
+    "question": "成人高血压食养指南对减盐有什么建议？",
+    "original_split": "development"
+  },
+  {
+    "id": "F01",
+    "split": "fresh_validation",
+    "topic": "痛风",
+    "kind": "direct",
+    "question": "痛风急性发作有哪些典型关节表现？",
+    "gold": [
+      "nhs-symptom-gout-2"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/gout/#symptoms",
+    "section": "Symptoms of gout"
+  },
+  {
+    "id": "F02",
+    "split": "fresh_validation",
+    "topic": "痛风",
+    "kind": "colloquial",
+    "question": "看痛风时，医生可能会做哪些检查？",
+    "gold": [
+      "nhs-symptom-gout-5"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/gout/#diagnosis",
+    "section": "What happens at your appointment"
+  },
+  {
+    "id": "F03",
+    "split": "fresh_validation",
+    "topic": "痛风",
+    "kind": "direct",
+    "question": "痛风发作期治疗与长期降尿酸治疗有什么不同？",
+    "gold": [
+      "nhs-symptom-gout-6"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/gout/#medical-treatments",
+    "section": "Treatments for gout"
+  },
+  {
+    "id": "F04",
+    "split": "fresh_validation",
+    "topic": "痛风",
+    "kind": "colloquial",
+    "question": "痛风总犯，平时饮食和喝酒要留意啥？",
+    "gold": [
+      "nhs-symptom-gout-9"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/gout/#prevention",
+    "section": "Things you can do to help prevent gout coming back"
+  },
+  {
+    "id": "F05",
+    "split": "fresh_validation",
+    "topic": "水痘",
+    "kind": "direct",
+    "question": "水痘皮疹从出现到结痂通常怎么变化？",
+    "gold": [
+      "nhs-symptom-chickenpox-2"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/chickenpox/#symptoms",
+    "section": "Symptoms of chickenpox"
+  },
+  {
+    "id": "F06",
+    "split": "fresh_validation",
+    "topic": "水痘",
+    "kind": "colloquial",
+    "question": "出水痘后在家怎么照护皮肤、减轻瘙痒？",
+    "gold": [
+      "nhs-symptom-chickenpox-3"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/chickenpox/#self-care",
+    "section": "How you can treat chickenpox yourself"
+  },
+  {
+    "id": "F07",
+    "split": "fresh_validation",
+    "topic": "水痘",
+    "kind": "direct",
+    "question": "得水痘后，哪些人需要尽早联系医生？",
+    "gold": [
+      "nhs-symptom-chickenpox-4"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/chickenpox/#medical-help",
+    "section": "When and where to get medical help"
+  },
+  {
+    "id": "F08",
+    "split": "fresh_validation",
+    "topic": "水痘",
+    "kind": "colloquial",
+    "question": "水痘还没冒疹子的时候就会传给别人吗？",
+    "gold": [
+      "nhs-symptom-chickenpox-5"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/chickenpox/#transmission",
+    "section": "How chickenpox is spread"
+  },
+  {
+    "id": "F09",
+    "split": "fresh_validation",
+    "topic": "偏头痛",
+    "kind": "direct",
+    "question": "偏头痛先兆可能有哪些表现？",
+    "gold": [
+      "nhs-symptom-migraine-2"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/migraine/#symptoms",
+    "section": "Symptoms of migraine"
+  },
+  {
+    "id": "F10",
+    "split": "fresh_validation",
+    "topic": "偏头痛",
+    "kind": "colloquial",
+    "question": "偏头疼比平时来得更频繁，什么时候该约医生？",
+    "gold": [
+      "nhs-symptom-migraine-3"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/migraine/",
+    "section": "Non-urgent advice: See a GP if:"
+  },
+  {
+    "id": "F11",
+    "split": "fresh_validation",
+    "topic": "偏头痛",
+    "kind": "direct",
+    "question": "偏头痛的急性期治疗和预防性治疗有什么区别？",
+    "gold": [
+      "nhs-symptom-migraine-6"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/migraine/#medical-treatments",
+    "section": "Treatment for migraine"
+  },
+  {
+    "id": "F12",
+    "split": "fresh_validation",
+    "topic": "偏头痛",
+    "kind": "colloquial",
+    "question": "老偏头疼，睡眠和日常习惯可以怎么调整？",
+    "gold": [
+      "nhs-symptom-migraine-8"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/migraine/#self-care",
+    "section": "Things you can do to ease or reduce migraine"
+  },
+  {
+    "id": "F13",
+    "split": "fresh_validation",
+    "topic": "扭伤",
+    "kind": "direct",
+    "question": "扭伤或拉伤后常见的局部表现有哪些？",
+    "gold": [
+      "nhs-symptom-sprains-2"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/sprains-and-strains/#symptoms",
+    "section": "Symptoms of a sprain or strain"
+  },
+  {
+    "id": "F14",
+    "split": "fresh_validation",
+    "topic": "扭伤",
+    "kind": "colloquial",
+    "question": "刚崴脚，最初两三天居家怎么护理？",
+    "gold": [
+      "nhs-symptom-sprains-3"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/sprains-and-strains/#self-care",
+    "section": "How to treat sprains and strains yourself"
+  },
+  {
+    "id": "F15",
+    "split": "fresh_validation",
+    "topic": "扭伤",
+    "kind": "direct",
+    "question": "扭伤一般多久有好转，恢复运动要注意什么？",
+    "gold": [
+      "nhs-symptom-sprains-4"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/sprains-and-strains/#prognosis-or-recovery",
+    "section": "How long it takes for a sprain or strain to heal"
+  },
+  {
+    "id": "F16",
+    "split": "fresh_validation",
+    "topic": "扭伤",
+    "kind": "colloquial",
+    "question": "崴脚时听到咔的一声、脚还变形了，该查哪种紧急处置？",
+    "gold": [
+      "nhs-symptom-sprains-9"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/sprains-and-strains/",
+    "section": "Immediate action required: Call 999 or go to A&E if:"
+  },
+  {
+    "id": "F17",
+    "split": "fresh_validation",
+    "topic": "流感",
+    "kind": "direct",
+    "question": "流感的典型起病特点和症状有哪些？",
+    "gold": [
+      "nhs-symptom-flu-3"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/flu/#symptoms",
+    "section": "Symptoms of flu"
+  },
+  {
+    "id": "F18",
+    "split": "fresh_validation",
+    "topic": "流感",
+    "kind": "colloquial",
+    "question": "得了流感，在家休息和补水怎么做？",
+    "gold": [
+      "nhs-symptom-flu-4"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/flu/#self-care",
+    "section": "How to treat flu yourself"
+  },
+  {
+    "id": "F19",
+    "split": "fresh_validation",
+    "topic": "流感",
+    "kind": "direct",
+    "question": "老人疑似流感，哪些情况应尽快联系医疗人员？",
+    "gold": [
+      "nhs-symptom-flu-5"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/flu/",
+    "section": "Urgent advice: Ask for an urgent GP appointment or get help from NHS 111 if:"
+  },
+  {
+    "id": "F20",
+    "split": "fresh_validation",
+    "topic": "流感",
+    "kind": "colloquial",
+    "question": "流感了怎么少传给一块住的人？",
+    "gold": [
+      "nhs-symptom-flu-7"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/flu/#transmission",
+    "section": "How to avoid spreading the flu"
+  },
+  {
+    "id": "F21",
+    "split": "fresh_validation",
+    "topic": "鼻窦炎",
+    "kind": "direct",
+    "question": "鼻窦炎常见的面部和鼻部症状有哪些？",
+    "gold": [
+      "nhs-symptom-sinusitis-2"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/sinusitis-sinus-infection/#symptoms",
+    "section": "Symptoms of sinusitis"
+  },
+  {
+    "id": "F22",
+    "split": "fresh_validation",
+    "topic": "鼻窦炎",
+    "kind": "colloquial",
+    "question": "轻微鼻窦炎，鼻子堵得难受，在家能做什么？",
+    "gold": [
+      "nhs-symptom-sinusitis-3"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/sinusitis-sinus-infection/#self-care",
+    "section": "How you can treat sinusitis yourself"
+  },
+  {
+    "id": "F23",
+    "split": "fresh_validation",
+    "topic": "鼻窦炎",
+    "kind": "direct",
+    "question": "鼻窦炎治疗后多久没好转应找医生？",
+    "gold": [
+      "nhs-symptom-sinusitis-5"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/sinusitis-sinus-infection/",
+    "section": "Non-urgent advice: See a GP if:"
+  },
+  {
+    "id": "F24",
+    "split": "fresh_validation",
+    "topic": "鼻窦炎",
+    "kind": "colloquial",
+    "question": "鼻窦炎一直不好，医疗人员可能考虑哪些治疗方式？",
+    "gold": [
+      "nhs-symptom-sinusitis-7"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/sinusitis-sinus-infection/#medical-treatments",
+    "section": "Treatment for sinusitis"
+  },
+  {
+    "id": "F25",
+    "split": "fresh_validation",
+    "topic": "扁桃体炎",
+    "kind": "direct",
+    "question": "扁桃体炎有哪些咽部表现和伴随症状？",
+    "gold": [
+      "nhs-symptom-tonsillitis-2"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/tonsillitis/#symptoms",
+    "section": "Symptoms of tonsillitis"
+  },
+  {
+    "id": "F26",
+    "split": "fresh_validation",
+    "topic": "扁桃体炎",
+    "kind": "colloquial",
+    "question": "扁桃体发炎通常几天能缓过来？",
+    "gold": [
+      "nhs-symptom-tonsillitis-3"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/tonsillitis/",
+    "section": "How long tonsillitis lasts"
+  },
+  {
+    "id": "F27",
+    "split": "fresh_validation",
+    "topic": "扁桃体炎",
+    "kind": "direct",
+    "question": "扁桃体炎时有什么居家办法能缓解咽痛？",
+    "gold": [
+      "nhs-symptom-tonsillitis-4"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/tonsillitis/#self-care",
+    "section": "How to treat tonsillitis yourself"
+  },
+  {
+    "id": "F28",
+    "split": "fresh_validation",
+    "topic": "扁桃体炎",
+    "kind": "colloquial",
+    "question": "扁桃体发炎疼得喝水都费劲，什么情况应尽快求助？",
+    "gold": [
+      "nhs-symptom-tonsillitis-6"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/tonsillitis/",
+    "section": "Urgent advice: Get help from NHS 111 now if:"
+  },
+  {
+    "id": "F29",
+    "split": "fresh_validation",
+    "topic": "接触性皮炎",
+    "kind": "direct",
+    "question": "接触性皮炎有哪些皮肤表现？",
+    "gold": [
+      "nhs-symptom-contact-dermatitis-2"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/contact-dermatitis/",
+    "section": "Symptoms of contact dermatitis"
+  },
+  {
+    "id": "F30",
+    "split": "fresh_validation",
+    "topic": "接触性皮炎",
+    "kind": "colloquial",
+    "question": "接触性皮炎反反复复，啥时候该去看医生？",
+    "gold": [
+      "nhs-symptom-contact-dermatitis-4"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/contact-dermatitis/",
+    "section": "When to see a GP"
+  },
+  {
+    "id": "F31",
+    "split": "fresh_validation",
+    "topic": "接触性皮炎",
+    "kind": "direct",
+    "question": "引起接触性皮炎的刺激物和过敏原有什么区别？",
+    "gold": [
+      "nhs-symptom-contact-dermatitis-5"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/contact-dermatitis/",
+    "section": "Causes of contact dermatitis"
+  },
+  {
+    "id": "F32",
+    "split": "fresh_validation",
+    "topic": "接触性皮炎",
+    "kind": "colloquial",
+    "question": "接触性皮炎好了，怎么尽量避免再起疹？",
+    "gold": [
+      "nhs-symptom-contact-dermatitis-7"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/contact-dermatitis/",
+    "section": "Preventing contact dermatitis"
+  },
+  {
+    "id": "F33",
+    "split": "fresh_validation",
+    "topic": "腰背痛",
+    "kind": "direct",
+    "question": "常见腰背痛有哪些可能原因？",
+    "gold": [
+      "nhs-symptom-back-pain-2"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/back-pain/#causes",
+    "section": "Causes of back pain"
+  },
+  {
+    "id": "F34",
+    "split": "fresh_validation",
+    "topic": "腰背痛",
+    "kind": "colloquial",
+    "question": "腰疼拖了好几周都没好，什么时候该看医生？",
+    "gold": [
+      "nhs-symptom-back-pain-3"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/back-pain/",
+    "section": "Non-urgent advice: See a GP if:"
+  },
+  {
+    "id": "F35",
+    "split": "fresh_validation",
+    "topic": "腰背痛",
+    "kind": "direct",
+    "question": "腰背痛伴双腿麻木，官方资料把哪些表现列为紧急信号？",
+    "gold": [
+      "nhs-symptom-back-pain-5"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/back-pain/",
+    "section": "Immediate action required: Call 999 or go to A&E if:"
+  },
+  {
+    "id": "F36",
+    "split": "fresh_validation",
+    "topic": "腰背痛",
+    "kind": "colloquial",
+    "question": "一般腰疼在家该一直躺着，还是可以活动？",
+    "gold": [
+      "nhs-symptom-back-pain-6"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/back-pain/#self-care",
+    "section": "How to ease back pain yourself"
+  },
+  {
+    "id": "F37",
+    "split": "fresh_validation",
+    "topic": "高血压",
+    "kind": "direct",
+    "question": "高血压通常有没有明显症状？",
+    "gold": [
+      "nhs-symptom-hypertension-4"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/high-blood-pressure-hypertension/#symptoms",
+    "section": "Symptoms of high blood pressure"
+  },
+  {
+    "id": "F38",
+    "split": "fresh_validation",
+    "topic": "高血压",
+    "kind": "colloquial",
+    "question": "去量血压时绑上胳膊的带子是怎么用的？",
+    "gold": [
+      "nhs-symptom-hypertension-7"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/high-blood-pressure-hypertension/#diagnosis",
+    "section": "What happens at a blood pressure check"
+  },
+  {
+    "id": "F39",
+    "split": "fresh_validation",
+    "topic": "高血压",
+    "kind": "direct",
+    "question": "生活方式调整有哪些办法帮助控制高血压？",
+    "gold": [
+      "nhs-symptom-hypertension-9"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/high-blood-pressure-hypertension/#self-care",
+    "section": "How you can help lower your blood pressure"
+  },
+  {
+    "id": "F40",
+    "split": "fresh_validation",
+    "topic": "高血压",
+    "kind": "colloquial",
+    "question": "血压一直高，医生一般啥时候考虑开降压药？",
+    "gold": [
+      "nhs-symptom-hypertension-10"
+    ],
+    "source_url": "https://www.nhs.uk/conditions/high-blood-pressure-hypertension/#medical-treatments",
+    "section": "Medicines for high blood pressure"
+  }
+]

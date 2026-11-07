@@ -130,39 +130,12 @@ def search(question, chunks, k=3):
     return sorted(ranked, key=lambda c: (-c['score'], c['id']))[:k]
 
 
-def evaluate():
-    chunks = json.loads((OUT/'chunks.json').read_text(encoding='utf-8'))
-    cases = json.loads((ROOT/'rag_cases.json').read_text(encoding='utf-8'))
-    raw = json.loads((SOURCE_DIR/(DOC_ID+'.pages.json')).read_text(encoding='utf-8'))
-    baseline = [dict(id=str(p['page']), text=p['text'], pdf_pages=[p['page']]) for p in raw if 3 <= p['page'] <= 10]
-    results = []
-    for case in cases:
-        row = dict(id=case['id'], question=case['question'])
-        for name, corpus in [('raw_page', baseline), ('section', chunks)]:
-            hits = search(case['question'], corpus)
-            def relevant(hit):
-                return (case['expected_page'] in hit['pdf_pages'] and
-                        compact(case['anchor']) in compact(hit['text']))
-            row[name] = {'hit_at_1': bool(hits and relevant(hits[0])),
-                         'hit_at_3': any(relevant(h) for h in hits),
-                         'retrieved_ids': [h['id'] for h in hits]}
-        results.append(row)
-    summary = {name: {metric: sum(r[name][metric] for r in results)/len(results)
-                      for metric in ('hit_at_1', 'hit_at_3')} for name in ('raw_page', 'section')}
-    output = dict(scope='8条人工编写的开发冒烟题；非独立测试集，非医学准确率；比较分块变化，两个版本均使用同一BM25',
-                  cases=len(cases), summary=summary, results=results,
-                  unknown_query_no_hits=not search('zzzzunknown', chunks))
-    (OUT/'evaluation.json').write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding='utf-8')
-    return output
-
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['build', 'search', 'evaluate'])
+    parser.add_argument('action', choices=['build', 'search'])
     parser.add_argument('--question')
     args = parser.parse_args()
     if args.action == 'build': result = build()
-    elif args.action == 'evaluate': result = evaluate()
     else:
         chunks = json.loads((OUT/'chunks.json').read_text(encoding='utf-8'))
         result = {'status': 'retrieval_preview_pending_review', 'generation_allowed': False,

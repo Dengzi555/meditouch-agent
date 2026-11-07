@@ -1,24 +1,87 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>知衡 · 医疗证据工作台</title><link rel="stylesheet" href="/style.css"></head><body>
-<aside class="sidebar">
-  <a class="brand" href="/">知衡</a>
+<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>医点通 · 医疗证据工作台</title><link rel="stylesheet" href="/style.css"></head><body>
+<aside class="sidebar" id="chat-sidebar">
+  <div class="sidebar-header">
+    <a class="brand" href="/"><img src="/brand.png" alt="医点通 MediTouch" width="1871" height="840"></a>
+    <button id="sidebar-toggle" type="button" aria-controls="chat-sidebar" aria-expanded="true" aria-label="收起侧栏" title="收起侧栏">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+        <rect x="3.5" y="4.5" width="17" height="15" rx="3"/>
+        <path d="M10 5v14M6.5 9h1m-1 3h1m-1 3h1" stroke-linecap="round"/>
+      </svg>
+    </button>
+  </div>
   <button type="button" id="new-session"><span aria-hidden="true">＋</span> 新咨询</button>
   <nav class="sidebar-conversation" aria-label="聊天记录">
-    <span>聊天记录</span>
+    <div class="history-heading">聊天记录</div>
+    <div id="history-batch" class="history-batch" hidden>
+      <button id="history-select-all" type="button">全选</button>
+      <button id="history-delete-selected" type="button" class="history-danger" disabled>删除所选</button>
+      <button id="history-cancel-selection" type="button">取消</button>
+    </div>
     <ul id="chat-history"></ul>
     <small id="history-feedback" role="status"></small>
   </nav>
+  <div id="history-menu" popover aria-label="聊天记录操作">
+    <button type="button" data-action="rename">重命名</button>
+    <button type="button" data-action="pin">置顶</button>
+    <button type="button" data-action="select">多选</button>
+    <button type="button" data-action="delete" class="history-danger">删除</button>
+  </div>
+  <div class="account-area">
+    <button id="account-button" type="button" aria-haspopup="dialog" disabled>
+      <svg class="account-avatar" viewBox="0 0 32 32" aria-hidden="true" hidden>
+        <circle cx="16" cy="16" r="16" fill="#dedaf9"/>
+        <circle cx="16" cy="12" r="5" fill="#59509e"/>
+        <path d="M7 26a9 9 0 0 1 18 0" fill="#59509e"/>
+      </svg>
+      <span id="account-label">登录账号</span>
+      <svg class="account-chevron" viewBox="0 0 16 16" aria-hidden="true" hidden>
+        <path d="m4 10 4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <div id="account-options" class="account-options" hidden>
+      <button id="account-profile" type="button">个人信息</button>
+      <button id="account-logout" type="button">退出登录</button>
+      <p id="account-menu-error" role="alert"></p>
+    </div>
+  </div>
 </aside>
+<dialog id="history-delete-dialog" aria-labelledby="history-delete-title">
+  <form method="dialog">
+    <h2 id="history-delete-title"></h2>
+    <div class="history-delete-actions">
+      <button type="submit" value="cancel" autofocus>取消</button>
+      <button type="submit" value="delete" id="history-delete-confirm">删除该对话</button>
+    </div>
+  </form>
+</dialog>
+<dialog id="account-dialog" aria-labelledby="account-title">
+  <h2 id="account-title">账号登录</h2>
+  <form id="account-form">
+    <label>用户名<input name="username" autocomplete="username" required minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}"></label>
+    <label>密码<input name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128"></label>
+    <div class="account-actions">
+      <button class="primary" type="submit" value="login">登录</button>
+      <button type="submit" value="register">创建账号</button>
+    </div>
+  </form>
+  <p id="account-error" role="alert"></p>
+  <form method="dialog"><button type="submit">关闭</button></form>
+</dialog>
 <main><header><span id="engine">正在连接…</span></header>
 <section id="workspace" class="page">
   <div class="conversation">
     <h1 id="session-status" class="conversation-title">新咨询</h1>
     <div class="workspace-transcript">
       <div id="result" aria-live="polite"></div>
-      <form id="clarification-form" class="card followup hidden" aria-labelledby="clarification-title">
-        <h2 id="clarification-title">补充一点情况</h2>
-        <div id="clarification-fields"></div>
-        <button class="primary" type="submit">继续咨询</button>
-      </form>
+      <div class="chat-welcome">
+        <div class="welcome-mark" aria-hidden="true">
+          <img src="/brand.png" alt="" width="1871" height="840">
+        </div>
+        <div>
+          <h2>你好，我是<span>医点通</span></h2>
+          <p>可以问我健康问题，也可以一起查找资料和出处。</p>
+        </div>
+      </div>
     </div>
     <form id="chat-form" class="card composer">
       <textarea id="question" aria-label="你的问题" maxlength="20000" placeholder="描述你的症状，或输入想了解的健康问题"></textarea>
@@ -34,4 +97,4 @@
 <section id="library" class="page hidden"><div class="eyebrow">KNOWLEDGE BASE</div><h1>证据的起点<span>。</span></h1><p class="intro">导入前核验来源、适用条件与版本关系。相同 id 会更新已有资料。</p><div class="card"><div class="card-heading"><h2>资料目录</h2><label class="primary upload">导入 JSON<input type="file" id="import" accept="application/json,.json" hidden></label></div><p id="import-message" role="status"></p><div id="documents"></div></div></section>
 <section id="evaluation" class="page hidden"><div class="eyebrow">EVALUATION</div><h1>把可靠性变成检查项<span>。</span></h1><p class="intro">使用合成问题和显式夹具验证流程，不把测试通过率当作医学准确率。</p><div class="card"><div class="card-heading"><h2>患者流程 · 五类场景与40个开发问题</h2><button class="primary" id="run-eval">运行验收 ↗</button></div><div id="eval-result"><p>正常问答、需要追问、证据不足、证据冲突、工具失败；另检查风险优先处理与引用拦截。此处使用脚本模型，不调用付费模型。</p></div></div></section>
 <section id="history" class="page hidden"><div class="eyebrow">OBSERVABILITY</div><h1>每一步，都有记录<span>。</span></h1><p class="intro">记录保存在本机 SQLite，包含问题、回答和证据快照。请勿在演示中录入真实身份信息。</p><div id="history-list"></div></section>
-<footer>知衡 / MEDICAL EVIDENCE LAB<span>证据可查 · 分歧可见</span></footer></main><script src="/app.js"></script></body></html>
+<footer>医点通 / MEDICAL EVIDENCE LAB<span>证据可查 · 分歧可见</span></footer></main><script src="/app.js"></script></body></html>

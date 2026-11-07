@@ -1,0 +1,3763 @@
+{
+  "version": 1,
+  "review_status": "pending_medical_review",
+  "note": "常见鉴别要点，用于选择追问问题和就医提示，不是诊断标准。新增或修改症状前应由医学人员核对。",
+  "symptoms": [
+    {
+      "id": "pediatric_fever",
+      "label": "儿童发热",
+      "patterns": [
+        "孩子发烧",
+        "宝宝发烧",
+        "儿童发烧",
+        "小孩发烧",
+        "婴幼儿发烧",
+        "婴儿发烧",
+        "新生儿发烧",
+        "孩子发热",
+        "宝宝发热",
+        "儿童发热",
+        "小孩发热",
+        "婴幼儿发热",
+        "婴儿发热",
+        "新生儿发热",
+        "孩子高烧",
+        "宝宝高烧",
+        "儿童高烧",
+        "孩子感冒发烧",
+        "宝宝感冒发烧",
+        "娃发烧",
+        "娃发热",
+        "崽崽发烧",
+        "崽崽发热",
+        "宝宝身上烫",
+        "孩子烧",
+        "孩子半夜发烧",
+        "宝宝反复发烧",
+        "孩子反复发烧"
+      ],
+      "notice": "选项只用于缩小资料范围，不作诊断。3 个月以下发热、精神差或叫不醒、呼吸困难、抽搐、按压不褪色的皮疹，请立即就医或呼叫急救。",
+      "differentials": [
+        {
+          "name": "病毒性上呼吸道感染",
+          "features": {
+            "age": "child",
+            "rash": "no",
+            "uri": "yes",
+            "urinary": "no",
+            "ear": "no",
+            "breathing": "no",
+            "seizure": "no",
+            "temp": "low",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "幼儿急疹",
+          "features": {
+            "age": "toddler",
+            "rash": "yes",
+            "uri": "no",
+            "urinary": "no",
+            "ear": "no",
+            "breathing": "no",
+            "seizure": "possible",
+            "temp": "high",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "流感",
+          "features": {
+            "age": "child",
+            "rash": "no",
+            "uri": "yes",
+            "urinary": "no",
+            "ear": "no",
+            "breathing": "no",
+            "seizure": "no",
+            "temp": "high",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "手足口病",
+          "features": {
+            "age": "toddler",
+            "rash": "yes",
+            "uri": "no",
+            "urinary": "no",
+            "ear": "no",
+            "breathing": "no",
+            "seizure": "no",
+            "temp": "mid",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "尿路感染",
+          "features": {
+            "age": "child",
+            "rash": "no",
+            "uri": "no",
+            "urinary": "yes",
+            "ear": "no",
+            "breathing": "no",
+            "seizure": "no",
+            "temp": "mid",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "中耳炎",
+          "features": {
+            "age": "toddler",
+            "rash": "no",
+            "uri": "yes",
+            "urinary": "no",
+            "ear": "yes",
+            "breathing": "no",
+            "seizure": "no",
+            "temp": "mid",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "肺炎",
+          "features": {
+            "age": "child",
+            "rash": "no",
+            "uri": "yes",
+            "urinary": "no",
+            "ear": "no",
+            "breathing": "yes",
+            "seizure": "no",
+            "temp": "high",
+            "course": "acute"
+          }
+        }
+      ],
+      "questions": [
+        {
+          "id": "age",
+          "prompt": "孩子多大了？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "under3m",
+              "label": "未满 3 个月",
+              "features": {
+                "age": "infant"
+              },
+              "red_flag": {
+                "level": "emergency",
+                "advice": "3 个月以下婴儿发热需要立即就医评估。"
+              }
+            },
+            {
+              "value": "3to6m",
+              "label": "3 到 6 个月",
+              "features": {
+                "age": "infant"
+              }
+            },
+            {
+              "value": "6mto3y",
+              "label": "6 个月到 3 岁",
+              "features": {
+                "age": "toddler"
+              }
+            },
+            {
+              "value": "3to5y",
+              "label": "3 到 5 岁",
+              "features": {
+                "age": "child"
+              }
+            },
+            {
+              "value": "over5y",
+              "label": "5 岁以上",
+              "features": {
+                "age": "child"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "priority": true
+        },
+        {
+          "id": "temperature",
+          "prompt": "体温大概是多少？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "low",
+              "label": "低于 38℃",
+              "features": {
+                "temp": "low"
+              }
+            },
+            {
+              "value": "mid",
+              "label": "38 到 38.9℃",
+              "features": {
+                "temp": "mid"
+              }
+            },
+            {
+              "value": "high",
+              "label": "39 到 39.9℃",
+              "features": {
+                "temp": "high"
+              }
+            },
+            {
+              "value": "veryhigh",
+              "label": "40℃ 及以上",
+              "features": {
+                "temp": "veryhigh"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "婴幼儿体温达到 40℃ 及以上，建议尽快就医评估。"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "未测或说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "veryhigh",
+              "pattern": "40|4[1-2]"
+            },
+            {
+              "value": "high",
+              "pattern": "39"
+            },
+            {
+              "value": "mid",
+              "pattern": "38"
+            },
+            {
+              "value": "low",
+              "pattern": "37"
+            }
+          ]
+        },
+        {
+          "id": "course",
+          "prompt": "发热持续多久了？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "acute",
+              "label": "不到 1 天",
+              "features": {
+                "course": "acute"
+              }
+            },
+            {
+              "value": "subacute",
+              "label": "1 到 3 天",
+              "features": {
+                "course": "subacute"
+              }
+            },
+            {
+              "value": "prolonged",
+              "label": "3 到 5 天",
+              "features": {
+                "course": "prolonged"
+              }
+            },
+            {
+              "value": "chronic",
+              "label": "超过 5 天",
+              "features": {
+                "course": "chronic"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "chronic",
+              "pattern": "超过五天|5天以上|一周"
+            },
+            {
+              "value": "prolonged",
+              "pattern": "三四天|四五天|3到5天"
+            },
+            {
+              "value": "subacute",
+              "pattern": "两天|三天|1到3天"
+            },
+            {
+              "value": "acute",
+              "pattern": "今天|刚刚|半天|不到一天"
+            }
+          ]
+        },
+        {
+          "id": "associated",
+          "prompt": "有没有下面这些情况？（可多选）",
+          "mode": "multi",
+          "options": [
+            {
+              "value": "lethargy",
+              "label": "精神差、嗜睡或叫不醒",
+              "features": {
+                "neuro": "yes"
+              },
+              "red_flag": {
+                "level": "emergency",
+                "advice": "孩子精神差或叫不醒需要立即就医。"
+              }
+            },
+            {
+              "value": "breathing",
+              "label": "呼吸急促、呻吟或鼻翼扇动",
+              "features": {
+                "breathing": "yes"
+              },
+              "red_flag": {
+                "level": "emergency",
+                "advice": "孩子出现呼吸困难表现，请立即就医或呼叫急救。"
+              }
+            },
+            {
+              "value": "seizure",
+              "label": "抽搐",
+              "features": {
+                "seizure": "yes"
+              },
+              "red_flag": {
+                "level": "emergency",
+                "advice": "发热伴抽搐需要立即就医。"
+              }
+            },
+            {
+              "value": "rash",
+              "label": "皮疹，按压后不褪色",
+              "features": {
+                "rash": "yes"
+              },
+              "red_flag": {
+                "level": "emergency",
+                "advice": "发热伴按压不褪色的皮疹，需要立即就医排除严重感染。"
+              }
+            },
+            {
+              "value": "dehydration",
+              "label": "尿量明显减少、哭无泪或口唇干",
+              "features": {
+                "urinary": "no"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "孩子有脱水表现，建议尽快就医评估。"
+              }
+            },
+            {
+              "value": "ear",
+              "label": "耳痛或反复抓耳朵",
+              "features": {
+                "ear": "yes"
+              }
+            },
+            {
+              "value": "gi",
+              "label": "呕吐或腹泻",
+              "features": {
+                "gi": "yes"
+              }
+            },
+            {
+              "value": "none",
+              "label": "以上都没有",
+              "features": {},
+              "exclusive": true
+            }
+          ],
+          "triggers": [
+            {
+              "value": "lethargy",
+              "pattern": "精神差|嗜睡|叫不醒|没精神"
+            },
+            {
+              "value": "breathing",
+              "pattern": "呼吸急促|呼吸困难|呻吟|鼻翼扇动|喘不上气"
+            },
+            {
+              "value": "seizure",
+              "pattern": "抽搐|抽风|抽抽"
+            },
+            {
+              "value": "rash",
+              "pattern": "皮疹|疹子"
+            },
+            {
+              "value": "dehydration",
+              "pattern": "尿少|哭无泪|嘴唇干|口唇干"
+            },
+            {
+              "value": "ear",
+              "pattern": "耳痛|抓耳朵"
+            },
+            {
+              "value": "gi",
+              "pattern": "呕吐|腹泻|拉肚子"
+            }
+          ],
+          "priority": true
+        }
+      ]
+    },
+    {
+      "id": "fever",
+      "label": "发烧",
+      "patterns": [
+        "发烧",
+        "发热",
+        "高烧",
+        "高热",
+        "体温高",
+        "烧起来",
+        "身上烫",
+        "三十八度",
+        "三十九度",
+        "低烧"
+      ],
+      "trigger_policy": "bare_only",
+      "notice": "选项只用于缩小资料范围，不作诊断。出现呼吸困难、胸痛、意识异常、抽搐或高热不退，请及时就医。",
+      "differentials": [
+        {
+          "name": "病毒性上呼吸道感染",
+          "features": {
+            "cough": "yes",
+            "sore": "possible",
+            "ache": "no",
+            "urinary": "no",
+            "gi": "no",
+            "rash": "no",
+            "breathing": "no",
+            "temp": "low",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "流感",
+          "features": {
+            "cough": "yes",
+            "sore": "possible",
+            "ache": "yes",
+            "urinary": "no",
+            "gi": "no",
+            "rash": "no",
+            "breathing": "no",
+            "temp": "high",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "尿路感染",
+          "features": {
+            "cough": "no",
+            "sore": "no",
+            "ache": "no",
+            "urinary": "yes",
+            "gi": "no",
+            "rash": "no",
+            "breathing": "no",
+            "temp": "mid",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "急性胃肠炎",
+          "features": {
+            "cough": "no",
+            "sore": "no",
+            "ache": "no",
+            "urinary": "no",
+            "gi": "yes",
+            "rash": "no",
+            "breathing": "no",
+            "temp": "mid",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "肺炎",
+          "features": {
+            "cough": "yes",
+            "sore": "no",
+            "ache": "possible",
+            "urinary": "no",
+            "gi": "no",
+            "rash": "no",
+            "breathing": "yes",
+            "temp": "high",
+            "course": "acute"
+          }
+        }
+      ],
+      "questions": [
+        {
+          "id": "age",
+          "prompt": "发烧的是谁？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "under3m",
+              "label": "3 个月以下婴儿",
+              "features": {},
+              "red_flag": {
+                "level": "emergency",
+                "advice": "3 个月以下婴儿发热需要立即就医评估。"
+              }
+            },
+            {
+              "value": "child",
+              "label": "儿童（14 岁以下）",
+              "features": {}
+            },
+            {
+              "value": "adult",
+              "label": "成人",
+              "features": {}
+            },
+            {
+              "value": "older",
+              "label": "65 岁以上",
+              "features": {}
+            },
+            {
+              "value": "pregnant",
+              "label": "孕产期",
+              "features": {}
+            },
+            {
+              "value": "unsure",
+              "label": "不便说明或说不清",
+              "features": {}
+            }
+          ],
+          "priority": true
+        },
+        {
+          "id": "temperature",
+          "prompt": "体温大概是多少？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "low",
+              "label": "低于 38℃",
+              "features": {
+                "temp": "low"
+              }
+            },
+            {
+              "value": "mid",
+              "label": "38 到 38.9℃",
+              "features": {
+                "temp": "mid"
+              }
+            },
+            {
+              "value": "high",
+              "label": "39 到 39.9℃",
+              "features": {
+                "temp": "high"
+              }
+            },
+            {
+              "value": "veryhigh",
+              "label": "40℃ 及以上",
+              "features": {
+                "temp": "veryhigh"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "体温达到 40℃ 及以上，建议尽快就医评估。"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "未测或说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "veryhigh",
+              "pattern": "40|4[1-2]"
+            },
+            {
+              "value": "high",
+              "pattern": "39"
+            },
+            {
+              "value": "mid",
+              "pattern": "38"
+            },
+            {
+              "value": "low",
+              "pattern": "37"
+            }
+          ]
+        },
+        {
+          "id": "course",
+          "prompt": "发热持续多久了？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "acute",
+              "label": "1 天以内",
+              "features": {
+                "course": "acute"
+              }
+            },
+            {
+              "value": "subacute",
+              "label": "1 到 3 天",
+              "features": {
+                "course": "subacute"
+              }
+            },
+            {
+              "value": "prolonged",
+              "label": "3 到 7 天",
+              "features": {
+                "course": "prolonged"
+              }
+            },
+            {
+              "value": "chronic",
+              "label": "超过 7 天",
+              "features": {
+                "course": "chronic"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "chronic",
+              "pattern": "超过一周|7天以上|一周以上"
+            },
+            {
+              "value": "prolonged",
+              "pattern": "三五天|五天|一周"
+            },
+            {
+              "value": "subacute",
+              "pattern": "两天|三天|1到3天"
+            },
+            {
+              "value": "acute",
+              "pattern": "今天|刚刚|半天|不到一天"
+            }
+          ]
+        },
+        {
+          "id": "respiratory",
+          "prompt": "有没有呼吸道症状？（可多选）",
+          "mode": "multi",
+          "options": [
+            {
+              "value": "cough",
+              "label": "咳嗽",
+              "features": {
+                "cough": "yes"
+              }
+            },
+            {
+              "value": "sore",
+              "label": "咽痛",
+              "features": {
+                "sore": "yes"
+              }
+            },
+            {
+              "value": "runny",
+              "label": "鼻塞或流鼻涕",
+              "features": {
+                "runny": "yes"
+              }
+            },
+            {
+              "value": "none",
+              "label": "都没有",
+              "features": {},
+              "exclusive": true
+            }
+          ],
+          "triggers": [
+            {
+              "value": "cough",
+              "pattern": "咳嗽|咳"
+            },
+            {
+              "value": "sore",
+              "pattern": "咽痛|嗓子疼|喉咙痛"
+            },
+            {
+              "value": "runny",
+              "pattern": "鼻塞|流鼻涕|流涕"
+            }
+          ]
+        },
+        {
+          "id": "associated",
+          "prompt": "有没有下面这些情况？（可多选）",
+          "mode": "multi",
+          "options": [
+            {
+              "value": "ache",
+              "label": "全身酸痛或明显乏力",
+              "features": {
+                "ache": "yes"
+              }
+            },
+            {
+              "value": "urinary",
+              "label": "尿痛、尿频或血尿",
+              "features": {
+                "urinary": "yes"
+              }
+            },
+            {
+              "value": "gi",
+              "label": "腹泻或呕吐",
+              "features": {
+                "gi": "yes"
+              }
+            },
+            {
+              "value": "rash",
+              "label": "皮疹",
+              "features": {
+                "rash": "yes"
+              }
+            },
+            {
+              "value": "breathing",
+              "label": "呼吸困难或胸痛",
+              "features": {
+                "breathing": "yes"
+              },
+              "red_flag": {
+                "level": "emergency",
+                "advice": "发热伴呼吸困难或胸痛，请立即就医或呼叫急救。"
+              }
+            },
+            {
+              "value": "neuro",
+              "label": "意识模糊、抽搐或叫不醒",
+              "features": {
+                "neuro": "yes"
+              },
+              "red_flag": {
+                "level": "emergency",
+                "advice": "发热伴意识异常或抽搐，请立即就医或呼叫急救。"
+              }
+            },
+            {
+              "value": "none",
+              "label": "以上都没有",
+              "features": {},
+              "exclusive": true
+            }
+          ],
+          "triggers": [
+            {
+              "value": "breathing",
+              "pattern": "呼吸困难|喘不过气|胸痛|喘不上气"
+            },
+            {
+              "value": "neuro",
+              "pattern": "意识模糊|意识不清|抽搐|叫不醒|抽抽"
+            },
+            {
+              "value": "urinary",
+              "pattern": "尿痛|尿频|血尿"
+            },
+            {
+              "value": "gi",
+              "pattern": "腹泻|呕吐|拉肚子"
+            },
+            {
+              "value": "rash",
+              "pattern": "皮疹|疹子"
+            },
+            {
+              "value": "ache",
+              "pattern": "酸痛|乏力|浑身疼"
+            }
+          ],
+          "priority": true
+        }
+      ]
+    },
+    {
+      "id": "common_cold",
+      "label": "感冒",
+      "patterns": [
+        "感冒",
+        "冻着了",
+        "着凉了",
+        "鼻子不通气",
+        "鼻子堵",
+        "鼻子塞"
+      ],
+      "trigger_policy": "bare_only",
+      "notice": "选项只用于缩小资料范围，不作诊断。出现呼吸困难、胸痛、意识异常或持续高热不退，请及时就医。",
+      "differentials": [
+        {
+          "name": "普通感冒",
+          "features": {
+            "fever": "no",
+            "ache": "no",
+            "allergy": "no",
+            "smell": "no",
+            "facial": "no",
+            "sudden": "no",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "流感",
+          "features": {
+            "fever": "yes",
+            "ache": "yes",
+            "allergy": "no",
+            "smell": "no",
+            "facial": "no",
+            "sudden": "yes",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "过敏性鼻炎",
+          "features": {
+            "fever": "no",
+            "ache": "no",
+            "allergy": "yes",
+            "smell": "possible",
+            "facial": "no",
+            "sudden": "no",
+            "course": "chronic"
+          }
+        },
+        {
+          "name": "新型冠状病毒感染",
+          "features": {
+            "fever": "possible",
+            "ache": "possible",
+            "allergy": "no",
+            "smell": "yes",
+            "facial": "no",
+            "sudden": "no",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "鼻窦炎",
+          "features": {
+            "fever": "possible",
+            "ache": "no",
+            "allergy": "no",
+            "smell": "possible",
+            "facial": "yes",
+            "sudden": "no",
+            "course": "subacute"
+          }
+        }
+      ],
+      "questions": [
+        {
+          "id": "onset",
+          "prompt": "症状是怎么开始的？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "sudden",
+              "label": "突然出现（几小时到 1 天）",
+              "features": {
+                "sudden": "yes"
+              }
+            },
+            {
+              "value": "gradual",
+              "label": "逐渐出现（2 到 3 天）",
+              "features": {
+                "sudden": "no"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "sudden",
+              "pattern": "突然|一下子"
+            },
+            {
+              "value": "gradual",
+              "pattern": "逐渐|慢慢"
+            }
+          ]
+        },
+        {
+          "id": "fever",
+          "prompt": "有没有发热？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "yes",
+              "label": "有发热",
+              "features": {
+                "fever": "yes"
+              }
+            },
+            {
+              "value": "no",
+              "label": "没有发热",
+              "features": {
+                "fever": "no"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "不确定",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "yes",
+              "pattern": "发热|发烧|高烧"
+            },
+            {
+              "value": "no",
+              "pattern": "没有发烧|没有发热|不发烧|无发热"
+            }
+          ]
+        },
+        {
+          "id": "allergy",
+          "prompt": "有没有这些过敏样表现？（可多选）",
+          "mode": "multi",
+          "options": [
+            {
+              "value": "sneeze",
+              "label": "连续打喷嚏",
+              "features": {
+                "allergy": "yes"
+              }
+            },
+            {
+              "value": "clear",
+              "label": "清水样鼻涕",
+              "features": {
+                "allergy": "yes"
+              }
+            },
+            {
+              "value": "itch",
+              "label": "眼睛或鼻子痒",
+              "features": {
+                "allergy": "yes"
+              }
+            },
+            {
+              "value": "none",
+              "label": "都没有",
+              "features": {},
+              "exclusive": true
+            }
+          ],
+          "triggers": [
+            {
+              "value": "sneeze",
+              "pattern": "打喷嚏"
+            },
+            {
+              "value": "clear",
+              "pattern": "清水样鼻涕|清水鼻涕"
+            },
+            {
+              "value": "itch",
+              "pattern": "眼痒|鼻痒|眼睛痒|鼻子痒"
+            }
+          ]
+        },
+        {
+          "id": "smell",
+          "prompt": "嗅觉或味觉有没有变化？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "yes",
+              "label": "明显减退或闻不到",
+              "features": {
+                "smell": "yes"
+              }
+            },
+            {
+              "value": "no",
+              "label": "正常",
+              "features": {
+                "smell": "no"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "不确定",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "yes",
+              "pattern": "嗅觉减退|闻不到|味觉减退|尝不出"
+            }
+          ]
+        },
+        {
+          "id": "facial",
+          "prompt": "有没有面部胀痛或压痛？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "yes",
+              "label": "有",
+              "features": {
+                "facial": "yes"
+              }
+            },
+            {
+              "value": "no",
+              "label": "没有",
+              "features": {
+                "facial": "no"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "不确定",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "yes",
+              "pattern": "面部胀痛|脸胀|面部压痛|鼻窦"
+            }
+          ]
+        },
+        {
+          "id": "associated",
+          "prompt": "有没有下面这些情况？（可多选）",
+          "mode": "multi",
+          "options": [
+            {
+              "value": "ache",
+              "label": "全身酸痛或明显乏力",
+              "features": {
+                "ache": "yes"
+              }
+            },
+            {
+              "value": "breathing",
+              "label": "呼吸困难或胸痛",
+              "features": {
+                "breathing": "yes"
+              },
+              "red_flag": {
+                "level": "emergency",
+                "advice": "感冒样症状伴呼吸困难或胸痛，请立即就医或呼叫急救。"
+              }
+            },
+            {
+              "value": "persistent",
+              "label": "持续高热超过 3 天",
+              "features": {
+                "fever": "yes"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "持续高热超过 3 天，建议尽快就医评估。"
+              }
+            },
+            {
+              "value": "neuro",
+              "label": "意识异常或叫不醒",
+              "features": {
+                "neuro": "yes"
+              },
+              "red_flag": {
+                "level": "emergency",
+                "advice": "出现意识异常，请立即就医或呼叫急救。"
+              }
+            },
+            {
+              "value": "none",
+              "label": "以上都没有",
+              "features": {},
+              "exclusive": true
+            }
+          ],
+          "triggers": [
+            {
+              "value": "breathing",
+              "pattern": "呼吸困难|胸痛|喘"
+            },
+            {
+              "value": "persistent",
+              "pattern": "持续高热|高烧不退|三天"
+            },
+            {
+              "value": "neuro",
+              "pattern": "意识模糊|意识不清|叫不醒|迷迷糊糊"
+            },
+            {
+              "value": "ache",
+              "pattern": "酸痛|乏力|浑身疼"
+            }
+          ],
+          "priority": true
+        }
+      ]
+    },
+    {
+      "id": "rash",
+      "label": "皮疹",
+      "patterns": [
+        "皮疹",
+        "疹子",
+        "起疹",
+        "红疹",
+        "风团",
+        "荨麻疹",
+        "起疙瘩",
+        "红点点",
+        "起包",
+        "身上痒"
+      ],
+      "notice": "选项只用于缩小资料范围，不作诊断。皮疹伴口唇或眼睑肿胀、呼吸困难，或发热伴按压不褪色的红点，请立即就医。",
+      "differentials": [
+        {
+          "name": "湿疹",
+          "features": {
+            "lesion": [
+              "macule",
+              "papule",
+              "vesicle"
+            ],
+            "itch": "yes",
+            "fever": "no",
+            "blanching": "yes",
+            "trigger": "no",
+            "course": "chronic"
+          }
+        },
+        {
+          "name": "荨麻疹",
+          "features": {
+            "lesion": "wheal",
+            "itch": "yes",
+            "fever": "no",
+            "blanching": "yes",
+            "trigger": "possible",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "接触性皮炎",
+          "features": {
+            "lesion": [
+              "papule",
+              "vesicle"
+            ],
+            "itch": "yes",
+            "fever": "no",
+            "blanching": "yes",
+            "trigger": "yes",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "病毒疹",
+          "features": {
+            "lesion": [
+              "macule",
+              "papule"
+            ],
+            "itch": "mild",
+            "fever": "yes",
+            "blanching": "yes",
+            "trigger": "no",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "药疹",
+          "features": {
+            "lesion": [
+              "macule",
+              "papule",
+              "wheal"
+            ],
+            "itch": "yes",
+            "fever": "possible",
+            "blanching": "yes",
+            "trigger": "yes",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "紫癜或严重感染相关皮疹",
+          "features": {
+            "lesion": "petechiae",
+            "itch": "no",
+            "fever": "yes",
+            "blanching": "no",
+            "trigger": "no",
+            "course": "acute"
+          }
+        }
+      ],
+      "questions": [
+        {
+          "id": "lesion",
+          "prompt": "皮疹主要是什么样子？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "macule",
+              "label": "平的红点或斑疹",
+              "features": {
+                "lesion": "macule"
+              }
+            },
+            {
+              "value": "papule",
+              "label": "凸起的丘疹",
+              "features": {
+                "lesion": "papule"
+              }
+            },
+            {
+              "value": "vesicle",
+              "label": "水疱或小水泡",
+              "features": {
+                "lesion": "vesicle"
+              }
+            },
+            {
+              "value": "wheal",
+              "label": "风团，像蚊子包",
+              "features": {
+                "lesion": "wheal"
+              }
+            },
+            {
+              "value": "petechiae",
+              "label": "紫红色出血点",
+              "features": {
+                "lesion": "petechiae"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "vesicle",
+              "pattern": "水疱|水泡"
+            },
+            {
+              "value": "wheal",
+              "pattern": "风团|像蚊子包"
+            },
+            {
+              "value": "petechiae",
+              "pattern": "紫点|出血点|紫红色"
+            },
+            {
+              "value": "papule",
+              "pattern": "丘疹|凸起|疙瘩"
+            },
+            {
+              "value": "macule",
+              "pattern": "红点|斑疹|平疹"
+            }
+          ],
+          "priority": true
+        },
+        {
+          "id": "itch",
+          "prompt": "痒不痒？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "yes",
+              "label": "明显瘙痒",
+              "features": {
+                "itch": "yes"
+              }
+            },
+            {
+              "value": "mild",
+              "label": "轻微痒",
+              "features": {
+                "itch": "mild"
+              }
+            },
+            {
+              "value": "no",
+              "label": "不痒",
+              "features": {
+                "itch": "no"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "yes",
+              "pattern": "很痒|明显痒|特别痒"
+            },
+            {
+              "value": "mild",
+              "pattern": "有点痒|轻微痒"
+            },
+            {
+              "value": "no",
+              "pattern": "不痒|不觉得痒"
+            }
+          ]
+        },
+        {
+          "id": "fever",
+          "prompt": "有没有发热？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "yes",
+              "label": "有发热",
+              "features": {
+                "fever": "yes"
+              }
+            },
+            {
+              "value": "no",
+              "label": "没有发热",
+              "features": {
+                "fever": "no"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "不确定",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "yes",
+              "pattern": "发热|发烧|高烧"
+            },
+            {
+              "value": "no",
+              "pattern": "没有发烧|没有发热|不发烧"
+            }
+          ]
+        },
+        {
+          "id": "blanching",
+          "prompt": "用手按压红点会褪色吗？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "yes",
+              "label": "按压后褪色",
+              "features": {
+                "blanching": "yes"
+              }
+            },
+            {
+              "value": "no",
+              "label": "按压后不褪色，红点不消失",
+              "features": {
+                "blanching": "no"
+              },
+              "red_flag": {
+                "level": "emergency",
+                "advice": "按压不褪色的皮疹可能提示出血点，尤其伴发热时需要立即就医。"
+              }
+            },
+            {
+              "value": "untried",
+              "label": "没试过",
+              "features": {}
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "no",
+              "pattern": "不褪色|压不褪|压了还在"
+            },
+            {
+              "value": "yes",
+              "pattern": "按压褪色|按压后褪色|压了会白|压后褪色"
+            }
+          ],
+          "priority": true
+        },
+        {
+          "id": "trigger",
+          "prompt": "最近有没有新的药物、食物或接触物？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "drug",
+              "label": "新用了药物",
+              "features": {
+                "trigger": "yes"
+              }
+            },
+            {
+              "value": "food",
+              "label": "吃了新的食物",
+              "features": {
+                "trigger": "yes"
+              }
+            },
+            {
+              "value": "contact",
+              "label": "接触了新的物品",
+              "features": {
+                "trigger": "yes"
+              }
+            },
+            {
+              "value": "no",
+              "label": "没有明确诱因",
+              "features": {
+                "trigger": "no"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "不确定",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "drug",
+              "pattern": "新药|吃了.*药|用药后"
+            },
+            {
+              "value": "food",
+              "pattern": "海鲜|新食物|吃了.*虾|吃了.*蟹"
+            },
+            {
+              "value": "contact",
+              "pattern": "接触|染发|化妆品|新衣服"
+            }
+          ]
+        },
+        {
+          "id": "associated",
+          "prompt": "有没有下面这些情况？（可多选）",
+          "mode": "multi",
+          "options": [
+            {
+              "value": "lip",
+              "label": "口唇、眼睑或舌头肿胀",
+              "features": {
+                "lip": "yes"
+              },
+              "red_flag": {
+                "level": "emergency",
+                "advice": "口唇、眼睑或舌头肿胀可能影响呼吸，请立即就医或呼叫急救。"
+              }
+            },
+            {
+              "value": "breathing",
+              "label": "呼吸困难或喘",
+              "features": {
+                "breathing": "yes"
+              },
+              "red_flag": {
+                "level": "emergency",
+                "advice": "皮疹伴呼吸困难，请立即就医或呼叫急救。"
+              }
+            },
+            {
+              "value": "peeling",
+              "label": "大面积脱皮或大疱",
+              "features": {
+                "peeling": "yes"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "大面积脱皮或大疱需要尽快就医评估。"
+              }
+            },
+            {
+              "value": "none",
+              "label": "以上都没有",
+              "features": {},
+              "exclusive": true
+            }
+          ],
+          "triggers": [
+            {
+              "value": "lip",
+              "pattern": "嘴唇肿|口唇肿|眼睑肿|舌头肿"
+            },
+            {
+              "value": "breathing",
+              "pattern": "呼吸困难|喘|喉咙紧"
+            },
+            {
+              "value": "peeling",
+              "pattern": "脱皮|大疱|大面积"
+            }
+          ],
+          "priority": true
+        }
+      ]
+    },
+    {
+      "id": "knee_pain",
+      "label": "膝关节痛",
+      "patterns": [
+        "膝关节痛",
+        "膝盖疼",
+        "膝盖痛",
+        "膝关节疼",
+        "膝盖肿",
+        "膝关节肿",
+        "波棱盖疼",
+        "波棱盖痛",
+        "膝盖骨疼",
+        "膝盖骨痛",
+        "蹲下去",
+        "膝盖红肿"
+      ],
+      "notice": "选项只用于缩小资料范围，不作诊断。关节明显红肿发热、伴发热或完全不能负重，请尽快就医。",
+      "differentials": [
+        {
+          "name": "骨关节炎",
+          "features": {
+            "trauma": "no",
+            "side": [
+              "one",
+              "both"
+            ],
+            "red_hot": "no",
+            "onset": "chronic",
+            "fever": "no",
+            "weight": "yes"
+          }
+        },
+        {
+          "name": "半月板或韧带损伤",
+          "features": {
+            "trauma": "yes",
+            "side": "one",
+            "red_hot": "mild",
+            "onset": "acute",
+            "fever": "no",
+            "weight": "painful"
+          }
+        },
+        {
+          "name": "痛风",
+          "features": {
+            "trauma": "no",
+            "side": "one",
+            "red_hot": "yes",
+            "onset": "acute",
+            "fever": "no",
+            "weight": "painful"
+          }
+        },
+        {
+          "name": "类风湿关节炎",
+          "features": {
+            "trauma": "no",
+            "side": "both",
+            "red_hot": "mild",
+            "onset": "chronic",
+            "fever": "no",
+            "weight": "painful"
+          }
+        },
+        {
+          "name": "感染性关节炎",
+          "features": {
+            "trauma": "no",
+            "side": "one",
+            "red_hot": "yes",
+            "onset": "acute",
+            "fever": "yes",
+            "weight": "no"
+          }
+        },
+        {
+          "name": "滑囊炎",
+          "features": {
+            "trauma": "no",
+            "side": "one",
+            "red_hot": "mild",
+            "onset": "subacute",
+            "fever": "no",
+            "weight": "painful"
+          }
+        }
+      ],
+      "questions": [
+        {
+          "id": "trauma",
+          "prompt": "最近有没有扭伤、碰撞或运动损伤？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "yes",
+              "label": "有",
+              "features": {
+                "trauma": "yes"
+              }
+            },
+            {
+              "value": "no",
+              "label": "没有",
+              "features": {
+                "trauma": "no"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "yes",
+              "pattern": "扭伤|崴脚|碰撞|摔倒|运动伤|外伤"
+            },
+            {
+              "value": "no",
+              "pattern": "没有外伤|没扭|没摔"
+            }
+          ],
+          "priority": true
+        },
+        {
+          "id": "side",
+          "prompt": "是一侧还是两侧膝盖？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "one",
+              "label": "只有一侧",
+              "features": {
+                "side": "one"
+              }
+            },
+            {
+              "value": "both",
+              "label": "两侧都有",
+              "features": {
+                "side": "both"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "one",
+              "pattern": "左膝|右膝|一侧|单侧|一个膝盖"
+            },
+            {
+              "value": "both",
+              "pattern": "两个膝盖|双侧|两边"
+            }
+          ]
+        },
+        {
+          "id": "swelling",
+          "prompt": "关节有没有明显红肿发热？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "yes",
+              "label": "明显红肿发热",
+              "features": {
+                "red_hot": "yes"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "关节明显红肿发热需要尽快就医，排除感染或痛风急性发作。"
+              }
+            },
+            {
+              "value": "mild",
+              "label": "轻微肿胀",
+              "features": {
+                "red_hot": "mild"
+              }
+            },
+            {
+              "value": "no",
+              "label": "没有红肿",
+              "features": {
+                "red_hot": "no"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "yes",
+              "pattern": "红肿|发热|又红又肿"
+            },
+            {
+              "value": "mild",
+              "pattern": "有点肿|轻微肿"
+            },
+            {
+              "value": "no",
+              "pattern": "没肿|不红|没有红肿"
+            }
+          ],
+          "priority": true
+        },
+        {
+          "id": "onset",
+          "prompt": "疼痛是怎么发展的？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "acute",
+              "label": "几小时内突然出现",
+              "features": {
+                "onset": "acute"
+              }
+            },
+            {
+              "value": "subacute",
+              "label": "几天内逐渐出现",
+              "features": {
+                "onset": "subacute"
+              }
+            },
+            {
+              "value": "chronic",
+              "label": "数周到数月，逐渐加重",
+              "features": {
+                "onset": "chronic"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "acute",
+              "pattern": "突然|几小时|一夜"
+            },
+            {
+              "value": "chronic",
+              "pattern": "几个月|几年|长期|逐渐加重"
+            },
+            {
+              "value": "subacute",
+              "pattern": "几天|一周"
+            }
+          ]
+        },
+        {
+          "id": "fever",
+          "prompt": "有没有发热？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "yes",
+              "label": "有发热",
+              "features": {
+                "fever": "yes"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "关节痛伴发热需要尽快就医，排除关节感染。"
+              }
+            },
+            {
+              "value": "no",
+              "label": "没有发热",
+              "features": {
+                "fever": "no"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "不确定",
+              "features": {}
+            }
+          ],
+          "priority": true,
+          "triggers": [
+            {
+              "value": "yes",
+              "pattern": "发烧|发热|体温高"
+            },
+            {
+              "value": "no",
+              "pattern": "没有发烧|不发烧|没发烧"
+            }
+          ]
+        },
+        {
+          "id": "weight",
+          "prompt": "能不能正常走路负重？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "yes",
+              "label": "能正常走路",
+              "features": {
+                "weight": "yes"
+              }
+            },
+            {
+              "value": "painful",
+              "label": "走路疼但能走",
+              "features": {
+                "weight": "painful"
+              }
+            },
+            {
+              "value": "no",
+              "label": "完全不能负重",
+              "features": {
+                "weight": "no"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "膝关节完全不能负重，建议尽快就医评估。"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "priority": true,
+          "triggers": [
+            {
+              "value": "yes",
+              "pattern": "能正常走路|能走"
+            },
+            {
+              "value": "painful",
+              "pattern": "走路疼但能走|走路疼"
+            },
+            {
+              "value": "no",
+              "pattern": "完全不能负重|走不了路|不能走"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "chest_tightness",
+      "label": "胸闷",
+      "patterns": [
+        "胸闷",
+        "胸口闷",
+        "胸部发闷",
+        "胸口发紧",
+        "胸前发紧",
+        "胸痛",
+        "胸口疼",
+        "胸口痛",
+        "胸口堵",
+        "心口窝",
+        "压了块石头",
+        "胸口就闷",
+        "胸口发闷",
+        "胸口压",
+        "压得慌"
+      ],
+      "notice": "选项只用于缩小资料范围，不作诊断。胸闷伴压榨感、活动后加重、出汗、放射痛、呼吸困难或晕厥，请立即就医或呼叫急救。",
+      "differentials": [
+        {
+          "name": "焦虑或惊恐发作",
+          "features": {
+            "nature": "pressure",
+            "exertional": "no",
+            "radiation": "no",
+            "dyspnea": "possible",
+            "reflux": "no",
+            "reproducible": "no",
+            "duration": "minutes"
+          }
+        },
+        {
+          "name": "胃食管反流",
+          "features": {
+            "nature": "burning",
+            "exertional": "no",
+            "radiation": "no",
+            "dyspnea": "no",
+            "reflux": "yes",
+            "reproducible": "no",
+            "duration": "minutes"
+          }
+        },
+        {
+          "name": "肋软骨炎",
+          "features": {
+            "nature": "sharp",
+            "exertional": "no",
+            "radiation": "no",
+            "dyspnea": "no",
+            "reflux": "no",
+            "reproducible": "yes",
+            "duration": "persistent"
+          }
+        },
+        {
+          "name": "哮喘",
+          "features": {
+            "nature": "tight",
+            "exertional": "yes",
+            "radiation": "no",
+            "dyspnea": "yes",
+            "reflux": "no",
+            "reproducible": "no",
+            "duration": "minutes"
+          }
+        },
+        {
+          "name": "心绞痛或心肌梗死",
+          "features": {
+            "nature": "pressure",
+            "exertional": "yes",
+            "radiation": "yes",
+            "dyspnea": "yes",
+            "reflux": "no",
+            "reproducible": "no",
+            "duration": "prolonged"
+          },
+          "aliases": [
+            "心绞痛",
+            "心肌梗死",
+            "心梗"
+          ]
+        },
+        {
+          "name": "肺栓塞",
+          "features": {
+            "nature": [
+              "sharp",
+              "pressure"
+            ],
+            "exertional": "yes",
+            "radiation": "no",
+            "dyspnea": "yes",
+            "reflux": "no",
+            "reproducible": "no",
+            "duration": "prolonged"
+          }
+        },
+        {
+          "name": "气胸",
+          "features": {
+            "nature": "sharp",
+            "exertional": "yes",
+            "radiation": "no",
+            "dyspnea": "yes",
+            "reflux": "no",
+            "reproducible": "no",
+            "duration": "prolonged"
+          }
+        }
+      ],
+      "questions": [
+        {
+          "id": "nature",
+          "prompt": "胸闷是什么感觉？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "pressure",
+              "label": "压榨感或紧缩感",
+              "features": {
+                "nature": "pressure"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "压榨样胸闷需要尽快就医评估心脏原因。"
+              }
+            },
+            {
+              "value": "sharp",
+              "label": "针刺样或尖锐",
+              "features": {
+                "nature": "sharp"
+              }
+            },
+            {
+              "value": "burning",
+              "label": "烧灼感",
+              "features": {
+                "nature": "burning"
+              }
+            },
+            {
+              "value": "tight",
+              "label": "发紧或喘不上气",
+              "features": {
+                "nature": "tight"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "胸闷伴喘不上气，建议尽快就医评估。"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "pressure",
+              "pattern": "压榨|紧缩|压迫感|压得慌"
+            },
+            {
+              "value": "sharp",
+              "pattern": "针扎|刺痛|尖锐|针刺"
+            },
+            {
+              "value": "burning",
+              "pattern": "烧灼|火烧"
+            },
+            {
+              "value": "tight",
+              "pattern": "发紧|喘不上气"
+            }
+          ]
+        },
+        {
+          "id": "exertional",
+          "prompt": "和活动有关系吗？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "yes",
+              "label": "活动后加重，休息能缓解",
+              "features": {
+                "exertional": "yes"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "活动后加重、休息缓解的胸闷需要尽快就医评估心脏原因。"
+              }
+            },
+            {
+              "value": "no",
+              "label": "与活动无关",
+              "features": {
+                "exertional": "no"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "yes",
+              "pattern": "活动后|走路后|上楼.*(?:闷|痛)|休息.*缓解"
+            },
+            {
+              "value": "no",
+              "pattern": "与活动无关|休息也不缓解"
+            }
+          ]
+        },
+        {
+          "id": "duration",
+          "prompt": "每次持续多久？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "seconds",
+              "label": "几秒钟",
+              "features": {
+                "duration": "seconds"
+              }
+            },
+            {
+              "value": "minutes",
+              "label": "几分钟",
+              "features": {
+                "duration": "minutes"
+              }
+            },
+            {
+              "value": "prolonged",
+              "label": "超过 15 分钟",
+              "features": {
+                "duration": "prolonged"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "胸闷持续超过 15 分钟，建议尽快就医或呼叫急救。"
+              }
+            },
+            {
+              "value": "recurrent",
+              "label": "反复发作",
+              "features": {
+                "duration": "recurrent"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "seconds",
+              "pattern": "几秒|几秒钟"
+            },
+            {
+              "value": "minutes",
+              "pattern": "几分钟|一两分钟"
+            },
+            {
+              "value": "prolonged",
+              "pattern": "超过15分钟|十五分钟以上|半小时"
+            },
+            {
+              "value": "recurrent",
+              "pattern": "反复|经常"
+            }
+          ]
+        },
+        {
+          "id": "associated",
+          "prompt": "有没有下面这些情况？（可多选）",
+          "mode": "multi",
+          "options": [
+            {
+              "value": "sweat",
+              "label": "出汗或恶心",
+              "features": {
+                "sweat": "yes"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "胸闷伴出汗或恶心，需要尽快就医评估心脏原因。"
+              }
+            },
+            {
+              "value": "radiation",
+              "label": "放射到左肩、下颌或背部",
+              "features": {
+                "radiation": "yes"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "胸闷伴放射痛，需要尽快就医或呼叫急救。"
+              }
+            },
+            {
+              "value": "dyspnea",
+              "label": "呼吸困难",
+              "features": {
+                "dyspnea": "yes"
+              },
+              "red_flag": {
+                "level": "emergency",
+                "advice": "胸闷伴呼吸困难，请立即就医或呼叫急救。"
+              }
+            },
+            {
+              "value": "syncope",
+              "label": "晕厥或差点晕倒",
+              "features": {
+                "syncope": "yes"
+              },
+              "red_flag": {
+                "level": "emergency",
+                "advice": "胸闷伴晕厥，请立即就医或呼叫急救。"
+              }
+            },
+            {
+              "value": "reflux",
+              "label": "反酸或烧心",
+              "features": {
+                "reflux": "yes"
+              }
+            },
+            {
+              "value": "none",
+              "label": "以上都没有",
+              "features": {},
+              "exclusive": true
+            }
+          ],
+          "triggers": [
+            {
+              "value": "sweat",
+              "pattern": "出汗|冷汗|恶心"
+            },
+            {
+              "value": "radiation",
+              "pattern": "左肩|下颌|后背|放射"
+            },
+            {
+              "value": "dyspnea",
+              "pattern": "呼吸困难|喘不上气"
+            },
+            {
+              "value": "syncope",
+              "pattern": "晕倒|晕厥|眼前发黑"
+            },
+            {
+              "value": "reflux",
+              "pattern": "反酸|烧心"
+            }
+          ],
+          "priority": true
+        },
+        {
+          "id": "reproducible",
+          "prompt": "按压胸壁会痛吗？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "yes",
+              "label": "按压时明显疼痛",
+              "features": {
+                "reproducible": "yes"
+              }
+            },
+            {
+              "value": "no",
+              "label": "按压不痛",
+              "features": {
+                "reproducible": "no"
+              }
+            },
+            {
+              "value": "untried",
+              "label": "没试过",
+              "features": {}
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "yes",
+              "pattern": "按压痛|按着疼"
+            },
+            {
+              "value": "no",
+              "pattern": "按压不痛|按不痛"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "eyelid_swelling",
+      "label": "眼皮肿",
+      "patterns": [
+        "眼皮肿",
+        "眼睑肿",
+        "上眼皮肿",
+        "下眼皮肿",
+        "眼睛肿",
+        "眼皮子肿",
+        "眼泡肿",
+        "上眼泡肿"
+      ],
+      "notice": "选项只用于缩小资料范围，不作诊断。若出现视力突然下降、眼球转动剧痛、高热或呼吸困难，请及时就医。",
+      "differentials": [
+        {
+          "name": "麦粒肿（睑腺炎）",
+          "aliases": [
+            "麦粒肿",
+            "针眼"
+          ],
+          "features": {
+            "pain": "yes",
+            "itch": "no",
+            "lesion": "yes",
+            "course": "acute",
+            "fever": "no",
+            "vision": "no",
+            "red_eye": "yes",
+            "urine": "no",
+            "bulge": "no"
+          }
+        },
+        {
+          "name": "过敏性眼睑皮炎或结膜炎",
+          "aliases": [
+            "过敏"
+          ],
+          "features": {
+            "pain": "no",
+            "itch": "yes",
+            "lesion": "no",
+            "course": [
+              "acute",
+              "subacute"
+            ],
+            "fever": "no",
+            "vision": "no",
+            "red_eye": "yes",
+            "urine": "no",
+            "bulge": "no"
+          }
+        },
+        {
+          "name": "肾脏相关水肿",
+          "aliases": [
+            "肾炎",
+            "肾病"
+          ],
+          "features": {
+            "pain": "no",
+            "itch": "no",
+            "lesion": "no",
+            "course": "chronic",
+            "fever": "no",
+            "vision": "no",
+            "red_eye": "no",
+            "urine": "foamy",
+            "bulge": "no"
+          }
+        },
+        {
+          "name": "眶周或眶隔蜂窝织炎",
+          "aliases": [
+            "蜂窝织炎"
+          ],
+          "features": {
+            "pain": "yes",
+            "itch": "no",
+            "lesion": "no",
+            "course": "acute",
+            "fever": [
+              "yes",
+              "possible"
+            ],
+            "vision": [
+              "yes",
+              "possible"
+            ],
+            "red_eye": "yes",
+            "urine": "no",
+            "bulge": [
+              "yes",
+              "possible"
+            ]
+          }
+        },
+        {
+          "name": "甲状腺相关眼病",
+          "aliases": [
+            "甲亢",
+            "甲状腺"
+          ],
+          "features": {
+            "pain": "mild",
+            "itch": "no",
+            "lesion": "no",
+            "course": "chronic",
+            "fever": "no",
+            "vision": [
+              "no",
+              "possible"
+            ],
+            "red_eye": "no",
+            "urine": "no",
+            "bulge": "yes"
+          }
+        },
+        {
+          "name": "蚊虫叮咬",
+          "aliases": [
+            "虫咬"
+          ],
+          "features": {
+            "pain": "mild",
+            "itch": "yes",
+            "lesion": "no",
+            "course": "acute",
+            "fever": "no",
+            "vision": "no",
+            "red_eye": "no",
+            "urine": "no",
+            "bulge": "no"
+          }
+        }
+      ],
+      "questions": [
+        {
+          "id": "features",
+          "prompt": "眼皮肿的时候，下面哪些情况符合？",
+          "mode": "multi",
+          "options": [
+            {
+              "value": "only_swelling",
+              "label": "单纯浮肿，不疼不痒",
+              "features": {
+                "pain": "no",
+                "itch": "no",
+                "lesion": "no"
+              },
+              "exclusive": true
+            },
+            {
+              "value": "pain",
+              "label": "伴有疼痛",
+              "features": {
+                "pain": [
+                  "yes",
+                  "mild"
+                ]
+              }
+            },
+            {
+              "value": "itch",
+              "label": "伴有瘙痒",
+              "features": {
+                "itch": "yes"
+              }
+            },
+            {
+              "value": "lesion",
+              "label": "有硬结或脓点",
+              "features": {
+                "lesion": "yes"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "only_swelling",
+              "pattern": "不疼不痒|不痛不痒|只有肿|单纯肿|只有浮肿|单纯浮肿"
+            },
+            {
+              "value": "pain",
+              "pattern": "(?<!头)(?<!肚)(?<!胃)(?<!腰)(?<!咽)(?<!背)(?<!关节)(?:疼|痛)"
+            },
+            {
+              "value": "itch",
+              "pattern": "痒"
+            },
+            {
+              "value": "lesion",
+              "pattern": "硬结|脓点|脓头|包块"
+            }
+          ]
+        },
+        {
+          "id": "course",
+          "prompt": "这种情况持续多久了？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "acute",
+              "label": "3 天以内",
+              "features": {
+                "course": "acute"
+              }
+            },
+            {
+              "value": "subacute",
+              "label": "3 天到 2 周",
+              "features": {
+                "course": "subacute"
+              }
+            },
+            {
+              "value": "chronic",
+              "label": "超过 2 周",
+              "features": {
+                "course": "chronic"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "chronic",
+              "pattern": "两周以上|2周以上|一个月|三个月|3个月|数月|半年|很久|长期|反复|好几个月|几个月"
+            },
+            {
+              "value": "subacute",
+              "pattern": "一周|1周|七天|几天|三四天|四五天|十天|两周|2周"
+            },
+            {
+              "value": "acute",
+              "pattern": "今天|昨天|今早|早上|刚刚|一两天|1-2天|两天|三天|3天"
+            }
+          ]
+        },
+        {
+          "id": "associated",
+          "prompt": "有没有下面这些情况？（可多选）",
+          "mode": "multi",
+          "priority": true,
+          "options": [
+            {
+              "value": "fever",
+              "label": "发热",
+              "features": {
+                "fever": "yes"
+              }
+            },
+            {
+              "value": "vision",
+              "label": "视力下降或看东西重影",
+              "features": {
+                "vision": "yes"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "出现视力下降或看东西重影，建议尽快到眼科或急诊评估。"
+              }
+            },
+            {
+              "value": "red_eye",
+              "label": "眼红或分泌物明显增多",
+              "features": {
+                "red_eye": "yes"
+              }
+            },
+            {
+              "value": "urine",
+              "label": "尿泡沫增多",
+              "features": {
+                "urine": "foamy"
+              }
+            },
+            {
+              "value": "bulge",
+              "label": "眼球突出或转动时疼痛",
+              "features": {
+                "bulge": "yes"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "眼球突出或转动时疼痛，建议尽快就医评估。"
+              }
+            },
+            {
+              "value": "none",
+              "label": "以上都没有",
+              "features": {},
+              "exclusive": true
+            }
+          ],
+          "triggers": [
+            {
+              "value": "fever",
+              "pattern": "发热|发烧|高烧"
+            },
+            {
+              "value": "vision",
+              "pattern": "视力下降|看不清|看东西重影|复视"
+            },
+            {
+              "value": "bulge",
+              "pattern": "眼球突出|转动时疼"
+            },
+            {
+              "value": "urine",
+              "pattern": "尿泡沫|泡沫尿"
+            },
+            {
+              "value": "red_eye",
+              "pattern": "眼红|分泌物"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "abdominal_pain",
+      "label": "腹痛",
+      "patterns": [
+        "腹痛",
+        "肚子疼",
+        "肚子痛",
+        "肚子不舒服",
+        "胃疼",
+        "胃痛",
+        "肚子一阵阵疼",
+        "肚子胀痛",
+        "右下腹疼",
+        "右下腹痛",
+        "右上腹疼",
+        "上腹疼",
+        "腰侧疼",
+        "小肚子疼",
+        "肚脐眼周围疼",
+        "肚脐周围疼",
+        "肚子绞痛",
+        "胃里翻",
+        "胃里难受",
+        "肚脐眼",
+        "右下腹",
+        "右上腹"
+      ],
+      "notice": "选项只用于缩小资料范围，不作诊断。若出现持续加重腹痛、便血、黑便、高热或晕厥，请及时就医。",
+      "differentials": [
+        {
+          "name": "急性胃肠炎",
+          "aliases": [
+            "胃肠炎",
+            "吃坏肚子"
+          ],
+          "features": {
+            "location": [
+              "diffuse",
+              "upper"
+            ],
+            "character": "colic",
+            "fever": "possible",
+            "vomiting": "yes",
+            "diarrhea": "yes",
+            "blood": "no",
+            "urine_blood": "no",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "阑尾炎",
+          "aliases": [
+            "阑尾"
+          ],
+          "features": {
+            "location": [
+              "right_lower",
+              "diffuse"
+            ],
+            "character": [
+              "constant",
+              "colic"
+            ],
+            "fever": "yes",
+            "vomiting": "yes",
+            "diarrhea": "no",
+            "blood": "no",
+            "urine_blood": "no",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "胆囊炎或胆结石",
+          "aliases": [
+            "胆囊",
+            "胆结石"
+          ],
+          "features": {
+            "location": [
+              "right_upper",
+              "upper"
+            ],
+            "character": "colic",
+            "fever": "yes",
+            "vomiting": "yes",
+            "diarrhea": "no",
+            "blood": "no",
+            "urine_blood": "no",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "泌尿系结石",
+          "aliases": [
+            "结石",
+            "肾结石",
+            "输尿管结石"
+          ],
+          "features": {
+            "location": "flank",
+            "character": "colic",
+            "fever": "no",
+            "vomiting": [
+              "yes",
+              "no"
+            ],
+            "diarrhea": "no",
+            "blood": "no",
+            "urine_blood": "yes",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "功能性消化不良",
+          "aliases": [
+            "消化不良"
+          ],
+          "features": {
+            "location": "upper",
+            "character": "dull",
+            "fever": "no",
+            "vomiting": "no",
+            "diarrhea": "no",
+            "blood": "no",
+            "urine_blood": "no",
+            "course": "chronic"
+          }
+        }
+      ],
+      "questions": [
+        {
+          "id": "location",
+          "prompt": "疼的位置主要在哪里？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "upper",
+              "label": "上腹或心口",
+              "features": {
+                "location": "upper"
+              }
+            },
+            {
+              "value": "right_upper",
+              "label": "右上腹",
+              "features": {
+                "location": "right_upper"
+              }
+            },
+            {
+              "value": "right_lower",
+              "label": "右下腹",
+              "features": {
+                "location": "right_lower"
+              }
+            },
+            {
+              "value": "flank",
+              "label": "腰侧或后背",
+              "features": {
+                "location": "flank"
+              }
+            },
+            {
+              "value": "diffuse",
+              "label": "整个肚子或说不清位置",
+              "features": {
+                "location": "diffuse"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "right_lower",
+              "pattern": "右下腹|右下肚子|右下方"
+            },
+            {
+              "value": "right_upper",
+              "pattern": "右上腹|右上肚子|右上方"
+            },
+            {
+              "value": "flank",
+              "pattern": "腰侧|侧腰|腰疼|后背"
+            },
+            {
+              "value": "upper",
+              "pattern": "上腹|心口|胃"
+            },
+            {
+              "value": "diffuse",
+              "pattern": "全腹|整个肚子|肚子都疼"
+            }
+          ]
+        },
+        {
+          "id": "character",
+          "prompt": "疼痛是什么感觉？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "colic",
+              "label": "一阵阵绞痛",
+              "features": {
+                "character": "colic"
+              }
+            },
+            {
+              "value": "constant",
+              "label": "持续疼痛",
+              "features": {
+                "character": "constant"
+              }
+            },
+            {
+              "value": "dull",
+              "label": "隐痛、胀痛或烧灼感",
+              "features": {
+                "character": "dull"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "colic",
+              "pattern": "绞痛|一阵阵|阵发"
+            },
+            {
+              "value": "constant",
+              "pattern": "持续疼|一直疼|持续痛"
+            },
+            {
+              "value": "dull",
+              "pattern": "隐痛|钝痛|胀痛|烧灼|烧心"
+            }
+          ]
+        },
+        {
+          "id": "associated",
+          "prompt": "有没有下面这些情况？（可多选）",
+          "mode": "multi",
+          "priority": true,
+          "options": [
+            {
+              "value": "fever",
+              "label": "发热",
+              "features": {
+                "fever": "yes"
+              }
+            },
+            {
+              "value": "vomiting",
+              "label": "呕吐",
+              "features": {
+                "vomiting": "yes"
+              }
+            },
+            {
+              "value": "diarrhea",
+              "label": "腹泻",
+              "features": {
+                "diarrhea": "yes"
+              }
+            },
+            {
+              "value": "blood",
+              "label": "便血或黑便",
+              "features": {
+                "blood": "yes"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "出现便血或黑便，建议尽快到急诊或消化科评估。"
+              }
+            },
+            {
+              "value": "none",
+              "label": "以上都没有",
+              "features": {},
+              "exclusive": true
+            }
+          ],
+          "triggers": [
+            {
+              "value": "blood",
+              "pattern": "便血|黑便|大便带血|大便发黑"
+            },
+            {
+              "value": "vomiting",
+              "pattern": "呕吐|吐了|想吐"
+            },
+            {
+              "value": "diarrhea",
+              "pattern": "腹泻|拉肚子|拉稀"
+            },
+            {
+              "value": "fever",
+              "pattern": "发热|发烧|高烧"
+            }
+          ]
+        },
+        {
+          "id": "course",
+          "prompt": "疼了多久？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "acute",
+              "label": "1 天以内",
+              "features": {
+                "course": "acute"
+              }
+            },
+            {
+              "value": "subacute",
+              "label": "1 到 3 天",
+              "features": {
+                "course": "subacute"
+              }
+            },
+            {
+              "value": "chronic",
+              "label": "超过 3 天或反复发作",
+              "features": {
+                "course": "chronic"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "chronic",
+              "pattern": "超过三天|3天以上|一周|两周|反复|很久"
+            },
+            {
+              "value": "subacute",
+              "pattern": "昨天|一两天|两天|三天|3天"
+            },
+            {
+              "value": "acute",
+              "pattern": "今天|刚刚|几小时|半天"
+            }
+          ]
+        },
+        {
+          "id": "urine",
+          "prompt": "有没有尿痛或血尿？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "yes",
+              "label": "有尿痛或血尿",
+              "features": {
+                "urine_blood": "yes"
+              }
+            },
+            {
+              "value": "no",
+              "label": "没有",
+              "features": {
+                "urine_blood": "no"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "yes",
+              "pattern": "尿痛|血尿|排尿疼|小便疼"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "headache",
+      "label": "头痛",
+      "patterns": [
+        "头痛",
+        "头疼",
+        "脑袋疼",
+        "头很痛",
+        "脑壳疼",
+        "太阳穴疼",
+        "太阳穴跳",
+        "脑门疼",
+        "太阳穴"
+      ],
+      "notice": "选项只用于缩小资料范围，不作诊断。若突然出现一生中最剧烈的头痛、伴发热和颈部僵硬、或出现肢体无力，请立即就医。",
+      "differentials": [
+        {
+          "name": "偏头痛",
+          "aliases": [
+            "偏头痛"
+          ],
+          "features": {
+            "sudden": "no",
+            "side": "one",
+            "quality": "throbbing",
+            "nausea": "yes",
+            "fever": "no",
+            "neck": "no",
+            "visual": "possible",
+            "nasal": "no",
+            "course": [
+              "subacute",
+              "chronic"
+            ]
+          }
+        },
+        {
+          "name": "紧张型头痛",
+          "aliases": [
+            "紧张型"
+          ],
+          "features": {
+            "sudden": "no",
+            "side": "both",
+            "quality": "tight",
+            "nausea": "no",
+            "fever": "no",
+            "neck": "no",
+            "visual": "no",
+            "nasal": "no",
+            "course": [
+              "subacute",
+              "chronic"
+            ]
+          }
+        },
+        {
+          "name": "鼻窦炎相关头痛",
+          "aliases": [
+            "鼻窦炎"
+          ],
+          "features": {
+            "sudden": "no",
+            "side": [
+              "one",
+              "both"
+            ],
+            "quality": "pressure",
+            "nausea": "no",
+            "fever": "possible",
+            "neck": "no",
+            "visual": "no",
+            "nasal": "yes",
+            "course": "subacute"
+          }
+        },
+        {
+          "name": "血压相关头痛",
+          "aliases": [
+            "高血压",
+            "血压"
+          ],
+          "features": {
+            "sudden": "no",
+            "side": "both",
+            "quality": "pressure",
+            "nausea": "possible",
+            "fever": "no",
+            "neck": "no",
+            "visual": "possible",
+            "nasal": "no",
+            "course": "chronic"
+          }
+        },
+        {
+          "name": "蛛网膜下腔出血等急症",
+          "aliases": [
+            "出血"
+          ],
+          "features": {
+            "sudden": "yes",
+            "side": [
+              "one",
+              "both"
+            ],
+            "quality": [
+              "throbbing",
+              "worst"
+            ],
+            "nausea": "yes",
+            "fever": "no",
+            "neck": "yes",
+            "visual": "possible",
+            "nasal": "no",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "发热相关头痛",
+          "aliases": [
+            "发烧",
+            "发热"
+          ],
+          "features": {
+            "sudden": "no",
+            "side": "both",
+            "quality": "pressure",
+            "nausea": "no",
+            "fever": "yes",
+            "neck": "no",
+            "visual": "no",
+            "nasal": "no",
+            "course": "acute"
+          }
+        }
+      ],
+      "questions": [
+        {
+          "id": "sudden",
+          "prompt": "头痛是怎么开始的？",
+          "mode": "single",
+          "priority": true,
+          "options": [
+            {
+              "value": "yes",
+              "label": "突然几秒内达到最痛",
+              "features": {
+                "sudden": "yes"
+              },
+              "red_flag": {
+                "level": "emergency",
+                "advice": "突然达到最剧烈的头痛需要排除出血等急症，请立即就医或呼叫急救。"
+              }
+            },
+            {
+              "value": "no",
+              "label": "逐渐加重",
+              "features": {
+                "sudden": "no"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "yes",
+              "pattern": "突然.{0,8}(?:最|剧烈|炸裂)|几秒.{0,6}(?:最|剧烈)|炸裂样|炸开|要炸"
+            },
+            {
+              "value": "no",
+              "pattern": "逐渐|慢慢|几天了|越来越重"
+            }
+          ]
+        },
+        {
+          "id": "side",
+          "prompt": "头痛主要在哪个位置？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "one",
+              "label": "偏一侧",
+              "features": {
+                "side": "one"
+              }
+            },
+            {
+              "value": "both",
+              "label": "两侧或整个头",
+              "features": {
+                "side": "both"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "one",
+              "pattern": "左边|右边|左侧|右侧|单侧|一边"
+            },
+            {
+              "value": "both",
+              "pattern": "两边|双侧|整个头"
+            }
+          ]
+        },
+        {
+          "id": "quality",
+          "prompt": "头痛是什么感觉？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "throbbing",
+              "label": "一跳一跳的搏动痛",
+              "features": {
+                "quality": "throbbing"
+              }
+            },
+            {
+              "value": "tight",
+              "label": "紧箍或压迫感",
+              "features": {
+                "quality": "tight"
+              }
+            },
+            {
+              "value": "pressure",
+              "label": "胀痛或沉重感",
+              "features": {
+                "quality": "pressure"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "throbbing",
+              "pattern": "跳痛|搏动|一跳一跳"
+            },
+            {
+              "value": "tight",
+              "pattern": "紧箍|压迫|紧绷"
+            },
+            {
+              "value": "pressure",
+              "pattern": "胀痛|沉重|发胀"
+            }
+          ]
+        },
+        {
+          "id": "associated",
+          "prompt": "有没有下面这些情况？（可多选）",
+          "mode": "multi",
+          "priority": true,
+          "options": [
+            {
+              "value": "fever",
+              "label": "发热",
+              "features": {
+                "fever": "yes"
+              }
+            },
+            {
+              "value": "nausea",
+              "label": "恶心或呕吐",
+              "features": {
+                "nausea": "yes"
+              }
+            },
+            {
+              "value": "neck",
+              "label": "颈部僵硬、低头困难",
+              "features": {
+                "neck": "yes"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "头痛伴颈部僵硬需要尽快排除感染或出血，请及时就医。"
+              }
+            },
+            {
+              "value": "visual",
+              "label": "看东西模糊、重影或视野缺损",
+              "features": {
+                "visual": "yes"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "头痛伴视力变化，建议尽快就医评估。"
+              }
+            },
+            {
+              "value": "none",
+              "label": "以上都没有",
+              "features": {},
+              "exclusive": true
+            }
+          ],
+          "triggers": [
+            {
+              "value": "neck",
+              "pattern": "脖子硬|颈部僵硬|低头困难"
+            },
+            {
+              "value": "visual",
+              "pattern": "视力模糊|看东西模糊|重影|视野缺损"
+            },
+            {
+              "value": "nausea",
+              "pattern": "恶心|呕吐|想吐"
+            },
+            {
+              "value": "fever",
+              "pattern": "发热|发烧|高烧"
+            }
+          ]
+        },
+        {
+          "id": "course",
+          "prompt": "头痛持续多久了？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "acute",
+              "label": "1 天以内",
+              "features": {
+                "course": "acute"
+              }
+            },
+            {
+              "value": "subacute",
+              "label": "1 到 7 天",
+              "features": {
+                "course": "subacute"
+              }
+            },
+            {
+              "value": "chronic",
+              "label": "超过 1 周或反复发作",
+              "features": {
+                "course": "chronic"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "chronic",
+              "pattern": "超过一周|一周以上|长期|反复|几个月"
+            },
+            {
+              "value": "subacute",
+              "pattern": "几天|两三天|三天|五天"
+            },
+            {
+              "value": "acute",
+              "pattern": "今天|刚刚|几小时|半天"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ankle_swelling",
+      "label": "脚踝肿",
+      "patterns": [
+        "脚踝肿",
+        "踝关节肿",
+        "脚腕肿",
+        "脚肿",
+        "下肢水肿",
+        "腿肿",
+        "脚脖子肿",
+        "脚脖子疼"
+      ],
+      "notice": "选项只用于缩小资料范围，不作诊断。若一侧小腿突然肿痛发热、或伴气短胸痛，请及时就医。",
+      "differentials": [
+        {
+          "name": "踝关节扭伤",
+          "aliases": [
+            "扭伤",
+            "崴脚"
+          ],
+          "features": {
+            "trauma": "yes",
+            "side": "one",
+            "pain": "yes",
+            "dyspnea": "no",
+            "urine": "no",
+            "calf": "no",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "心源性水肿",
+          "aliases": [
+            "心衰",
+            "心脏"
+          ],
+          "features": {
+            "trauma": "no",
+            "side": "both",
+            "pain": "no",
+            "dyspnea": "yes",
+            "urine": "no",
+            "calf": "no",
+            "course": "chronic"
+          }
+        },
+        {
+          "name": "肾源性水肿",
+          "aliases": [
+            "肾炎",
+            "肾病"
+          ],
+          "features": {
+            "trauma": "no",
+            "side": "both",
+            "pain": "no",
+            "dyspnea": "no",
+            "urine": "foamy",
+            "calf": "no",
+            "course": "chronic"
+          }
+        },
+        {
+          "name": "下肢深静脉血栓",
+          "aliases": [
+            "血栓",
+            "静脉血栓"
+          ],
+          "features": {
+            "trauma": "no",
+            "side": "one",
+            "pain": [
+              "yes",
+              "mild"
+            ],
+            "dyspnea": "possible",
+            "urine": "no",
+            "calf": "yes",
+            "course": "acute"
+          }
+        },
+        {
+          "name": "静脉功能不全",
+          "aliases": [
+            "静脉曲张"
+          ],
+          "features": {
+            "trauma": "no",
+            "side": [
+              "one",
+              "both"
+            ],
+            "pain": "mild",
+            "dyspnea": "no",
+            "urine": "no",
+            "calf": "no",
+            "course": "chronic"
+          }
+        }
+      ],
+      "questions": [
+        {
+          "id": "trauma",
+          "prompt": "最近有没有扭伤、碰撞或摔倒？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "yes",
+              "label": "有",
+              "features": {
+                "trauma": "yes"
+              }
+            },
+            {
+              "value": "no",
+              "label": "没有",
+              "features": {
+                "trauma": "no"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "yes",
+              "pattern": "扭伤|崴脚|碰撞|摔倒|外伤"
+            },
+            {
+              "value": "no",
+              "pattern": "没有外伤|没扭|没摔"
+            }
+          ],
+          "priority": true
+        },
+        {
+          "id": "side",
+          "prompt": "是一只脚还是两只脚肿？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "one",
+              "label": "只有一侧",
+              "features": {
+                "side": "one"
+              }
+            },
+            {
+              "value": "both",
+              "label": "两侧都有",
+              "features": {
+                "side": "both"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "one",
+              "pattern": "左脚|右脚|一侧|单侧|一只脚"
+            },
+            {
+              "value": "both",
+              "pattern": "两只脚|两侧|双脚|双侧"
+            }
+          ]
+        },
+        {
+          "id": "pain",
+          "prompt": "肿的地方疼不疼？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "yes",
+              "label": "明显疼痛",
+              "features": {
+                "pain": "yes"
+              }
+            },
+            {
+              "value": "mild",
+              "label": "酸胀或轻微不适",
+              "features": {
+                "pain": "mild"
+              }
+            },
+            {
+              "value": "no",
+              "label": "不疼",
+              "features": {
+                "pain": "no"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "yes",
+              "pattern": "(?<!头)(?<!肚)(?<!胃)(?<!腰)(?<!咽)(?<!背)(?<!关节)(?:疼|痛)"
+            },
+            {
+              "value": "mild",
+              "pattern": "酸胀|发胀|不舒服"
+            },
+            {
+              "value": "no",
+              "pattern": "不疼|不痛|没感觉"
+            }
+          ]
+        },
+        {
+          "id": "associated",
+          "prompt": "有没有下面这些情况？（可多选）",
+          "mode": "multi",
+          "priority": true,
+          "options": [
+            {
+              "value": "dyspnea",
+              "label": "活动后气短或躺下喘",
+              "features": {
+                "dyspnea": "yes"
+              }
+            },
+            {
+              "value": "urine",
+              "label": "尿泡沫增多",
+              "features": {
+                "urine": "foamy"
+              }
+            },
+            {
+              "value": "calf",
+              "label": "一侧小腿突然肿痛、发热",
+              "features": {
+                "calf": "yes"
+              },
+              "red_flag": {
+                "level": "prompt_care",
+                "advice": "一侧小腿突然肿痛发热需要排除血栓，请尽快就医。"
+              }
+            },
+            {
+              "value": "none",
+              "label": "以上都没有",
+              "features": {},
+              "exclusive": true
+            }
+          ],
+          "triggers": [
+            {
+              "value": "dyspnea",
+              "pattern": "气短|喘|呼吸困难"
+            },
+            {
+              "value": "urine",
+              "pattern": "尿泡沫|泡沫尿"
+            },
+            {
+              "value": "calf",
+              "pattern": "小腿肿|小腿疼|小腿发热"
+            }
+          ]
+        },
+        {
+          "id": "course",
+          "prompt": "肿了多久？",
+          "mode": "single",
+          "options": [
+            {
+              "value": "acute",
+              "label": "3 天以内",
+              "features": {
+                "course": "acute"
+              }
+            },
+            {
+              "value": "subacute",
+              "label": "3 天到 2 周",
+              "features": {
+                "course": "subacute"
+              }
+            },
+            {
+              "value": "chronic",
+              "label": "超过 2 周或反复",
+              "features": {
+                "course": "chronic"
+              }
+            },
+            {
+              "value": "unsure",
+              "label": "说不清",
+              "features": {}
+            }
+          ],
+          "triggers": [
+            {
+              "value": "chronic",
+              "pattern": "超过两周|两周以上|一个月|长期|反复"
+            },
+            {
+              "value": "subacute",
+              "pattern": "一周|几天|三四天|十天"
+            },
+            {
+              "value": "acute",
+              "pattern": "今天|昨天|刚刚|一两天|两天|三天"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

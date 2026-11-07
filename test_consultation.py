@@ -1,15 +1,78 @@
+import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
-from consultation import ConsultationStore, SessionError, run_consultation
+from consultation import ConsultationStore, SessionError, finalize_consultation, run_consultation
 from patient_context import INTAKE_FIELDS
 
 
 class ConsultationTests(unittest.TestCase):
+    @patch.dict('os.environ', {'MED_AGENT_GENERAL_HEALTH_FALLBACK': '0'})
+    def test_topic_switch_carries_intent_but_not_old_disease(self):
+        def runner(question, **options):
+            return {'id': 'fixture', 'status': 'insufficient', 'question': question}
+
+        result = run_consultation(self.store, question='新冠的症状是啥', runner=runner)
+        for short, effective in (
+            ('那带状疱疹呢', '带状疱疹有哪些常见症状？'),
+            ('那小孩也一样吗？', '儿童带状疱疹有哪些常见症状？'),
+        ):
+            with patch('consultation.ModelGateway.complete', return_value={'content': json.dumps({
+                'action': 'rewrite', 'text': effective, 'same_case': False,
+            })}) as model:
+                result = run_consultation(self.store, question=short, append_turn=True,
+                                          session_id=result['session_id'], revision=result['revision'],
+                                          runner=runner)
+            self.assertEqual(json.loads(model.call_args.args[0][-1]['content'])['latest'], short)
+            self.assertEqual(result['question'], effective)
+            self.assertEqual(result['original_question'], short)
+            self.assertEqual(result['intent_coverage'], {'symptoms': 'missing'})
+
+    def test_empty_section_cannot_claim_support(self):
+        result = {'status': 'answered', 'answer_sections': [
+            {'title': '护理建议', 'intent': 'care', 'has_evidence': True, 'excerpts': []},
+        ]}
+        finalize_consultation(result, '感冒怎么办？', {}, 'real')
+        self.assertEqual(result['intent_coverage'], {'care': 'missing'})
+        self.assertFalse(result['answer_sections'][0]['has_evidence'])
+
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
         self.store=ConsultationStore(Path(self.temp.name)/'test.db');self.store.initialize()
+
+    def test_partial_answer_preserves_care_and_marks_medication_gap(self):
+        def local(question, **options):
+            return {'id': 'local', 'status': 'answered',
+                    'sources': [{'id': 'care-source'}],
+                    'answer_sections': [{'title': '日常护理', 'has_evidence': True,
+                                         'excerpts': [{'quote': '护理证据原文', 'evidence_id': 'care-source'}]}],
+                    'followup': {'field': 'temperature', 'question': '量过体温吗？'}}
+
+        result = run_consultation(self.store, question='感冒怎么办，吃什么药？',
+                                  known_context={'temperature': '未测量'}, runner=local)
+        self.assertEqual(result['intent_coverage'], {'care': 'supported', 'medication': 'missing'})
+        self.assertTrue(result['answer_sections'][0]['excerpts'])
+        self.assertFalse(result['answer_sections'][1]['has_evidence'])
+        self.assertIsNone(result['followup'])
+
+    @patch.dict('os.environ', {'MED_AGENT_GENERAL_HEALTH_FALLBACK': '0'})
+    def test_evidence_exit_rejects_missing_source_even_when_marked_supported(self):
+        def local(question, **options):
+            return {'id': 'local', 'status': 'answered', 'answer': '未核实草稿',
+                    'sources': [{'id': 'unrelated'}],
+                    'answer_sections': [{'title': '常见症状', 'intent': 'symptoms',
+                                         'has_evidence': True, 'excerpts': [
+                                             {'quote': '未核实草稿', 'evidence_id': 'missing'},
+                                         ]}]}
+
+        result = run_consultation(self.store, question='未知综合症有哪些症状？', runner=local)
+        self.assertEqual(result['status'], 'insufficient')
+        self.assertEqual(result['sources'], [])
+        self.assertNotIn('未核实草稿', result['answer'])
+        self.assertIn({'node': 'evidence_exit', 'status': 'insufficient', 'missing': ['symptoms']},
+                      result['trace'])
 
     def test_partial_reply_persists_and_only_missing_fields_are_asked(self):
         def unexpected(*args,**kwargs): raise AssertionError('no model while waiting')
@@ -30,13 +93,10 @@ class ConsultationTests(unittest.TestCase):
                 first=run_consultation(self.store,question='发烧吃什么',runner=unexpected)
                 self.assertEqual(first['missing_context'],['fever_intent'])
                 last=run_consultation(self.store,session_id=first['session_id'],revision=first['revision'],
-                    known_context={'fever_intent':intent},runner=unexpected if intent=='用药' else
-                    lambda question,**kwargs: {'id':'diet','question':question,'status':'insufficient'})
-                if intent=='用药':
-                    self.assertIn('medications',last['missing_context'])
-                else:
-                    self.assertEqual(last['status'],'insufficient')
-                    self.assertEqual(last['original_question'],'发烧吃什么')
+                    known_context={'fever_intent':intent},
+                    runner=lambda question,**kwargs: {'id':'fixture','question':question,'status':'insufficient'})
+                self.assertEqual(last['status'],'insufficient')
+                self.assertEqual(last['original_question'],'发烧吃什么')
 
     def test_complete_reply_resumes_original_task_and_preserves_unknown(self):
         first=run_consultation(self.store,question='我发烧了怎么办？')

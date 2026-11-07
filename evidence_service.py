@@ -5,14 +5,19 @@ No API keys, implicit approval, model calls, or database writes here.
 import copy
 import hashlib
 import json
+import os
 import re
+from math import isfinite
+from concurrent.futures import ThreadPoolExecutor, wait
 from contextlib import closing
 from pathlib import Path
 import sqlite3
+from threading import BoundedSemaphore
 
 from rag_pipeline import OUT, SOURCE_DIR, search
 from hybrid_retrieval import hybrid_search
 from evidence_applicability import applicability_reason
+from query_plan import matching_intents, normalize_terms, requested_intents, retrieval_queries
 
 CHILD_QUERY = re.compile(r'儿童|孩子|宝宝|婴幼儿|小儿|小孩|(?<!\d)(?:1[0-7]|[0-9])\s*岁|\d+\s*个月')
 
@@ -59,7 +64,7 @@ def validate_request(question, k=3):
 
 
 def fingerprint(item):
-    fields = {k: v for k, v in item.items() if k not in ('score', 'snapshot_sha256')}
+    fields = {k: v for k, v in item.items() if k not in ('score', 'snapshot_sha256', 'retrieval_window')}
     return hashlib.sha256(json.dumps(fields, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
@@ -77,6 +82,138 @@ def normalize_document(doc):
         supersedes=doc.get('supersedes', []), quality_flags=['旧资料没有页码定位'], score=0.0)
     item['snapshot_sha256'] = fingerprint(item)
     return item
+
+
+def scope_reason(item, question, context):
+    population = context.get('population') or question
+    if item.get('audience') == 'child' and not CHILD_QUERY.search(population):
+        return 'population_not_established'
+    if item.get('audience') == 'adult' and (
+        CHILD_QUERY.search(population) or not re.search(r'成人|成年人|大人', population)
+        or re.search(r'孕|哺乳', question + ' ' + ' '.join(context.values()))
+    ):
+        return 'population_not_established'
+    if 'applicability_policy' in item:
+        return applicability_reason(item, question, context)
+    return 'unstructured_scope'
+
+
+SUPPLEMENT_POOL = ThreadPoolExecutor(max_workers=3, thread_name_prefix='evidence-search')
+SUPPLEMENT_SLOTS = BoundedSemaphore(12)
+SUPPLEMENT_TIMEOUT = 3
+
+
+def parallel_supplements(jobs, ranked):
+    pending, states = {}, {}
+    for intent, target, pool in jobs:
+        if not SUPPLEMENT_SLOTS.acquire(blocking=False):
+            states[intent] = 'busy'
+            continue
+        try:
+            future = SUPPLEMENT_POOL.submit(ranked, target, pool, 2)
+        except RuntimeError:
+            SUPPLEMENT_SLOTS.release()
+            states[intent] = 'error'
+            continue
+        future.add_done_callback(lambda _: SUPPLEMENT_SLOTS.release())
+        pending[intent] = future
+    done, _ = wait(pending.values(), timeout=SUPPLEMENT_TIMEOUT)
+    results = {}
+    for intent, future in pending.items():
+        if future not in done:
+            states[intent] = 'timeout'
+            future.cancel()
+            continue
+        try:
+            results[intent], _ = future.result()
+        except Exception:
+            states[intent] = 'error'
+    return results, states
+
+
+def adaptive_hits(question, query, candidates, context, query_hint=None, *, intent_states=None):
+    intents = requested_intents(question)
+    queries = retrieval_queries(query, intents)
+    eligible = [item for item in candidates
+                if scope_reason(item, question, context) in ('eligible', 'unstructured_scope')]
+    enable_rerank = os.environ.get('MED_AGENT_RERANK') == '1'
+    cutoff = os.environ.get('MED_AGENT_RERANK_MIN_SCORE', '').strip() if enable_rerank else ''
+    min_score = float(cutoff) if cutoff else None
+    if min_score is not None and not isfinite(min_score):
+        raise ValueError('MED_AGENT_RERANK_MIN_SCORE must be finite')
+
+    def ranked(term, pool, keep):
+        hits, mode = hybrid_search(term, pool, 5 if enable_rerank else keep)
+        if enable_rerank and hits and (len(hits) > 1 or min_score is not None):
+            from reranking import rerank
+            try:
+                hits = rerank(term, hits, min_score)
+                mode += '+rerank'
+                if min_score is not None:
+                    mode += '+threshold'
+            except (ImportError, OSError, RuntimeError, ValueError):
+                mode += '+rerank_fallback'
+        return hits[:keep], mode
+
+    first, mode = ranked(queries[0], eligible, 3)
+    remaining = set(intents)
+    chosen = []
+    states = intent_states if intent_states is not None else {}
+
+    def cover(hits, stage):
+        for hit in hits:
+            covered = remaining.intersection(matching_intents(hit, question, intents))
+            if covered:
+                chosen.append(hit)
+                remaining.difference_update(covered)
+                states.update(dict.fromkeys(covered, stage))
+
+    cover(first, 'initial')
+    executed = queries[:1]
+    alternate = query_hint if query_hint and query_hint != query else normalize_terms(query)
+    if alternate == query:
+        alternate = ''
+    if remaining and os.environ.get('MED_AGENT_PARALLEL_SUPPLEMENT', '1') == '1':
+        missing_order = [intent for intent in intents if intent in remaining]
+        pools = {intent: [] for intent in missing_order}
+        seen = {hit['id'] for hit in first}
+        for item in eligible:
+            if item['id'] not in seen:
+                for intent in matching_intents(item, question, missing_order):
+                    pools[intent].append(item)
+        jobs = []
+        for intent in missing_order:
+            if not pools[intent]:
+                continue
+            focus = retrieval_queries(query, [intent])
+            target = ' '.join(dict.fromkeys(filter(None, [alternate, focus[-1]])))[:20000]
+            jobs.append((intent, target, pools[intent]))
+            executed.append(target)
+        results, failures = parallel_supplements(jobs, ranked)
+        states.update(failures)
+        for intent in missing_order:
+            if intent in remaining:
+                cover(results.get(intent, []), 'supplement')
+    elif remaining:
+        focus = retrieval_queries(query, [intent for intent in intents if intent in remaining])
+        target = ' '.join(dict.fromkeys(filter(None, [alternate, *focus[1:]]))) or query
+        target = target[:20000]
+        seen = {hit['id'] for hit in first}
+        # Apply evidence-purpose filtering to the second pass before ranking.
+        focused = [item for item in eligible if item['id'] not in seen and
+                   remaining.intersection(matching_intents(item, question, intents))]
+        if focused:
+            found, _ = ranked(target, focused, 2)
+            executed.append(target)
+            cover(found, 'supplement')
+    elif not intents and alternate:
+        found, _ = ranked(alternate, eligible, 3)
+        executed.append(alternate)
+        merged = {hit['id']: hit for hit in first[:1] + found + first[1:]}
+        return list(merged.values())[:3], mode, executed, intents, [], first
+    for intent in remaining:
+        states.setdefault(intent, 'missing')
+    return (chosen if intents else first), mode, executed, intents, sorted(remaining), first
 
 
 class EvidenceService:
@@ -162,6 +299,11 @@ class EvidenceService:
             if self.reference_paths is not None:
                 from reference_ingestion import load_items as load_references
                 items.extend(load_references(*self.reference_paths))
+            if self.chunks_path == OUT/'chunks.json' and self.source_dir == SOURCE_DIR:
+                from common_reference_pack import load_items as load_common_references
+                from symptom_reference_pack import load_items as load_symptom_references
+                items.extend(load_common_references())
+                items.extend(load_symptom_references())
             if self.review_path is not None:
                 from reviewed_content import attach_reviews
                 items=attach_reviews(items,self.review_path)
@@ -171,7 +313,7 @@ class EvidenceService:
         except (OSError, ValueError, TypeError, KeyError):
             raise EvidenceError('CORPUS_INTEGRITY_FAILED') from None
 
-    def search(self, question, k=3, corpus='real'):
+    def search(self, question, k=3, corpus='real', *, adaptive=False, context=None, query_hint=None):
         validate_request(question, k)
         items = self.all_items(corpus)
         from patient_context import normalize_cough_question
@@ -179,19 +321,44 @@ class EvidenceService:
         if corpus == 'real' and normalize_cough_question(question) == '咳嗽怎么办？':
             query = '咳嗽 居家观察 症状监测'
         candidates = items
-        if corpus == 'real' and not CHILD_QUERY.search(question):
+        context = context or {}
+        if corpus == 'real' and not CHILD_QUERY.search(context.get('population') or question):
             candidates = [item for item in items if item.get('audience') != 'child']
-        if corpus == 'real':
-            hits, retrieval_mode = hybrid_search(query, candidates, k)
+        if corpus == 'real' and adaptive:
+            # Research-only snapshots are searchable via the evidence endpoint,
+            # but must not displace answer evidence in the consultation pool.
+            candidates = [item for item in candidates if not item.get('retrieval_only')]
+            intent_states = {}
+            hits, retrieval_mode, queries, intents, missing, initial = adaptive_hits(
+                question, query, candidates, context, query_hint, intent_states=intent_states)
+        elif corpus == 'real':
+            intents = requested_intents(question)
+            queries = retrieval_queries(query, intents)[:5]
+            hits, retrieval_mode = hybrid_search(queries[0], candidates, k)
+            if len(queries) > 1:
+                pool = {item['id']: item for item in hits}
+                for variant in queries[1:]:
+                    found, _ = hybrid_search(variant, candidates, k)
+                    for item in found:
+                        pool.setdefault(item['id'], item)
+                focused = {}
+                for intent in intents:
+                    for item in pool.values():
+                        if item['id'] not in focused and matching_intents(item, question, [intent]):
+                            focused[item['id']] = item
+                            break
+                focused.update({item_id: item for item_id, item in pool.items() if item_id not in focused})
+                hits = list(focused.values())[:k]
         else:
             hits, retrieval_mode = search(query, candidates, k), 'bm25'
         retry_query = None
-        if corpus == 'real':
+        if corpus == 'real' and (not adaptive or not intents):
             hits, retry_query = _retry_respiratory_diet_search(question, candidates, hits, k)
         # Retrieve all structured counterclaims / replacement versions with the same
         # explicit scope, even if they fell below top-k. Unstructured conflicts remain unknown.
         scopes = {(a['topic'], a['population'], a['condition'])
-                  for i in hits for a in i.get('claims', [])}
+                  for i in (hits + initial if corpus == 'real' and adaptive else hits)
+                  for a in i.get('claims', [])}
         ids = {i['id'] for i in hits}
         related = [i for i in items if i['id'] not in ids and any(
             (a['topic'], a['population'], a['condition']) in scopes for a in i.get('claims', []))]
@@ -199,6 +366,9 @@ class EvidenceService:
             items=hits, related_items=related,
             coverage={'retrieved':len(hits), 'related':len(related), 'indexed':len(items),
                       'retry_query':retry_query,
+                      **({'queries':queries, 'intents':intents} if corpus == 'real' else {}),
+                      **({'initial_candidates':len(initial), 'missing_intents':missing, 'intent_states':intent_states}
+                         if corpus == 'real' and adaptive else {}),
                       'retrieval_mode':retrieval_mode,
                       'conflict_detection':'structured_claims_only'},
             limitations=['相关性不等于医学适用性；无结构化主张不代表无冲突。'])
@@ -242,6 +412,8 @@ def validate_answer(draft, items, decision, corpus='real', *, question='', conte
     by_id = {i['id']:i for i in items}
     errors, citations, applicability = [], [], {}
     context = context or {}
+    intents = requested_intents(question) if corpus == 'real' else []
+    intent_coverage = {}
     if decision['unresolved']: errors.append('UNRESOLVED_CONFLICT')
     if draft['status']=='answer' and not draft['citations']: errors.append('MISSING_CITATIONS')
     if draft['status']=='insufficient' and draft['citations']: errors.append('UNEXPECTED_CITATIONS')
@@ -253,19 +425,24 @@ def validate_answer(draft, items, decision, corpus='real', *, question='', conte
         if i is None: errors.append('UNKNOWN_CITATION'); continue
         if i['id'] in decision['retired']: errors.append('RETIRED_CITATION'); continue
         if i['demo'] and corpus!='demo': errors.append('DEMO_CITATION'); continue
+        if i.get('retrieval_only'): errors.append('UNREVIEWED_CITATION'); continue
         quote = citation.get('quote', i['raw_quote'])
         # Full retrieved unit required, to prevent dropping a contraindication or qualifier.
         if not isinstance(quote, str) or quote != i['raw_quote']:
             errors.append('QUOTE_NOT_COMPLETE_OR_EXACT'); continue
         if fingerprint(i)!=i['snapshot_sha256']: errors.append('SNAPSHOT_CHANGED'); continue
-        reason = 'unstructured_scope'
-        if 'applicability_policy' in i:
-            reason = applicability_reason(i, question, context)
-        if i.get('audience')=='child' and not CHILD_QUERY.search(context.get('population') or question):
-            reason = 'population_not_established'
+        reason = scope_reason(i, question, context)
         applicability[i['id']] = reason
         if reason not in ('eligible', 'unstructured_scope'):
             errors.append('EVIDENCE_OUT_OF_SCOPE'); continue
+        covered = matching_intents(i, question, intents)
+        if intents and not covered:
+            continue
+        if covered:
+            intent_coverage[i['id']] = covered
         citations.append({'evidence_id':i['id'],'quote':quote})
+    if intents and draft['status'] == 'answer' and not citations:
+        errors.append('EVIDENCE_DOES_NOT_ANSWER_INTENT')
     return {'ok':not errors, 'errors':sorted(set(errors)), 'citations':citations, 'applicability':applicability,
+            'intent_coverage':intent_coverage,
             'scope':'完整原文摘录、引用身份、已标注人群和快照校验。'}
