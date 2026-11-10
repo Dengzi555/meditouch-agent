@@ -2,7 +2,7 @@
 
 一个本地运行的中文健康资料助手，用 LangGraph 调用检索工具，校验原文引用，并在条件缺失、证据冲突或工具失败时给出明确结果。
 
-[![CI](https://github.com/Dengzi555/zhiheng-medical-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/Dengzi555/zhiheng-medical-agent/actions/workflows/ci.yml)
+[![CI](https://github.com/Dengzi555/meditouch-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/Dengzi555/meditouch-agent/actions/workflows/ci.yml)
 
 ## 快速开始
 
