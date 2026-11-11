@@ -34,7 +34,7 @@ TOPICS = {
 SPECIAL_POPULATION = re.compile(r'儿童|小孩|孩子|宝宝|婴儿|幼儿|孕|老人|高龄|'
                                 r'(?<!\d)(?:[0-9]|1[0-7]|6[5-9]|[7-9]\d|1\d\d)\s*岁')
 CARE = re.compile(r'\b(?:rest|drink|fluids|humidifier|saline|lifestyle changes|self-care)\b', re.I)
-TRIAGE = re.compile(r'\b(?:medical help|medical attention|see a doctor|health care provider)\b', re.I)
+TRIAGE = re.compile(r'\b(?:medical help|medical attention|see a doctor|health care provider|contact your provider)\b', re.I)
 URGENT = re.compile(r'\b(?:right away|immediately|emergency)\b', re.I)
 MEDICATION = re.compile(r'\b(?:antibiotics?|dosage|medicines?|medications?|drugs?|pain relievers?)\b', re.I)
 SYMPTOM_LIST = re.compile(
@@ -286,7 +286,9 @@ def public_fallback(result, question, context, route_kind, previous, *, plan=Non
             return dict(result, trace=trace, answer='本地资料不足，公开健康资料暂时无法查询。请稍后重试。')
         return dict(result, trace=trace)
 
-    triage = next((block for block in blocks if TRIAGE.search(block) and URGENT.search(block)), '')
+    triage = next((block for block in blocks if TRIAGE.search(block)
+                   and re.search(r'trouble breathing|dehydration|symptoms.*worsen', block, re.I)), '')
+    triage = triage or next((block for block in blocks if TRIAGE.search(block) and URGENT.search(block)), '')
     triage = triage or next((block for block in blocks if TRIAGE.search(block)), '')
     care = next((block for block in blocks if CARE.search(block) and not MEDICATION.search(block)), '')
     overview = next((block for block in blocks if not TRIAGE.search(block) and not MEDICATION.search(block)), '')
@@ -302,21 +304,36 @@ def public_fallback(result, question, context, route_kind, previous, *, plan=Non
     additions = [{'title': heading + '（英文原文）', 'intent': intent, 'has_evidence': True,
                   'excerpts': [{'quote': block, 'evidence_id': source_id}]}
                  for intent, heading, block in candidates if intent in needs and block]
-    symptom_timing = ''
+    symptom_details = []
     if title == 'Common Cold' and 'symptoms' in needs and symptoms and all(
         word in symptoms.lower() for word in ('sneezing', 'stuffy nose', 'runny nose', 'sore throat', 'coughing', 'headache')
     ):
         section = next(section for section in additions if section['intent'] == 'symptoms')
         section['title'] = INTENTS['symptoms'][0]
         section['excerpts'] = [
-            {'quote': '普通感冒常见的是打喷嚏、鼻塞、流鼻涕，也可能有咽痛、咳嗽和头痛。',
+            {'quote': '鼻部表现：普通感冒常见打喷嚏、鼻塞、流鼻涕。',
              'highlight': '打喷嚏、鼻塞、流鼻涕', 'evidence_id': source_id},
+            {'quote': '咽喉与呼吸道表现：可能有咽痛、咳嗽。', 'highlight': '咽痛、咳嗽', 'evidence_id': source_id},
+            {'quote': '其他不适：也可能出现头痛。', 'highlight': '头痛', 'evidence_id': source_id},
         ]
         symptom_timing = next((block for block in blocks
                                if re.search(r'start a few days after.*10[-–]14 days', block, re.I)), '')
         if symptom_timing:
-            section['excerpts'].append({'quote': '症状通常在感染后几天出现，有些症状可能持续 10–14 天。',
-                                        'evidence_id': source_id})
+            symptom_details.append(symptom_timing)
+            additions.append({'title': '常见病程', 'intent': 'overview', 'has_evidence': True,
+                              'excerpts': [{'quote': '症状通常在感染后几天出现；部分症状可能持续 10–14 天。',
+                                            'highlight': '10–14 天', 'evidence_id': source_id}]})
+        if triage and all(phrase in triage.lower() for phrase in (
+                'trouble breathing', 'dehydration', 'fever that lasts longer than 4 days',
+                'more than 10 days without improvement', 'return or worsen')):
+            symptom_details.append(triage)
+            warnings = {'title': '需要留意的表现', 'intent': 'triage', 'has_evidence': True, 'excerpts': [
+                {'quote': '出现呼吸困难、呼吸急促或脱水时，应联系医生评估。',
+                 'highlight': '呼吸困难、呼吸急促或脱水', 'evidence_id': source_id},
+                {'quote': '发热超过 4 天、症状超过 10 天仍未改善，或好转后又加重时，应及时联系医生。',
+                 'evidence_id': source_id},
+            ]}
+            additions = [item for item in additions if item['intent'] != 'triage'] + [warnings]
     trace.append({'node': 'public_knowledge', 'status': 'used' if additions else 'insufficient',
                   'topic': title, 'source': 'MedlinePlus', 'match': 'mapped' if topics else 'dynamic'})
     if not additions:
@@ -359,7 +376,7 @@ def public_fallback(result, question, context, route_kind, previous, *, plan=Non
     source = {'id': source_id, 'title': title, 'publisher': 'MedlinePlus / U.S. National Library of Medicine',
               'source_url': url, 'raw_quote': '\n\n'.join(dict.fromkeys(
                   [block for intent, _, block in candidates if intent in needs and block]
-                  + ([symptom_timing] if symptom_timing else [])))}
+                  + symptom_details))}
     public_answer = '\n\n'.join(point['quote'] for section in additions for point in section['excerpts'])
     answer = '\n\n'.join(filter(None, [result.get('answer') if status in {'answered', 'guidance'} else None, public_answer]))
     return dict(result, status='guidance' if status != 'answered' else status, answer=answer,

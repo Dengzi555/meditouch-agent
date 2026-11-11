@@ -16,6 +16,31 @@ class PublicKnowledgeTests(unittest.TestCase):
         self.addCleanup(cache.stop)
 
     @patch('meditouch.public_health.fetch_topic')
+    def test_cold_symptoms_expand_only_supported_course_and_warning_information(self, fetch):
+        fetch.return_value = ('https://medlineplus.gov/commoncold.html', (
+            'The symptoms of a common cold usually include: Sneezing; Stuffy nose; Runny nose; Sore throat; Coughing; Headache;',
+            'The symptoms usually start a few days after infection. Some symptoms can last for 10-14 days.',
+            'Talk with your child\'s health care provider before giving cold medicines.',
+            'Contact your provider for: Trouble breathing; Dehydration; Fever that lasts longer than 4 days; '
+            'Symptoms that last more than 10 days without improvement; Symptoms that return or worsen.',
+        ))
+        result = public_fallback({'status': 'insufficient', 'trace': []}, '感冒有什么症状？', {}, 'education', None)
+        sections = {item['title']: item for item in result['answer_sections']}
+        self.assertEqual(len(sections['常见症状']['excerpts']), 3)
+        self.assertIn('常见病程', sections)
+        self.assertIn('需要留意的表现', sections)
+        self.assertIn('Contact your provider', result['sources'][0]['raw_quote'])
+        self.assertNotIn('child\'s health care provider', sections['需要留意的表现']['excerpts'][0]['quote'])
+
+    @patch('meditouch.public_health.fetch_topic')
+    def test_cold_symptom_list_does_not_invent_absent_course_or_warning_evidence(self, fetch):
+        fetch.return_value = ('https://medlineplus.gov/commoncold.html', (
+            'The symptoms of a common cold usually include: Sneezing; Stuffy nose; Runny nose; Sore throat; Coughing; Headache;',
+        ))
+        result = public_fallback({'status': 'insufficient', 'trace': []}, '感冒有什么症状？', {}, 'education', None)
+        self.assertEqual([section['title'] for section in result['answer_sections']], ['常见症状'])
+
+    @patch('meditouch.public_health.fetch_topic')
     def test_fresh_disk_snapshot_survives_provider_failure_but_expired_one_does_not(self, fetch):
         import sqlite3
         from contextlib import closing

@@ -31,9 +31,9 @@
 
 ### 原文核对
 
-参考资料侧栏展示来源、原文链接及引用摘录。
+以“感冒有什么症状”为例，分组呈现常见表现、病程与有来源支持的就医警示。侧栏展示对应原文与链接。
 
-![回答与引用侧栏](docs/images/evidence-sources.png)
+![感冒症状回答与引用侧栏](docs/images/cold-symptoms-and-sources.png)
 
 ### 追问卡片
 
