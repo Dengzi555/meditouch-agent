@@ -2,6 +2,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import symptom_clarification as clarification
 from consultation import ConsultationStore, run_consultation
@@ -64,7 +65,8 @@ class CardTests(unittest.TestCase):
             with self.subTest(question=question):
                 card = clarification.build_card(question)
                 self.assertIsNotNone(card)
-                self.assertTrue(expected <= {item['id'] for item in card['questions']})
+                self.assertEqual(len(card['questions']), 1)
+                self.assertIn(card['questions'][0]['id'], expected)
 
     def test_pediatric_card_wins_for_child_fever(self):
         self.assertEqual(clarification.consultation_symptom('宝宝发烧')['id'], 'pediatric_fever')
@@ -98,7 +100,7 @@ class CardTests(unittest.TestCase):
         card = clarification.build_card('眼皮肿，疼，有硬结')
         ids = {item['id'] for item in card['questions']}
         self.assertNotIn('features', ids)
-        self.assertIn('associated', ids)
+        self.assertTrue(ids <= {'course', 'associated'})
         # A co-occurring headache must not be read as eyelid pain.
         unrelated = clarification.build_card('眼皮肿，头痛')
         self.assertIn('features', {item['id'] for item in unrelated['questions']})
@@ -108,7 +110,7 @@ class CardTests(unittest.TestCase):
         self.assertIsNotNone(card)
         self.assertEqual(card['round'], 2)
         self.assertNotIn('features', {item['id'] for item in card['questions']})
-        self.assertIn('associated', {item['id'] for item in card['questions']})
+        self.assertEqual(len(card['questions']), 1)
 
     def test_complete_answers_end_clarification(self):
         context = payload('eyelid_swelling', {
@@ -117,7 +119,7 @@ class CardTests(unittest.TestCase):
         self.assertIsNone(clarification.build_card('眼皮肿', context))
 
     def test_round_limit_stops_new_cards(self):
-        context = payload('eyelid_swelling', {'features': 'only_swelling'}, round_no=2)
+        context = payload('eyelid_swelling', {'features': 'only_swelling'}, round_no=clarification.MAX_ROUNDS)
         self.assertIsNone(clarification.build_card('眼皮肿', context))
 
     def test_exclusive_option_wins_over_companions(self):
@@ -204,23 +206,31 @@ class ConsultationIntegrationTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.store = ConsultationStore(Path(self.temp.name) / 'test.db')
         self.store.initialize()
+        self.runner = self.enterContext(patch('agent_graph.run_graph', side_effect=lambda question, **kwargs: {
+            'id': 'stub', 'question': question, 'status': 'insufficient', 'answer': '资料不足',
+            'sources': [], 'citations': [], 'trace': [], 'model_calls': 0, 'tool_calls': 1,
+            'latency_ms': 0,
+        }))
+        self.enterContext(patch('public_health.public_fallback', side_effect=lambda result, *args, **kwargs: result))
 
-    def test_first_turn_returns_card_without_model_calls(self):
+    def test_first_turn_runs_retrieval_before_attaching_one_question(self):
         result = run_consultation(self.store, question='眼皮肿', corpus='real')
-        self.assertEqual(result['status'], 'needs_clarification')
+        self.assertEqual(result['status'], 'insufficient')
         self.assertEqual(result['model_calls'], 0)
-        self.assertEqual(result['tool_calls'], 0)
+        self.assertEqual(result['tool_calls'], 1)
+        self.runner.assert_called_once()
+        self.assertEqual(len(result['clarification_card']['questions']), 1)
         self.assertEqual(result['clarification_card']['symptom'], 'eyelid_swelling')
         self.assertTrue(result['session_id'])
         stored = self.store.view(result['session_id'])
-        self.assertEqual(stored['result']['status'], 'needs_clarification')
+        self.assertEqual(stored['result']['status'], 'insufficient')
 
     def test_new_condition_first_turns_return_cards(self):
         for question, symptom in (('发烧', 'fever'), ('孩子发烧', 'pediatric_fever'),
                                   ('皮疹', 'rash'), ('胸闷', 'chest_tightness')):
             with self.subTest(question=question):
                 result = run_consultation(self.store, question=question, corpus='real')
-                self.assertEqual(result['status'], 'needs_clarification')
+                self.assertEqual(result['status'], 'insufficient')
                 self.assertEqual(result['model_calls'], 0)
                 self.assertEqual(result['clarification_card']['symptom'], symptom)
 
@@ -231,11 +241,33 @@ class ConsultationIntegrationTests(unittest.TestCase):
             self.store, session_id=first['session_id'], revision=first['revision'],
             known_context=answers,
         )
-        self.assertEqual(second['status'], 'needs_clarification')
+        self.assertEqual(second['status'], 'insufficient')
         self.assertEqual([item['id'] for item in second['clarification_card']['questions']], ['associated'])
         self.assertIn('伴有疼痛', second['clarification_summary'])
         stored = self.store.view(first['session_id'])
         self.assertIn('clarification', stored['context'])
+
+    def test_incremental_selections_merge_and_do_not_repeat_questions(self):
+        first = run_consultation(self.store, question='眼皮肿', corpus='real')
+        second = run_consultation(self.store, session_id=first['session_id'], revision=first['revision'],
+                                  known_context=payload('eyelid_swelling', {'features': ['pain']}))
+        self.assertNotEqual(second['clarification_card']['questions'][0]['id'], 'features')
+        third = run_consultation(self.store, session_id=second['session_id'], revision=second['revision'],
+                                 known_context=payload('eyelid_swelling', {'course': 'acute'}, round_no=2))
+        state = clarification.parse_clarification({'clarification': third['context']['clarification']['value']})
+        self.assertEqual(state['answers']['features'], ['pain'])
+        self.assertEqual(state['answers']['course'], 'acute')
+        self.assertEqual(third['clarification_card']['questions'][0]['id'], 'associated')
+
+    def test_answer_content_is_preserved_with_optional_followup(self):
+        def public(result, *args, **kwargs):
+            return dict(result, status='guidance', answer='测试资料中的科普内容', sources=[{'id': 'test-source'}],
+                        answer_sections=[{'title': '概况', 'intent': 'overview', 'has_evidence': True,
+                                          'excerpts': [{'quote': '测试资料中的科普内容', 'evidence_id': 'test-source'}]}])
+        result = run_consultation(self.store, question='眼皮肿', corpus='real', public_lookup=public)
+        self.assertEqual(result['status'], 'guidance')
+        self.assertEqual(result['answer_sections'][0]['excerpts'][0]['quote'], '测试资料中的科普内容')
+        self.assertEqual(result['clarification_card']['questions'][0]['id'], 'features')
 
     def test_answers_are_appended_to_the_retrieval_question(self):
         captured = []

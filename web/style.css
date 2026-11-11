@@ -236,26 +236,27 @@ body:has(#workspace:not(.hidden)) main > header { display: none; }
 
 /* Dynamic symptom clarification card */
 .clarify-card {
-  margin-top: 16px; padding: 16px 18px 14px;
-  border: 1px solid var(--line); border-radius: 14px;
-  background: #fbfbff;
+  margin: 0 0 18px; padding: 20px;
+  border: 1px solid var(--line); border-radius: 20px;
+  background: #fcfcff;
 }
 .clarify-eyebrow { margin: 0 0 4px; color: var(--muted); font-size: 11px; letter-spacing: .08em; }
 .clarify-title { margin: 0 0 6px; font-size: 15px; font-weight: 600; line-height: 1.5; }
-.clarify-question { margin-top: 14px; }
-.clarify-prompt { margin: 0 0 8px; font-size: 13px; font-weight: 500; line-height: 1.6; }
+.clarify-question { margin: 0; }
+.clarify-prompt { margin: 0 0 16px; font-size: 15px; font-weight: 600; line-height: 1.6; }
 .clarify-hint { margin-left: 4px; color: var(--muted); font-size: 11px; font-weight: 400; }
 .clarify-options { display: flex; flex-wrap: wrap; gap: 8px; }
 .clarify-option {
-  padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px;
-  background: #fff; color: var(--ink); font-size: 13px; line-height: 1.4;
+  padding: 10px 16px; border: 1px solid transparent; border-radius: 12px;
+  background: #f0eff9; color: var(--ink); font-size: 14px; line-height: 1.5;
 }
 .clarify-option:hover { border-color: var(--green); }
 .clarify-option[aria-pressed="true"] {
   border-color: var(--green); background: var(--green); color: #fff;
 }
-.clarify-actions { margin-top: 16px; }
-.clarify-submit { border-radius: 999px; }
+.clarify-actions { margin-top: 16px; display: flex; gap: 10px; align-items: center; }
+.clarify-submit { border-radius: 10px; }
+.clarify-skip { border: 0; background: transparent; color: var(--muted); padding: 8px 10px; }
 .clarify-note { margin: 10px 0 0; color: var(--muted); font-size: 11px; line-height: 1.7; }
 .clarify-card button:disabled { cursor: not-allowed; }
 @media (max-width: 700px) {

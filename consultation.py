@@ -140,6 +140,15 @@ class ConsultationStore:
                 state=dict(id=uuid4().hex,question=question,corpus=corpus,slots={},revision=0,
                            history=[],created_at=now)
             for key,value in updates.items():
+                if key == 'clarification' and value and state['slots'].get(key):
+                    previous = symptom_clarification.parse_clarification(
+                        {key: state['slots'][key]['value']})
+                    incoming = symptom_clarification.parse_clarification({key: value})
+                    if previous['symptom'] == incoming['symptom']:
+                        value = json.dumps({'v': 1, 'symptom': incoming['symptom'],
+                                            'round': incoming['round'],
+                                            'answers': {**previous['answers'], **incoming['answers']}},
+                                           ensure_ascii=False)
                 if value: state['slots'][key]=dict(value=value,source='user_declaration',updated_at=now)
                 else: state['slots'].pop(key,None)
             state.update(lease=lease,lease_until=now+180,status='running',updated_at=now)
@@ -416,7 +425,8 @@ def run_consultation(store,*,question=None,corpus=None,known_context=None,sessio
         if not clarification and decision['kind'] in ('consultation', 'education'):
             clarify_result = symptom_clarification.respond(
                 state['question'], context, corpus=state['corpus'], decision=decision)
-        if clarify_result is not None:
+        symptom = symptom_clarification.consultation_symptom(state['question'])
+        if clarify_result is not None and clarify_result['status'] == 'risk_alert':
             result = clarify_result
         elif decision['kind'] in ('risk','insufficient'):
             result=stopped_result(state['question'],decision)
@@ -435,7 +445,7 @@ def run_consultation(store,*,question=None,corpus=None,known_context=None,sessio
                 missing_context=[],sources=[],citations=[],error=None,engine='呼吸道症状科普',
                 trace=[{'node':'route','result':{'kind':'guidance'}}],model_calls=0,tool_calls=0,
                 latency_ms=0,flow={'kind':'guidance'},created_at=time.strftime('%Y-%m-%d %H:%M:%S'))
-        elif missing:
+        elif missing and symptom is None:
             # Waiting for user input is a host transition, requiring no model call.
             result=dict(id=uuid4().hex,question=state['question'],status='needs_clarification',
                 answer=('' if missing==['fever_intent'] else '请补充以下信息，可以填写“不清楚”或“未测量”。这些信息仅用于当前咨询，不据此确诊。\n\n')+
@@ -451,11 +461,20 @@ def run_consultation(store,*,question=None,corpus=None,known_context=None,sessio
             suffix = symptom_clarification.query_suffix(context)
             retrieval_question = f'{request_question} {suffix}'.strip() if suffix else request_question
             retrieval_context = {**context, **symptom_clarification.context_hints(context)}
+            if symptom is not None:
+                # Offer general, evidence-backed information before asking for
+                # details. Unknown patient facts remain in the separate slots.
+                effective_question = f'{symptom["label"]}是什么'
+                retrieval_question = f'{effective_question} {suffix}'.strip()
+                plan = understand_question(effective_question, retrieval_context)
+                if default_runner:
+                    options['plan'] = plan
             if state['corpus']=='real' and public_lookup and os.getenv('MED_AGENT_PUBLIC_KNOWLEDGE', '1') == '1':
                 if on_progress:
                     on_progress('public_search')
+                lookup_decision = dict(decision, kind='education', missing_fields=[]) if symptom else decision
                 result = retrieve_api_first(runner, public_lookup, retrieval_question, effective_question,
-                                            retrieval_context, decision, state.get('result'), plan, options)
+                                            retrieval_context, lookup_decision, state.get('result'), plan, options)
             else:
                 result=runner(retrieval_question,corpus=state['corpus'],known_context=retrieval_context,**options)
             if state['corpus'] == 'real':
@@ -467,6 +486,13 @@ def run_consultation(store,*,question=None,corpus=None,known_context=None,sessio
                 result = general_health_fallback(result, effective_question, context, decision['kind'],
                                                  plan=plan, on_progress=on_progress)
             result['flow']=decision
+        if (clarify_result is not None and clarify_result['status'] != 'risk_alert'
+                and result['status'] not in ('risk_alert', 'unresolved')):
+            result['clarification_card'] = clarify_result['clarification_card']
+            result['clarification_summary'] = clarify_result['clarification_summary']
+            result.setdefault('trace', []).extend(clarify_result['trace'])
+            if not result.get('answer_sections') and result['status'] == 'insufficient':
+                result['answer'] = '目前资料还不足以判断具体原因。补充下面这个表现后，可以继续核对适用的资料。'
         if classifier_event:
             result['trace'] = [classifier_event, *result.get('trace', [])]
             if classifier_event.get('code') != 'MODEL_NOT_CONFIGURED':

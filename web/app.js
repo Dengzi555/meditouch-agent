@@ -226,19 +226,16 @@ function evidenceExcerpts(question, sources){
   }).filter(Boolean).sort((a,b)=>b.matches-a.matches).slice(0,2);
 }
 function clarificationHTML(card){
-  const questions=(card.questions??[]).map((question,index)=>`
+  const questions=(card.questions??[]).slice(0,1).map(question=>`
     <div class="clarify-question" data-qid="${escapeHTML(question.id)}" data-mode="${question.mode==='multi'?'multi':'single'}" role="group" aria-label="${escapeHTML(question.prompt)}">
-      <p class="clarify-prompt">${index+1}. ${escapeHTML(question.prompt)}${question.mode==='multi'?' <span class="clarify-hint">可多选</span>':''}</p>
+      <h3 class="clarify-prompt"><span aria-hidden="true">💡</span> ${escapeHTML(question.prompt)}${question.mode==='multi'?' <span class="clarify-hint">可多选</span>':''}</h3>
       <div class="clarify-options">
         ${(question.options??[]).map(option=>`<button type="button" class="clarify-option" data-value="${escapeHTML(option.value)}" data-label="${escapeHTML(option.label)}" ${option.exclusive?'data-exclusive="true"':''} aria-pressed="false">${escapeHTML(option.label)}</button>`).join('')}
       </div>
     </div>`).join('');
-  return `<section class="clarify-card" data-clarification data-symptom="${escapeHTML(card.symptom)}" data-round="${Number(card.round)||1}" aria-label="${escapeHTML(card.label)}补充信息">
-    <p class="clarify-eyebrow">需要确认</p>
-    <h3 class="clarify-title">${escapeHTML(card.intro??'')}</h3>
+  return `<section class="card clarify-card" data-clarification data-symptom="${escapeHTML(card.symptom??'')}" data-field="${escapeHTML(card.field??'')}" data-round="${Number(card.round)||1}" aria-label="${escapeHTML(card.label)}追问">
     ${questions}
-    <div class="clarify-actions"><button type="button" class="primary clarify-submit" disabled>按这些情况继续 →</button></div>
-    <p class="clarify-note">${escapeHTML(card.notice??'')}</p>
+    <div class="clarify-actions"><button type="button" class="primary clarify-submit" disabled>继续 →</button><button type="button" class="clarify-skip">暂不补充</button></div>
   </section>`;
 }
 function resultHTML(r, showTrace=false){
@@ -292,9 +289,15 @@ function resultHTML(r, showTrace=false){
     ?`<details><summary>查看来源 · ${sources.length} 篇</summary>${sources.map(sourceHTML).join('')}</details>`
     :`<button type="button" class="reference-toggle" data-references="${preview?'related':'reference'}" aria-expanded="false" aria-controls="references">${preview?'查看检索结果':'查看参考资料'} · ${sources.length} 条 <span aria-hidden="true">›</span></button>`):'';
   const trace=showTrace?`<details><summary>执行轨迹 · ${escapeHTML(r.engine)} · ${r.latency_ms} ms</summary><pre>${escapeHTML(JSON.stringify(r.trace,null,2))}</pre></details>`:'';
-  const clarify=r.clarification_card?clarificationHTML(r.clarification_card):'';
-  const followup=r.followup?.question?`<p class="chat-followup">${escapeHTML(r.followup.question)}</p>`:'';
-  return `<article class="card chat-answer ${r.status==='risk_alert'?'urgent-answer':''}">${showTrace?'':references}${badge}${answer}${clarify}${followup}${uncertainty}${r.error&&r.error!==r.answer?`<p class="error">${escapeHTML(r.error)}</p>`:''}${showTrace?references:''}${trace}</article>`;
+  const followup=r.followup;
+  const followupCard=followup?.question&&followup.options?.length?{
+    label:'补充情况',field:followup.field,questions:[{id:followup.field,prompt:followup.question,
+      mode:followup.field==='associated_symptoms'?'multi':'single',
+      options:followup.options.map(label=>({value:label,label}))}],
+  }:null;
+  const clarify=r.status!=='risk_alert'&&(r.clarification_card||followupCard)
+    ?clarificationHTML(r.clarification_card||followupCard):'';
+  return `<article class="card chat-answer ${r.status==='risk_alert'?'urgent-answer':''}">${showTrace?'':references}${badge}${answer}${uncertainty}${r.error&&r.error!==r.answer?`<p class="error">${escapeHTML(r.error)}</p>`:''}${showTrace?references:''}${trace}</article>${clarify}`;
 }
 async function load(){const state=await api('state');$('#engine').textContent=state.config.enabled?'模型已配置 · '+state.config.model:'规则演示模式 · 未配置模型';$('#documents').innerHTML=state.documents.map(sourceHTML).join('');}
 $('#chat-form').onsubmit=e=>{
@@ -331,7 +334,7 @@ function renderConversation(question,result){
   currentSources=responseSources(result);
   const prior=result.prior_turns??[];
   $('#result').innerHTML=priorTurnsHTML(prior)+turnHTML(question,result);
-  $('#result').querySelectorAll('[data-prior-turn] .clarify-option,[data-prior-turn] .clarify-submit')
+  $('#result').querySelectorAll('[data-prior-turn] [data-clarification] button')
     .forEach(button=>{button.disabled=true;});
   const transcript=$('.workspace-transcript');
   transcript.scrollTop=prior.length?transcript.scrollHeight:0;
@@ -495,13 +498,16 @@ function submitClarification(card){
   const answers=clarificationAnswers(card);
   if(!answers)return;
   const labels=[...card.querySelectorAll('.clarify-option[aria-pressed="true"]')].map(button=>button.dataset.label);
-  const payload={v:1,symptom:card.dataset.symptom,round:Number(card.dataset.round)||1,answers};
+  const payload=card.dataset.field?{[card.dataset.field]:labels.join('、')}:
+    {clarification:JSON.stringify({v:1,symptom:card.dataset.symptom,round:Number(card.dataset.round)||1,answers})};
   card.dataset.submitted='1';
   card.querySelectorAll('button').forEach(button=>{button.disabled=true;});
-  submitQuestion({clarification:JSON.stringify(payload)},
+  submitQuestion(payload,
     displayedResult?.original_question||activeQuestion,false,'已补充：'+labels.join('、'));
 }
 document.addEventListener('click',event=>{
+  const skip=event.target.closest?.('.clarify-skip');
+  if(skip){skip.closest('[data-clarification]').remove();return;}
   const option=event.target.closest?.('.clarify-option');
   if(option){
     const group=option.closest('.clarify-question');

@@ -15,7 +15,7 @@ from pathlib import Path
 from uuid import uuid4
 
 VERSION = 1
-MAX_ROUNDS = 2
+MAX_ROUNDS = 6
 MAX_QUESTIONS = 4
 REGISTRY_PATH = Path(__file__).parent / 'knowledge' / 'symptom_differentials.json'
 
@@ -386,13 +386,13 @@ def _card(symptom, selected, round_no, retrieved_names):
         'options': [dict({'value': option['value'], 'label': option['label']},
                          **({'exclusive': True} if option.get('exclusive') else {}))
                     for option in question['options']],
-    } for question in selected]
+    } for question in selected[:1]]
     return {
         'version': VERSION,
         'symptom': symptom['id'],
         'label': symptom['label'],
         'round': round_no + 1,
-        'intro': f'「{symptom["label"]}」这个描述还比较宽泛，先确认下面 {len(questions)} 点。',
+        'intro': questions[0]['prompt'],
         'notice': symptom['notice'],
         'questions': questions,
         'basis': 'retrieval+registry' if retrieved_names and len(retrieved_names) >= 2 else 'registry',
