@@ -44,7 +44,7 @@ Windows 的 `command` 使用虚拟环境中的 `Scripts/python.exe`。可在 `ar
 ## 验证
 
 ```sh
-python check_craft_mcp.py
+python -m scripts.check_craft_mcp
 python -m unittest
 ```
 

@@ -23,8 +23,8 @@
 新题的段落 Hit@5 从 **23/40（57.5%）** 提升至 **30/40（75.0%）**，混检 p95 增加 **3.0 ms**。重排将 Hit@1 从 **14/40** 提升至 **25/40**，Hit@5 持平，p95 增加约 **1.07 秒**。耗时为本机离线检索阶段，未计生成和线上并发。新题由已有小节反向编写，覆盖面与真实用户流量仍有差异。
 
 ```sh
-python symptom_reference_pack.py --download
-python eval_retrieval_ab.py --mode source
+python -m meditouch.symptom_reference_pack --download
+python -m scripts.eval_retrieval_ab --mode source
 ```
 
 逐题结果写入 `eval_results/retrieval_ab_source.csv`，含 24 道开发题和 60 道验证题。新增资料仍为仅检索、待审核。
@@ -44,7 +44,7 @@ python eval_retrieval_ab.py --mode source
 **用途为检索管线回归**：语料是虚构夹具，天然比真实语料更容易被词面命中，用于验证切分、检索器或重排调整后的行为。真实资料结果见上节，分别报告。
 
 ```sh
-python eval_retrieval_symptom_200.py
+python -m scripts.eval_retrieval_symptom_200
 ```
 
 ## 这些数字不能说明什么

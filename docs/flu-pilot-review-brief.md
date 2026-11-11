@@ -18,8 +18,8 @@
 收到审核结果后，从项目目录执行以下命令。安装前核对待安装清单，安装会替换当前审核注册表并备份原文件。
 
 ```powershell
-rtk proxy python -B reviewed_content.py check data/flu-pilot-review.json
-rtk proxy python -B reviewed_content.py install data/flu-pilot-review.json
+rtk proxy python -B -m meditouch.reviewed_content check data/flu-pilot-review.json
+rtk proxy python -B -m meditouch.reviewed_content install data/flu-pilot-review.json
 rtk proxy pwsh -NoProfile -File start_with_model.ps1 -Action FluPilotEval
 ```
 

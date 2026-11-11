@@ -29,12 +29,12 @@ flowchart LR
   D --> E[完整原文摘录 / 追问 / 不足 / 冲突 / 失败 / 待审核预览]
 ```
 
-- `model_gateway.py`：兼容 Chat Completions，真正发送 tools/tool_choice，工具返回携带原调用 id。
-- `evidence_service.py`：`evidence.v1` 只读契约、BM25 与旧资料适配、原文偏移核验、PDF 哈希核验、显式主张关联补召回、仲裁与校验。
-- `agent_graph.py`：StateGraph 的 model/tools/validate 节点和条件边。
-- `agent_acceptance.py`：离线脚本模型验收、真实模型验收、ping 往返及真实资料预览检查。
-- `test_agent_graph.py`：契约与循环的针对性回归。
-- `test_agent_http.py`：隔离数据库下的HTTP调用、持久化及无效参数检查。
+- `meditouch/model_gateway.py`：兼容 Chat Completions，真正发送 tools/tool_choice，工具返回携带原调用 id。
+- `meditouch/evidence_service.py`：`evidence.v1` 只读契约、BM25 与旧资料适配、原文偏移核验、PDF 哈希核验、显式主张关联补召回、仲裁与校验。
+- `meditouch/agent_graph.py`：StateGraph 的 model/tools/validate 节点和条件边。
+- `scripts/agent_acceptance.py`：离线脚本模型验收、真实模型验收、ping 往返及真实资料预览检查。
+- `tests/test_agent_graph.py`：契约与循环的针对性回归。
+- `tests/test_agent_http.py`：隔离数据库下的HTTP调用、持久化及无效参数检查。
 
 主 Agent 工具：`search_evidence(question,k)`、`get_evidence(evidence_id)`、`ask_user(fields)`。真实/演示语料由请求端选择，模型不能更改语料源或审核状态。读取原文只允许本次已经检索到的 ID，并复用本次快照。
 
@@ -60,8 +60,8 @@ flowchart LR
 
 ```powershell
 # 14项新增单元测试，含5类离线验收与HTTP集成
-.\.venv-agent\Scripts\python.exe -B -m unittest test_agent_graph test_agent_http -v
-.\.venv-agent\Scripts\python.exe -B agent_acceptance.py
+.\.venv-agent\Scripts\python.exe -B -m unittest tests.test_agent_graph tests.test_agent_http -v
+.\.venv-agent\Scripts\python.exe -B -m scripts.agent_acceptance
 
 # 真实模型：消耗接口额度；只用虚构工程证据
 pwsh -NoProfile -File .\start_with_model.ps1 -Action AgentCheck
@@ -72,7 +72,7 @@ pwsh -NoProfile -File .\start_with_model.ps1 -Action AgentPreview
 
 # 原回归与真实 MCP SDK 协议测试
 .\.venv-eval\Scripts\python.exe -B -m unittest -v
-.\.venv-craft\Scripts\python.exe -B check_craft_mcp.py
+.\.venv-craft\Scripts\python.exe -B -m scripts.check_craft_mcp
 ```
 
 2026-11-02实际结果：

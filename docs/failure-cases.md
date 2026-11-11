@@ -9,5 +9,5 @@
 | 模型重复成功的工具请求 | `search_evidence → REPEATED_TOOL_CALL → budget_exceeded` | 工具名和参数用于识别重复调用。成功过的相同请求不会再次执行。 |
 
 ```sh
-python -m unittest -v test_evidence_applicability test_agent_graph.GraphTests.test_forged_answer_gets_one_repair_then_blocked test_agent_graph.GraphTests.test_repeated_calls_terminate
+python -m unittest -v tests.test_evidence_applicability test_agent_graph.GraphTests.test_forged_answer_gets_one_repair_then_blocked test_agent_graph.GraphTests.test_repeated_calls_terminate
 ```

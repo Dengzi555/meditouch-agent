@@ -53,10 +53,10 @@
 
 ## 相关文件
 
-- `agent_graph.py`：Prompt、工具列表、状态图、终止与修复。
-- `evidence_service.py`：证据契约、来源完整性、仲裁、引用校验。
-- `web_knowledge.py`：现有4篇疾控网页提取与读取。
-- `download_patient_materials.py`：本批5份原件的下载及清单。
+- `meditouch/agent_graph.py`：Prompt、工具列表、状态图、终止与修复。
+- `meditouch/evidence_service.py`：证据契约、来源完整性、仲裁、引用校验。
+- `meditouch/web_knowledge.py`：现有4篇疾控网页提取与读取。
+- `scripts/download_patient_materials.py`：本批5份原件的下载及清单。
 - `server.py`、`web/app.js`：API、记录和现有追问交互。
 - `medical_mcp.py`：MCP查询适配。
 - `eval_data/`：两份合成开发问题集。

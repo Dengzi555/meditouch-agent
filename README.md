@@ -128,13 +128,13 @@ python server.py
 
 ```sh
 python -m pip install -r requirements-agent.txt
-python hybrid_retrieval.py
-python hybrid_retrieval.py --check
+python -m meditouch.hybrid_retrieval
+python -m meditouch.hybrid_retrieval --check
 ```
 
-BGE 使用 `BAAI/bge-small-zh-v1.5`，段落向量缓存于 `data/bge-passage-cache/`。模型不可用时回退到 BM25。可选重排模型为 `BAAI/bge-reranker-base`，通过 `python reranking.py` 准备。
+BGE 使用 `BAAI/bge-small-zh-v1.5`，段落向量缓存于 `data/bge-passage-cache/`。模型不可用时回退到 BM25。可选重排模型为 `BAAI/bge-reranker-base`，通过 `python -m meditouch.reranking` 准备。
 
-真实资料快照和派生索引由使用者本地准备，不随仓库分发。运行 `python symptom_reference_pack.py --download` 可下载并切分 NHS 主题资料用于检索评测。该包标记为 `retrieval_only`，不会自动进入咨询回答池。其他资料的构建逻辑见 `reference_ingestion.py`、`common_reference_pack.py` 和 `rag_pipeline.py`，各入口需对应来源清单与原件。
+真实资料快照和派生索引由使用者本地准备，不随仓库分发。运行 `python -m meditouch.symptom_reference_pack --download` 可下载并切分 NHS 主题资料用于检索评测。该包标记为 `retrieval_only`，不会自动进入咨询回答池。其他资料的构建逻辑见 `meditouch/reference_ingestion.py`、`meditouch/common_reference_pack.py` 和 `meditouch/rag_pipeline.py`，各入口需对应来源清单与原件。
 
 ## 检索评测
 
@@ -151,9 +151,9 @@ BGE 使用 `BAAI/bge-small-zh-v1.5`，段落向量缓存于 `data/bge-passage-ca
 真实资料集共 84 题，包含 24 道开发题和 60 道验证题。验证部分由上述 40 道新题与 20 道历史题组成，历史题使用来源组级标签，报告单独列出。另保留 200 题合成检索夹具，用于检索管线回归。数据、完整指标及标注限制见 [评测报告](docs/eval-report.md)。
 
 ```sh
-python symptom_reference_pack.py --download
-python eval_retrieval_ab.py --mode source
-python eval_retrieval_symptom_200.py
+python -m meditouch.symptom_reference_pack --download
+python -m scripts.eval_retrieval_ab --mode source
+python -m scripts.eval_retrieval_symptom_200
 ```
 
 评测题由资料反向编写，检索命中率衡量目标证据的可检索性。它与医学回答准确性、真实用户满意度及端到端响应时间分别度量。复现时记录提交号、语料快照与本机模型版本。
@@ -167,15 +167,37 @@ python demo.py
 
 测试覆盖工具往返、证据适用性、引用校验、会话修订与并发、公开资料缓存和追问流程。缺少可选依赖或本地资料时，对应用例标记跳过。GitHub Actions 执行 Ruff 核心错误检查、单元测试与五类场景验证。
 
+### 目录结构
+
+```text
+meditouch-agent/
+├── meditouch/         # Agent、咨询、检索、证据校验与服务实现
+├── tests/             # 自动化测试
+├── scripts/           # 下载、验收、评测与连接检查
+├── web/               # 网页界面
+├── knowledge/         # 症状追问配置
+├── docs/              # 文档与界面截图
+├── integrations/      # MCP 与外部客户端配置
+├── eval_data/         # 评测问题与标注
+├── eval_corpus/       # 合成检索夹具
+├── demo_corpus/       # 离线演示资料
+├── server.py          # 网页启动入口
+├── demo.py            # 离线演示入口
+└── medical_mcp.py     # MCP 启动入口
+```
+
+在仓库根目录运行命令。业务模块使用 `python -m meditouch.模块名`，工具脚本使用 `python -m scripts.脚本名`，单独运行测试可用 `python -m unittest tests.test_contextual_answers`。三个根目录入口调用对应模块，资料、数据库和模型缓存仍相对于项目目录定位。
+
 | 目录 / 模块 | 职责 |
 | --- | --- |
-| `agent_graph.py` / `model_gateway.py` | Agent 循环、模型接口与调用预算 |
-| `consultation.py` / `query_plan.py` | 会话状态、多轮改写与查询计划 |
-| `symptom_clarification.py` / `knowledge/` | 症状追问与条件收集 |
-| `evidence_service.py` | 统一证据接口、仲裁与回答校验 |
-| `hybrid_retrieval.py` / `reranking.py` | 混合检索、向量缓存与可选重排 |
-| `public_health*.py` / `web_evidence.py` | 公开资料、缓存及联网回退 |
-| `server.py` / `accounts.py` / `web/` | HTTP 服务、账号与网页 |
+| `meditouch/agent_graph.py` / `meditouch/model_gateway.py` | Agent 循环、模型接口与调用预算 |
+| `meditouch/consultation.py` / `meditouch/query_plan.py` | 会话状态、多轮改写与查询计划 |
+| `meditouch/symptom_clarification.py` / `knowledge/` | 症状追问与条件收集 |
+| `meditouch/evidence_service.py` | 统一证据接口、仲裁与回答校验 |
+| `meditouch/hybrid_retrieval.py` / `meditouch/reranking.py` | 混合检索、向量缓存与可选重排 |
+| `meditouch/public_health*.py` / `meditouch/web_evidence.py` | 公开资料、缓存及联网回退 |
+| `meditouch/server.py` / `meditouch/accounts.py` / `web/` | HTTP 服务、账号与网页 |
+| `tests/` / `scripts/` | 自动化测试、资料处理和评测入口 |
 | `eval_data/` / `eval_corpus/` | 评测问题与合成夹具 |
 
 HTTP 入口为 `POST /api/agent`、`POST /api/agent/stream` 和 `GET /api/session/{id}`。会话通过 `session_id` 和 `revision` 延续，过期修订返回 `409`。MCP 接入见 [集成说明](integrations/craft/README.md)。

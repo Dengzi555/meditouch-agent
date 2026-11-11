@@ -1,6 +1,6 @@
 # 按问题选择追问字段
 
-2026-11-02。用户要求将固定“人群、肾功能”追问扩展为场景选择。本次修改集中在 `patient_context.py`、前端字段显示与独立回归测试，没有重建会话存储或更改资料审核状态。
+2026-11-02。用户要求将固定“人群、肾功能”追问扩展为场景选择。本次修改集中在 `meditouch/patient_context.py`、前端字段显示与独立回归测试，没有重建会话存储或更改资料审核状态。
 
 | 场景 | 必要信息 |
 | --- | --- |
@@ -17,4 +17,4 @@
 
 当前选择规则是确定性关键词规则，覆盖本轮示例，不是通用病情理解模型、完整临床分诊或剂量工具；复杂否定、含糊表述及超出关键词的症状仍需后续案例完善。
 
-验证命令：`.venv-agent\Scripts\python.exe -X utf8 -B -m unittest test_patient_context_routing test_consultation test_agent_graph test_agent_http -q`。测试使用隔离数据库和脚本模型，不调用付费模型、不重启主线程正在运行的服务。
+验证命令：`.venv-agent\Scripts\python.exe -X utf8 -B -m unittest tests.test_patient_context_routing tests.test_consultation tests.test_agent_graph tests.test_agent_http -q`。测试使用隔离数据库和脚本模型，不调用付费模型、不重启主线程正在运行的服务。

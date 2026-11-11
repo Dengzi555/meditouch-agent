@@ -4,12 +4,12 @@
 
 ## 新资料入库
 
-`reference_ingestion.py` 处理 `knowledge_sources/respiratory_reference_20261102/manifest.json` 中成功下载的5份原件，跳过并保留下载失败记录。网页仅提取 `.TRS_UEDITOR` 正文，去除导航、脚本、样式和页脚；短篇科普整篇保留，避免拆散例外条件。18页流感方案按一级章节切分，跨页章节保留全部定位跨度与原文，未按字数硬截断。
+`meditouch/reference_ingestion.py` 处理 `knowledge_sources/respiratory_reference_20261102/manifest.json` 中成功下载的5份原件，跳过并保留下载失败记录。网页仅提取 `.TRS_UEDITOR` 正文，去除导航、脚本、样式和页脚；短篇科普整篇保留，避免拆散例外条件。18页流感方案按一级章节切分，跨页章节保留全部定位跨度与原文，未按字数硬截断。
 
 本批得到17单元：PDF引言及12章共13个、网页科普4个；合并旧语料后真实索引共30个。治疗章约4514字符，作为完整章节保留并加长章节标记；其表格、数值和剂量需人工对照PDF核对。没有自动抽取临床claims。
 
 ```powershell
-python -B reference_ingestion.py
+python -B -m meditouch.reference_ingestion
 ```
 
 输出至 `rag_data/respiratory_reference/`：
@@ -22,15 +22,15 @@ python -B reference_ingestion.py
 
 默认 `EvidenceService` 已合并新索引，HTTP、MCP统一入口与单Agent均可检索。自定义PDF语料不会自动混入新包；测试可显式注入reference_paths。新机器需先下载资料再构建，原件和派生内容仍被Git忽略，不随源码分发。
 
-10 类症状的 NHS 公开资料仍保存在本机索引中，仅用于资料检索，尚未进入咨询回答池。可用 `python symptom_reference_pack.py --download` 更新原文与清单。
+10 类症状的 NHS 公开资料仍保存在本机索引中，仅用于资料检索，尚未进入咨询回答池。可用 `python -m meditouch.symptom_reference_pack --download` 更新原文与清单。
 
 Information from the NHS website is licensed under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/). See the [NHS website terms](https://www.nhs.uk/our-policies/terms-and-conditions/).
 
 ## 会话与追问
 
-`consultation.py` 使用现有本机SQLite库新增 `consultations` 表，保持已有docs/runs。每次咨询包含随机session_id、原问题、固定语料、人群及症状等结构化字段、来源声明、更新时间、revision和运行状态。不会把“不清楚”转换为“无异常”，不会自行从自然语言猜出未提供的体温或持续时间。
+`meditouch/consultation.py` 使用现有本机SQLite库新增 `consultations` 表，保持已有docs/runs。每次咨询包含随机session_id、原问题、固定语料、人群及症状等结构化字段、来源声明、更新时间、revision和运行状态。不会把“不清楚”转换为“无异常”，不会自行从自然语言猜出未提供的体温或持续时间。
 
-`patient_context.py` 定义字段与按问题选择的追问规则：症状咨询收集相关人群、症状和持续时间；涉及发热时收集体温及测量方式；涉及用药时可补充药名规格、成分和既往用药情况；肾功能沿用钾盐相关条件。伴随症状等字段可保存。规则用于信息收集，不用于判断严重程度、药物安全或诊断。
+`meditouch/patient_context.py` 定义字段与按问题选择的追问规则：症状咨询收集相关人群、症状和持续时间；涉及发热时收集体温及测量方式；涉及用药时可补充药名规格、成分和既往用药情况；肾功能沿用钾盐相关条件。伴随症状等字段可保存。规则用于信息收集，不用于判断严重程度、药物安全或诊断。
 
 缺少条件时由宿主直接进入等待状态，不耗费模型调用；补充后只追问仍缺的字段，满足当前信息收集条件再把原问题与已知声明交给现有LangGraph。这里恢复的是咨询任务和结构化信息，不是从某次模型执行到一半的LangGraph节点恢复，也没有自动建设跨会话健康画像。
 

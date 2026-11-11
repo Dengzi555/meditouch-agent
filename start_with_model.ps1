@@ -23,6 +23,7 @@ $env:CLAW_EVAL_API_KEY = $env:MED_AGENT_API_KEY
 $env:CLAW_EVAL_BASE_URL = $env:MED_AGENT_BASE_URL
 $env:CLAW_EVAL_MODEL = $env:MED_AGENT_MODEL
 $env:PYTHONUTF8 = '1'
+Push-Location -LiteralPath $PSScriptRoot
 try {
     if ($Action -eq 'Agent' -and -not $env:MED_AGENT_DEEPSEEK_SEARCH_KEY) {
         $searchKeyPath = Join-Path $PSScriptRoot 'data\deepseek-search-key.dpapi'
@@ -43,16 +44,16 @@ try {
         if ($Action -eq 'Agent') {
             & $agentPython (Join-Path $PSScriptRoot 'server.py')
         } elseif ($Action -eq 'AgentCheck') {
-            & $agentPython (Join-Path $PSScriptRoot 'agent_acceptance.py') --ping
+            & $agentPython -m scripts.agent_acceptance --ping
         } elseif ($Action -eq 'AgentPreview') {
-            & $agentPython (Join-Path $PSScriptRoot 'agent_acceptance.py') --real-preview
+            & $agentPython -m scripts.agent_acceptance --real-preview
         } elseif ($Action -eq 'PatientEval') {
-            & $agentPython (Join-Path $PSScriptRoot 'patient_acceptance.py') --live
+            & $agentPython -m scripts.patient_acceptance --live
         } else {
-            & $agentPython (Join-Path $PSScriptRoot 'agent_acceptance.py') --live
+            & $agentPython -m scripts.agent_acceptance --live
         }
     } elseif ($Action -eq 'Check') {
-        & python (Join-Path $PSScriptRoot 'check_model_connection.py')
+        & python -m scripts.check_model_connection
     } else {
         & python (Join-Path $PSScriptRoot 'server.py')
     }
@@ -64,5 +65,6 @@ try {
         Remove-Item Env:MED_AGENT_DEEPSEEK_SEARCH_KEY -ErrorAction SilentlyContinue
     }
     $secureKey.Dispose()
+    Pop-Location
 }
 exit $modelExitCode

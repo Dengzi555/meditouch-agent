@@ -36,8 +36,8 @@
 在D:\demo执行，以下脚本仅使用标准库，读取前期已提取的pages.json：
 
 ```powershell
-python rag_pipeline.py build
-python rag_pipeline.py search --question "肾功能不全者补钾前需要注意什么？"
+python -m meditouch.rag_pipeline build
+python -m meditouch.rag_pipeline search --question "肾功能不全者补钾前需要注意什么？"
 python -m unittest -v
 ```
 

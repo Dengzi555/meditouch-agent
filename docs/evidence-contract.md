@@ -54,4 +54,4 @@ items是按BM25相关性排序的前k项；related_items补充相同显式主张
 
 本地缺库和完整性错误不自动重试。暂时连接或超时可重试一次。不得把异常原文（可能含凭据）透传给模型或前端。
 
-共享实现：evidence_service.py。MCP使用search_materials/read_material；HTTP使用/api/evidence/search；LangGraph白名单工具在同进程调用相同服务。旧接口继续保留，不声称旧接口字段已经全部迁移。
+共享实现：meditouch/evidence_service.py。MCP使用search_materials/read_material；HTTP使用/api/evidence/search；LangGraph白名单工具在同进程调用相同服务。旧接口继续保留，不声称旧接口字段已经全部迁移。

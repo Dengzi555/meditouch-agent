@@ -43,7 +43,7 @@ cd D:\demo
 python -m venv .venv-eval
 .\.venv-eval\Scripts\python.exe -m pip install .\vendor\claw-eval
 $env:PYTHONUTF8='1'
-.\.venv-eval\Scripts\python.exe run_claw_medical_eval.py
+.\.venv-eval\Scripts\python.exe -m scripts.run_claw_medical_eval
 .\.venv-eval\Scripts\python.exe -m unittest -v
 ```
 

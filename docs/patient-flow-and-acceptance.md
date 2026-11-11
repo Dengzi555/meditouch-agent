@@ -4,7 +4,7 @@
 
 ## 咨询流程
 
-`consultation_flow.py` 在模型、追问和检索之前进行路由：
+`meditouch/consultation_flow.py` 在模型、追问和检索之前进行路由：
 
 ```mermaid
 flowchart TD
@@ -30,17 +30,17 @@ flowchart TD
 
 ## 经审核内容的受限生成
 
-`reviewed_content.py` 把医学审核记录绑定到具体证据ID、完整原文和原始快照指纹。每条审核记录包含患者表述patient_text、适用范围、限制、不确定性、审核人和日期。只允许 `general_education`；个体处方范围不被接受。
+`meditouch/reviewed_content.py` 把医学审核记录绑定到具体证据ID、完整原文和原始快照指纹。每条审核记录包含患者表述patient_text、适用范围、限制、不确定性、审核人和日期。只允许 `general_education`；个体处方范围不被接受。
 
 目前真实资料仍无临床审核通过的记录。已生成本地30单元模板 `data/review-template-20261102.json`，均为pending，供专业人员核对和填写。本次没有把下载资料或模型自评冒充医学审核。
 
 ```powershell
 # 导出新的待审模板（不会覆盖已有文件）
-python -B reviewed_content.py template data/review-template-new.json
+python -B -m meditouch.reviewed_content template data/review-template-new.json
 # 专业审核完成后，检查审核记录与当前原件是否仍一致
-python -B reviewed_content.py check data/completed-reviews.json
+python -B -m meditouch.reviewed_content check data/completed-reviews.json
 # 明确安装有效审核记录；原注册表有备份，并留下本机安装日志
-python -B reviewed_content.py install data/completed-reviews.json
+python -B -m meditouch.reviewed_content install data/completed-reviews.json
 ```
 
 注册表位于Git忽略的 `data/reviewed-content.json`。安装是开发者CLI动作，没有暴露给Agent、HTTP导入文档工具或MCP工具。审核人身份在本机记录，尚未认证；不能把这个文件机制当作正式机构的审批系统。有权限同时修改源码、原件和注册表的人仍可篡改内容，需要部署层的访问控制另行治理。
@@ -51,14 +51,14 @@ python -B reviewed_content.py install data/completed-reviews.json
 
 ## 五类验收与40个开发问题
 
-新增 `patient_acceptance.py`，分别报告两部分：
+新增 `scripts/patient_acceptance.py`，分别报告两部分：
 
 1. 五类工程场景：正常问答、需要追问、证据不足、证据冲突、工具失败。正常回答使用显式的虚构审核表述夹具，不涉及真实病情；测试引用绑定及限制保留。可用真实模型验证工具往返。
 2. 原40个合成问题：由 `eval_data/patient_flow_expectations.json` 提供逐题、人工编写的工程预期，不从被测route函数直接计算预期。普通查询使用真实待审语料，冲突、引用错误和工具失败明确注入夹具。风险案例检查零模型调用且优先停止；资料待审只能预览。这不是独立医学测试集，不能从流程通过推导临床可靠性。
 
 ```powershell
 # 不调用付费模型
-.\.venv-agent\Scripts\python.exe -B patient_acceptance.py
+.\.venv-agent\Scripts\python.exe -B -m scripts.patient_acceptance
 # 当前配置的真实模型运行五类工程场景；40题仍用脚本模型检查流程
 pwsh -NoProfile -File start_with_model.ps1 -Action PatientEval
 ```
@@ -67,7 +67,7 @@ pwsh -NoProfile -File start_with_model.ps1 -Action PatientEval
 
 报告保存为 `data/patient-acceptance-offline.json`、`data/patient-acceptance-live.json` 及带时间戳归档。失败试跑报告也保留，没有通过后覆盖掉历史归档。界面“质量评测”按钮通过 `/api/patient/evaluate` 执行脚本模型的五类与40题验收，不消耗模型API调用；原 `/api/evaluate` 的规则基线仍可调用。
 
-新增 `test_patient_flow.py` 覆盖风险优先及否定/假设/历史、审核记录与来源绑定、撤销/篡改阻断、禁止模型改写、五类与40题。HTTP测试另覆盖风险结果刷新恢复及新验收端点。
+新增 `tests/test_patient_flow.py` 覆盖风险优先及否定/假设/历史、审核记录与来源绑定、撤销/篡改阻断、禁止模型改写、五类与40题。HTTP测试另覆盖风险结果刷新恢复及新验收端点。
 
 ## 仍需外部材料或专业工作
 

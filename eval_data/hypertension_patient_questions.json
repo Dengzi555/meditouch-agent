@@ -132,7 +132,7 @@
     }
   ],
   "engineering_acceptance": {
-    "runner": "patient_acceptance.py",
+    "runner": "scripts/patient_acceptance.py",
     "expectations": "patient_flow_expectations.json",
     "report": "data/patient-acceptance-live.json",
     "development_flow_cases_executed": true,

@@ -28,14 +28,14 @@
 
 ## 工程实现和验证方式
 
-`web_knowledge.py` 只抽取 `#articleCon` 正文，排除导航、脚本和页脚；每次读取校验原件与正文哈希。HTML没有PDF页码，以网页正文选择器和提取文本坐标定位。`EvidenceService` 默认真实检索合并既有PDF和这批网页；自定义PDF语料路径不会自动混入本地网页包。包未下载时可运行旧语料；存在但损坏时检索失败，禁止静默使用变更内容。
+`meditouch/web_knowledge.py` 只抽取 `#articleCon` 正文，排除导航、脚本和页脚；每次读取校验原件与正文哈希。HTML没有PDF页码，以网页正文选择器和提取文本坐标定位。`EvidenceService` 默认真实检索合并既有PDF和这批网页；自定义PDF语料路径不会自动混入本地网页包。包未下载时可运行旧语料；存在但损坏时检索失败，禁止静默使用变更内容。
 
 四篇网页全部固定为 `pending` / `generation_allowed=false`。来源机构审核不等于本项目对适用范围、版本和引用单元的审核；改manifest不能自动批准这些网页。新资料暂时只允许原文预览。尚未建立这批资料的正式审核发布流程。
 
 ```powershell
-python -B web_knowledge.py collect
-python -B web_knowledge.py check
-.\.venv-agent\Scripts\python.exe -B -m unittest test_web_knowledge test_agent_graph test_agent_http -v
+python -B -m meditouch.web_knowledge collect
+python -B -m meditouch.web_knowledge check
+.\.venv-agent\Scripts\python.exe -B -m unittest tests.test_web_knowledge tests.test_agent_graph tests.test_agent_http -v
 ```
 
 网络采集只在显式 `collect` 时运行；查询不在线抓取。完整网页作为单元是第一版折中，后续可按问答/章节切分，再评估准确率和上下文长度。

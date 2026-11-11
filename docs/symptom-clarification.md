@@ -93,7 +93,7 @@ curl -s http://127.0.0.1:8765/api/agent \
 ## 测试
 
 ```sh
-python -m unittest test_symptom_clarification -v
+python -m unittest tests.test_symptom_clarification -v
 ```
 
 覆盖：差异化单题选项、正文与追问同时返回、科普问题不触发、自由文本跳过已答问题、互斥项、轮次上限、非法答案拒绝、红旗文本与选项、增量答案合并、会话持久化、检索问题拼接，以及风险时不进入检索。

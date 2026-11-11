@@ -4,7 +4,7 @@
 
 采集日期：2026-11-02。用户要求下载可供后续RAG使用的公开资料。本批实际成功5份（1份PDF、4份HTML），另3个网页返回HTTP 412，未伪装为下载成功。与此前4篇疾控科普合计9份呼吸道相关原件，不计高血压材料。
 
-本批目录：`D:\demo\knowledge_sources\respiratory_reference_20261102\`。目录中的 `manifest.json` 记录来源、日期、下载结果、字节数、SHA256、用途与待审核状态；带时间戳的manifest保存每次采集结果，原件变更时按哈希另存，避免覆盖历史快照。源码脚本：`download_patient_materials.py`，运行需Python及pypdf。
+本批目录：`D:\demo\knowledge_sources\respiratory_reference_20261102\`。目录中的 `manifest.json` 记录来源、日期、下载结果、字节数、SHA256、用途与待审核状态；带时间戳的manifest保存每次采集结果，原件变更时按哈希另存，避免覆盖历史快照。源码脚本：`scripts/download_patient_materials.py`，运行需Python及pypdf。
 
 | 已成功保存的材料 | 用途 | 原件 |
 | --- | --- | --- |
