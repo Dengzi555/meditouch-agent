@@ -10,7 +10,8 @@ from uuid import uuid4
 
 from evidence_service import validate_request
 from model_gateway import ModelError, ModelGateway
-from patient_context import QUESTIONS, missing_context, resolve_fever_intent, validate_context
+from patient_context import (QUESTIONS, FEVER_STATUS, confirmed_context, fever_conflict,
+                             missing_context, resolve_fever_intent, validate_context)
 from query_plan import INTENTS, requested_intents, understand_question
 from consultation_flow import route, stopped_result
 import symptom_clarification
@@ -95,9 +96,15 @@ class ConsultationStore:
     def view(self,session_id):
         state=self.read(session_id)
         decision=route(consultation_question(state),values(state))
+        result = state.get('result')
+        view_status = state['status']
+        if fever_conflict(values(state), state['question']) and decision['kind'] != 'risk' and result and result['status'] != 'risk_alert':
+            result = dict(fever_conflict_result(state['question']), session_id=state['id'],
+                          revision=state['revision'], original_question=state['question'], context=state['slots'])
+            view_status, decision = result['status'], result['flow']
         return dict(session_id=state['id'],revision=state['revision'],question=state['question'],
-                    corpus=state['corpus'],context=state['slots'],status=state['status'],
-                    result=state.get('result'),prior_turns=state.get('prior_turns', []),
+                    corpus=state['corpus'],context=(result or {}).get('context', state['slots']),status=view_status,
+                    result=result,prior_turns=state.get('prior_turns', []),
                     missing_context=decision['missing_fields'],flow=decision,
                     questions=QUESTIONS,storage_scope='仅本机咨询状态；用户声明未核实，非长期健康档案')
 
@@ -139,6 +146,8 @@ class ConsultationStore:
                 if corpus not in ('real','demo'): raise ValueError('corpus 必须为 real 或 demo')
                 state=dict(id=uuid4().hex,question=question,corpus=corpus,slots={},revision=0,
                            history=[],created_at=now)
+            if set(updates) & {'symptoms', 'associated_symptoms', 'temperature'} and 'fever_status' not in updates:
+                state['slots'].pop('fever_status', None)
             for key,value in updates.items():
                 if key == 'clarification' and value and state['slots'].get(key):
                     previous = symptom_clarification.parse_clarification(
@@ -174,8 +183,10 @@ class ConsultationStore:
                            result=result,updated_at=time.time())
             current['history'].append(dict(revision=current['revision'],run_id=result['id'],status=result['status']))
             current['history']=current['history'][-50:]
+            display_slots = {key: {**current['slots'].get(key, {}), 'value': value}
+                             for key, value in values(current).items()}
             result.update(session_id=current['id'],revision=current['revision'],
-                          context=current['slots'],original_question=current['question'])
+                          context=display_slots,original_question=current['question'])
             # result and current reference one another only through JSON-safe slot data.
             db.execute('UPDATE consultations SET body=? WHERE id=? AND owner_id=?',(json.dumps(current,ensure_ascii=False),current['id'],self.owner_id))
         return dict(result, prior_turns=current.get('prior_turns', []))
@@ -191,7 +202,19 @@ class ConsultationStore:
                 db.execute('UPDATE consultations SET body=? WHERE id=? AND owner_id=?',(json.dumps(state,ensure_ascii=False),session_id,self.owner_id))
 
 
-def values(state): return {k:v['value'] for k,v in state['slots'].items()}
+def values(state): return confirmed_context({k:v['value'] for k,v in state['slots'].items()})
+
+
+def fever_conflict_result(question):
+    return dict(id=uuid4().hex, question=question, status='needs_clarification',
+                answer='你提供的发热描述和体温信息有矛盾。请先确认当前情况，再更新判断；此前高热与现在退热可以分别记录。',
+                clarification_card={'field': 'fever_status', 'label': '确认当前情况',
+                                    'questions': [{'id': 'fever_status', 'mode': 'single',
+                                                   'prompt': '目前的发热情况是哪一种？',
+                                                   'options': [{'value': label, 'label': label} for label in FEVER_STATUS]}]},
+                sources=[], citations=[], trace=[{'node': 'context_consistency', 'status': 'conflict'}],
+                model_calls=0, tool_calls=0, latency_ms=0, missing_context=[],
+                flow={'kind': 'clarification', 'missing_fields': []}, created_at=time.strftime('%Y-%m-%d %H:%M:%S'))
 
 
 def consultation_question(state):
@@ -278,6 +301,30 @@ def finalize_consultation(result, question, context, corpus):
         result['answer_sections'] = sections
         result['intent_coverage'] = coverage
         result.setdefault('trace', []).append({'node': 'answer_coverage', 'result': coverage})
+
+
+def describe_known_information(result, context, previous):
+    if result['status'] not in ('guidance', 'answered', 'insufficient', 'general_health', 'unresolved'):
+        return
+    labels = {'population': '人群', 'temperature': '体温', 'duration': '病程',
+              'symptoms': '主要症状', 'associated_symptoms': '伴随表现', 'fever_status': '当前发热情况',
+              'risk_factors': '已说明的背景', 'medications': '已用药物'}
+    known = [{'label': label, 'value': context[key]} for key, label in labels.items() if context.get(key)]
+    old = {key: slot.get('value', '') for key, slot in (previous or {}).get('context', {}).items()
+           if isinstance(slot, dict)}
+    changed = [{'label': label, 'value': context[key]} for key, label in labels.items()
+               if previous and context.get(key) and context[key] != old.get(key)]
+    result['answer_context'] = {'known': known, 'changed': changed}
+    assessment_titles = {'可能的原因', '目前更符合哪种情况', '怎么判断', '当前判断'}
+    def assessment(reply):
+        for section in (reply or {}).get('answer_sections', []):
+            if section['title'] in assessment_titles and section.get('excerpts'):
+                point = section['excerpts'][0]
+                return {**point, 'quote': point['quote'].split('。')[0] + '。'}
+        return None
+    before, after = assessment(previous), assessment(result)
+    if changed and before and after and before['quote'] != after['quote']:
+        result['answer_context']['assessment_change'] = {'before': before, 'after': after}
 
 
 def evidence_intents(question):
@@ -426,7 +473,10 @@ def run_consultation(store,*,question=None,corpus=None,known_context=None,sessio
             clarify_result = symptom_clarification.respond(
                 state['question'], context, corpus=state['corpus'], decision=decision)
         symptom = symptom_clarification.consultation_symptom(state['question'])
-        if clarify_result is not None and clarify_result['status'] == 'risk_alert':
+        if (fever_conflict(context, original) and decision['kind'] != 'risk'
+                and not (clarify_result and clarify_result['status'] == 'risk_alert')):
+            result = fever_conflict_result(original)
+        elif clarify_result is not None and clarify_result['status'] == 'risk_alert':
             result = clarify_result
         elif decision['kind'] in ('risk','insufficient'):
             result=stopped_result(state['question'],decision)
@@ -460,7 +510,7 @@ def run_consultation(store,*,question=None,corpus=None,known_context=None,sessio
                 options['plan'] = plan
             suffix = symptom_clarification.query_suffix(context)
             retrieval_question = f'{request_question} {suffix}'.strip() if suffix else request_question
-            retrieval_context = {**context, **symptom_clarification.context_hints(context)}
+            retrieval_context = confirmed_context({**context, **symptom_clarification.context_hints(context)})
             if symptom is not None:
                 # Offer general, evidence-backed information before asking for
                 # details. Unknown patient facts remain in the separate slots.
@@ -486,7 +536,7 @@ def run_consultation(store,*,question=None,corpus=None,known_context=None,sessio
                 result = general_health_fallback(result, effective_question, context, decision['kind'],
                                                  plan=plan, on_progress=on_progress)
             result['flow']=decision
-        if (clarify_result is not None and clarify_result['status'] != 'risk_alert'
+        if (clarify_result is not None and clarify_result['status'] != 'risk_alert' and not fever_conflict(context, original)
                 and result['status'] not in ('risk_alert', 'unresolved')):
             result['clarification_card'] = clarify_result['clarification_card']
             result['clarification_summary'] = clarify_result['clarification_summary']
@@ -508,6 +558,7 @@ def run_consultation(store,*,question=None,corpus=None,known_context=None,sessio
             if summary:
                 result['clarification_summary'] = summary
         finalize_consultation(result, effective_question, context, state['corpus'])
+        describe_known_information(result, context, state.get('result'))
         result.setdefault('uncertainty',[])
         if decision['kind'] != 'general_text':
             result['uncertainty'] += ['用户声明尚未独立核实；信息完整不代表可确诊或治疗适用。']

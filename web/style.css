@@ -209,6 +209,10 @@ body:has(#workspace:not(.hidden)) main > header { display: none; }
 .answer-points li { line-height: 1.65; padding-inline-start: .2em; }
 .answer-points li + li { margin-top: 8px; }
 .answer-highlight { font-weight: 700; }
+.answer-context { padding: 10px 14px; margin-bottom: 16px; border-radius: 10px; background: #f3f2fb; }
+.answer-context p { margin: 0; font-size: 13px; line-height: 1.7; color: var(--muted); }
+.answer-context p + p { margin-top: 5px; }
+.answer-context strong { color: var(--ink); margin-right: 6px; }
 .urgent-answer .answer-highlight { color: #8d3722; }
 @keyframes loading { to { transform: rotate(360deg); } }
 @media (max-width: 960px) {

@@ -1,5 +1,6 @@
 """Source-linked first response and optional follow-ups for sore throat reports."""
 import re
+from patient_context import FEVER_STATUS
 
 SORE_THROAT = r'咽痛|嗓子(?:疼|痛)|喉咙(?:疼|痛)|喉痛'
 BODY_ACHES = r'(?:浑身|全身)(?:酸)?(?:疼|痛)|肌肉(?:酸)?(?:疼|痛)|酸痛'
@@ -26,10 +27,14 @@ FLU_TREATMENT = {'title': '美国 CDC · 流感抗病毒治疗', 'url': 'https:/
 def guidance_response(sections, followup):
     """Keep the same modules in streamed, saved, and plain-text replies."""
     references = {source['url']: source for _, _, source in sections}
+    grouped = {}
+    for title, quotes, source in sections:
+        grouped.setdefault(title, []).extend(
+            dict(quote=quote, source_url=source['url'])
+            for quote in (quotes if isinstance(quotes, list) else [quotes]))
     return dict(
-        answer='\n\n'.join(quote for _, quote, _ in sections),
-        sections=[dict(title=title, excerpts=[dict(quote=quote, source_url=source['url'])])
-                  for title, quote, source in sections],
+        answer='\n\n'.join(point['quote'] for points in grouped.values() for point in points),
+        sections=[dict(title=title, excerpts=points) for title, points in grouped.items()],
         followup=followup, references=list(references.values()),
     )
 
@@ -114,6 +119,9 @@ def first_response(question, context, *, head_and_chills=False):
     aches = present(BODY_ACHES, symptoms)
     fever = present(FEVER, symptoms)
     no_fever = not fever and bool(re.search(r'(?:没有|没|无)(?:出现)?(?:发热|发烧)', symptoms))
+    if context.get('fever_status'):
+        fever = context['fever_status'] == FEVER_STATUS[0]
+        no_fever = context['fever_status'] in FEVER_STATUS[1:3]
     headache = present(OPTIONS['头痛'], symptoms)
     high_temperature = bool(re.search(
         r'^\s*(?:39|4[0-2])(?:\.\d+)?\s*(?:℃|°C|度)(?:\s*或以上)?\s*$',
@@ -161,27 +169,42 @@ def first_response(question, context, *, head_and_chills=False):
         if '发热' in choices:
             choices.insert(choices.index('发热')+1, '没有发烧')
         if choices:
-            followup = dict(field='associated_symptoms', question='请选择符合你情况的选项。', options=choices)
+            followup = dict(field='associated_symptoms', question='还伴有哪些表现？', options=choices,
+                            option_conflicts={'发热': ['没有发烧'], '没有发烧': ['发热']})
 
-    medication = '需要缓解不适时，可以请医生或药师按年龄和身体情况选择对症药。核对有效成分，避免叠加含相同成分的复方药。'
-    seek_care = '出现呼吸困难请立即寻求急救。无法吞咽或症状明显加重时，请及时就医。'
+    care = ['尽量休息，保证饮水。咳嗽、咽痛等症状可先对症缓解，同时观察是否出现加重或反复。']
+    medication = ['退热镇痛药可暂时缓解发热、头痛或肌肉酸痛，但不能据此治疗病因。使用前核对说明书，并说明正在服用的其他药。',
+                  '复方感冒药可能包含多种成分，合用前逐一核对，避免同一种成分重复服用。']
+    seek_care = ['出现呼吸困难请立即寻求急救。',
+                 '无法吞咽、喝不进水或出现明显脱水时，请及时就医。',
+                 '症状在几天内没有改善、持续加重或反复发作时，应联系医生评估。']
     if flu_pattern:
         duration = context.get('duration')
         if duration in ('不到一天', '1–2 天'):
-            seek_care += '你补充说刚起病不久。如属于流感重症高风险人群，请尽早联系医生评估。'
+            seek_care.append('你补充说刚起病不久。若怀孕、有慢性病或免疫功能低下，应尽早联系医生评估抗病毒治疗，避免耽误早期治疗。')
         elif duration == '超过 2 天':
-            seek_care += '你补充说症状已超过两天。如果症状加重或属于高风险人群，仍应联系医生评估。'
+            seek_care.append('你补充说症状已超过两天。超过两天不代表抗病毒治疗一定无益，高风险或病情较重的人仍应尽快联系医生评估。')
         else:
-            seek_care += '怀孕、有慢性病或免疫功能低下的人出现疑似流感症状时，应尽早联系医生。'
-        medication += '流感抗病毒药需由医生评估是否适用。'
+            seek_care.append('怀孕、有慢性病或免疫功能低下的人出现疑似流感症状时，应尽早联系医生；这些人即使症状较轻也需要关注。')
+    if present(OPTIONS['鼻塞或流鼻涕'], symptoms):
+        care.append('如果鼻塞、流鼻涕明显，可了解生理盐水鼻喷或滴鼻等缓解方式，并按产品说明使用。')
     sections = [
-        ('目前更符合哪种情况' if flu_pattern else '可能的原因', opening + clues, REFERENCES[0]),
-        ('现在怎么做', '如果症状较轻，可以先休息、适量补充水分。', REFERENCES[2]),
-        ('用药注意事项', medication, FLU_TREATMENT if flu_pattern else REFERENCES[3]),
-        ('什么时候就医', seek_care, FLU_TREATMENT if flu_pattern else REFERENCES[1]),
+        ('目前更符合哪种情况' if flu_pattern else '可能的原因', opening, REFERENCES[0]),
+        ('目前更符合哪种情况' if flu_pattern else '可能的原因', clues, REFERENCES[4] if flu_pattern else REFERENCES[0]),
+        ('现在怎么做', care, REFERENCES[2]),
+        ('现在怎么做', '咽痛时可尝试温饮，并避开吸烟和二手烟等刺激。若吞咽困难到影响喝水，应及时就医。', REFERENCES[1]),
+        ('用药注意事项', medication, REFERENCES[3]),
+        ('用药注意事项', '如果病因是病毒，抗生素不能起到治疗作用。是否需要抗生素，应由医生结合检查判断。', REFERENCES[1]),
+        ('什么时候就医', seek_care[:3], REFERENCES[1]),
     ]
+    if context.get('temperature'):
+        sections.append(('现在怎么做', f'你记录的体温为「{context["temperature"]}」。后续按体温计说明复测，留意体温和不适是否持续或加重；一次读数不能确定病因。', ADULT_FEVER))
+    if flu_pattern:
+        sections.append(('什么时候就医', seek_care[3:], FLU_TREATMENT))
+        sections.append(('用药注意事项', '流感抗病毒药属于处方药，由医生评估是否适用。通常越早使用获益越大；不能仅凭症状自行认定需要服药。', FLU_TREATMENT))
+    if context.get('population') == '成人':
+        sections.append(('用药注意事项', '成人发热且明显不适时，可核对对乙酰氨基酚或布洛芬的说明书，或请药师确认是否适合自己；有基础病或合用药物时需特别核对。', ADULT_FEVER))
     result = guidance_response(sections, followup)
     if flu_pattern:
         result['sections'][0]['excerpts'][0]['highlight'] = '更符合流感的常见表现'
-        result['references'].extend([REFERENCES[3], REFERENCES[4]])
     return result

@@ -25,10 +25,44 @@ QUESTIONS={
     'label_basis':'标签以每100克、每100毫升还是每份标注？一份多少？',
     'consumed_amount':'实际吃了多少克、毫升或多少份？不清楚可说明。',
 }
+FEVER_STATUS = ('目前有发热', '此前发热，目前已退热', '先前记录有误，目前没有发热', '当前情况不确定，需要重新测量')
+
+
+def fever_conflict(context, question=''):
+    if context.get('fever_status') in FEVER_STATUS:
+        return False
+    if (re.search(r'科普|区别|区分|是什么|为什么|会不会|是否|如果|假如|定义', question)
+            and not re.search(r'我现在|我已经|目前', question)):
+        question = ''
+    text = '、'.join([question, *(context.get(key, '') for key in ('symptoms', 'associated_symptoms'))])
+    denied = bool(re.search(r'(?:没有|没|无|不)(?:出现)?(?:发热|发烧)', text))
+    positive = re.sub(r'(?:没有|没|无|不)(?:出现)?(?:发热|发烧)', '', text)
+    temperature = re.match(r'^\s*(3[89]|4[0-2])(?:\.\d+)?', context.get('temperature', ''))
+    temperature = temperature or re.search(r'(?:体温|测到|测出)\s*(?:是|为)?\s*(?:3[89]|4[0-2])(?:\.\d+)?\s*(?:℃|度)', question)
+    return denied and (bool(re.search(r'发热|发烧|高热|高烧', positive)) or bool(temperature))
+
+
+def confirmed_context(context):
+    """Project an explicit correction while retaining raw declarations in storage."""
+    status = context.get('fever_status')
+    if status not in FEVER_STATUS:
+        return dict(context)
+    resolved = dict(context)
+    for key in ('symptoms', 'associated_symptoms'):
+        text = re.sub(r'(?:没有|没|无|不)(?:出现)?(?:发热|发烧)|发热|发烧|高热|高烧', '', resolved.get(key, ''))
+        resolved[key] = re.sub(r'[、，,；;\s]+', '、', text).strip('、')
+    observation = ('发热' if status == FEVER_STATUS[0] else
+                   '没有发烧' if status in FEVER_STATUS[1:3] else '发热情况不确定')
+    resolved['associated_symptoms'] = '、'.join(filter(None, [resolved.get('associated_symptoms'), observation]))
+    if (status != FEVER_STATUS[0] and resolved.get('temperature')
+            and not resolved['temperature'].startswith(('此前记录：', '此前填写有误：'))):
+        prefix = '此前填写有误' if status == FEVER_STATUS[2] else '此前记录'
+        resolved['temperature'] = f'{prefix}：{resolved["temperature"]}；当前体温未确认'
+    return {key: value for key, value in resolved.items() if value}
 # Kept as the complete supported intake field list for clients and fixtures.
 # Required fields are selected per consultation by missing_context below.
 # Structured clarification answers are an internal slot, not a user-facing prompt.
-CONTEXT_LIMITS = {'clarification': 4000}
+CONTEXT_LIMITS = {'clarification': 4000, 'fever_status': 100}
 ALLOWED_CONTEXT = set(QUESTIONS) | set(CONTEXT_LIMITS)
 INTAKE_FIELDS=['population','symptoms','duration','temperature','temperature_method',
                'associated_symptoms','risk_factors','drug_name','drug_ingredients','medications']
@@ -39,6 +73,8 @@ def validate_context(context,keep_empty=False):
             or any(k not in ALLOWED_CONTEXT or not isinstance(v,str)
                    or len(v) > CONTEXT_LIMITS.get(k,300) for k,v in context.items())):
         raise ValueError('补充信息字段无效；文本长度超出限制')
+    if context.get('fever_status') and context['fever_status'].strip() not in FEVER_STATUS:
+        raise ValueError('请选择有效的当前发热情况')
     return {k:v.strip() for k,v in context.items() if keep_empty or v.strip()}
 
 

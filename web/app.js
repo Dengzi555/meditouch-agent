@@ -230,7 +230,7 @@ function clarificationHTML(card){
     <div class="clarify-question" data-qid="${escapeHTML(question.id)}" data-mode="${question.mode==='multi'?'multi':'single'}" role="group" aria-label="${escapeHTML(question.prompt)}">
       <h3 class="clarify-prompt"><span aria-hidden="true">💡</span> ${escapeHTML(question.prompt)}${question.mode==='multi'?' <span class="clarify-hint">可多选</span>':''}</h3>
       <div class="clarify-options">
-        ${(question.options??[]).map(option=>`<button type="button" class="clarify-option" data-value="${escapeHTML(option.value)}" data-label="${escapeHTML(option.label)}" ${option.exclusive?'data-exclusive="true"':''} aria-pressed="false">${escapeHTML(option.label)}</button>`).join('')}
+        ${(question.options??[]).map(option=>`<button type="button" class="clarify-option" data-value="${escapeHTML(option.value)}" data-label="${escapeHTML(option.label)}" data-excludes="${escapeHTML(JSON.stringify(option.excludes??[]))}" ${option.exclusive?'data-exclusive="true"':''} aria-pressed="false">${escapeHTML(option.label)}</button>`).join('')}
       </div>
     </div>`).join('');
   return `<section class="card clarify-card" data-clarification data-symptom="${escapeHTML(card.symptom??'')}" data-field="${escapeHTML(card.field??'')}" data-round="${Number(card.round)||1}" aria-label="${escapeHTML(card.label)}追问">
@@ -293,11 +293,15 @@ function resultHTML(r, showTrace=false){
   const followupCard=followup?.question&&followup.options?.length?{
     label:'补充情况',field:followup.field,questions:[{id:followup.field,prompt:followup.question,
       mode:followup.field==='associated_symptoms'?'multi':'single',
-      options:followup.options.map(label=>({value:label,label}))}],
+      options:followup.options.map(label=>({value:label,label,excludes:followup.option_conflicts?.[label]??[]}))}],
   }:null;
   const clarify=r.status!=='risk_alert'&&(r.clarification_card||followupCard)
     ?clarificationHTML(r.clarification_card||followupCard):'';
-  return `<article class="card chat-answer ${r.status==='risk_alert'?'urgent-answer':''}">${showTrace?'':references}${badge}${answer}${uncertainty}${r.error&&r.error!==r.answer?`<p class="error">${escapeHTML(r.error)}</p>`:''}${showTrace?references:''}${trace}</article>${clarify}`;
+  const known=r.answer_context;
+  const change=known?.assessment_change;
+  const changeHTML=change?`<p><strong>判断更新</strong> ${escapeHTML(change.after.quote)} ${change.after.source_url?sourceLink({source_url:change.after.source_url},undefined,true):''}</p><details><summary>查看上轮判断</summary><p>${escapeHTML(change.before.quote)}</p></details>`:'';
+  const contextHTML=known?.known?.length?`<div class="answer-context"><p><strong>目前已知</strong> ${known.known.map(item=>escapeHTML(item.label+'：'+item.value)).join(' · ')}</p>${known.changed?.length?`<p><strong>本轮补充</strong> ${known.changed.map(item=>escapeHTML(item.label+'：'+item.value)).join(' · ')}</p>`:''}${changeHTML}</div>`:'';
+  return `<article class="card chat-answer ${r.status==='risk_alert'?'urgent-answer':''}">${showTrace?'':references}${badge}${contextHTML}${answer}${uncertainty}${r.error&&r.error!==r.answer?`<p class="error">${escapeHTML(r.error)}</p>`:''}${showTrace?references:''}${trace}</article>${clarify}`;
 }
 async function load(){const state=await api('state');$('#engine').textContent=state.config.enabled?'模型已配置 · '+state.config.model:'规则演示模式 · 未配置模型';$('#documents').innerHTML=state.documents.map(sourceHTML).join('');}
 $('#chat-form').onsubmit=e=>{
@@ -442,7 +446,7 @@ async function submitQuestion(context={},q=activeQuestion,appendTurn=false,displ
       }
       if(event.event==='answer'){
         partial={status:event.status,sources:event.sources,citations:event.citations,risk_references:event.risk_references,
-          guidance_references:event.guidance_references,answer_sections:[],answer:'',streaming:true};
+          guidance_references:event.guidance_references,answer_context:event.answer_context,answer_sections:[],answer:'',streaming:true};
       }
       function renderPartial(){
         currentSources=responseSources(partial);
@@ -524,6 +528,12 @@ document.addEventListener('click',event=>{
       option.setAttribute('aria-pressed',String(!pressed));
       if(!pressed)group.querySelectorAll('.clarify-option[data-exclusive="true"]')
         .forEach(button=>button.setAttribute('aria-pressed','false'));
+    }
+    if(!pressed){
+      const excludes=JSON.parse(option.dataset.excludes||'[]');
+      group.querySelectorAll('.clarify-option').forEach(button=>{
+        if(excludes.includes(button.dataset.value))button.setAttribute('aria-pressed','false');
+      });
     }
     updateClarify(card);
     return;

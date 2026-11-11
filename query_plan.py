@@ -87,6 +87,9 @@ def understand_question(question, context):
                 facts[term] = state if facts.get(term, state) == state else 'unknown'
     if any(UNMEASURED.search(value) for value in [*symptom_texts, context.get('temperature', '')]):
         facts['体温'] = 'unknown'
+    if context.get('fever_status'):
+        from patient_context import FEVER_STATUS
+        facts['发热'] = dict(zip(FEVER_STATUS, ('reported', 'denied', 'denied', 'unknown'))).get(context['fever_status'], 'unknown')
     return QuestionPlan(normalized, *(tuple(term for term, value in facts.items() if value == state)
                                       for state in ('reported', 'denied', 'unknown')))
 

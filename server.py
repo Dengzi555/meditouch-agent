@@ -196,6 +196,7 @@ class Handler(BaseHTTPRequestHandler):
             emit('answer', status=result['status'], sources=result.get('sources', []),
                  citations=result.get('citations', []),
                  risk_references=result.get('risk_references', []),
+                 answer_context=result.get('answer_context'),
                  guidance_references=result.get('guidance_references', []))
             sections = result.get('answer_sections', [])
             for section in sections:

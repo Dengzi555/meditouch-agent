@@ -222,9 +222,15 @@ class AgentHttpTests(unittest.TestCase):
             'session_id': first['session_id'], 'revision': narrowed['revision'],
             'known_context': {'associated_symptoms': '没有发烧、头痛'},
         })
-        self.assertIn('少了一个提示典型流感的线索', updated['answer'])
-        self.assertIn('仍无法判断炎症是否仅限于咽喉', updated['answer'])
-        self.assertIsNone(updated['followup'])
+        self.assertEqual(updated['status'], 'needs_clarification')
+        self.assertEqual(updated['clarification_card']['field'], 'fever_status')
+        corrected = self.post('/api/agent', {
+            'session_id': first['session_id'], 'revision': updated['revision'],
+            'known_context': {'fever_status': '此前发热，目前已退热'},
+        })
+        self.assertIn('少了一个提示典型流感的线索', corrected['answer'])
+        self.assertIn('仍无法判断炎症是否仅限于咽喉', corrected['answer'])
+        self.assertIsNone(corrected['followup'])
         sore_throat = self.post('/api/agent', {'question': '我喉咙疼'})
         self.assertIn('吞咽困难', sore_throat['followup']['options'])
         self.assertNotIn('头痛', sore_throat['followup']['options'])
