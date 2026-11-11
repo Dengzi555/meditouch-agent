@@ -39,7 +39,7 @@
 
 先呈现当前可支持的回答，再用一张小卡片追问相关表现。用户可单选或多选，也可暂不补充。后续轮次保留已有信息，更新检索范围和可支持的回答。
 
-![动态症状追问](docs/images/followup-options.png)
+![动态症状追问](docs/images/followup-consultation.png)
 
 ### 实时处理状态
 
