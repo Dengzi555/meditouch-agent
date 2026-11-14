@@ -169,52 +169,6 @@ class Handler(BaseHTTPRequestHandler):
                                           ensure_ascii=False), result['session_id']),
             )
 
-    def stream_consultation(self, store, runner, data):
-        self.send_response(200)
-        self.send_header('Content-Type', 'application/x-ndjson; charset=utf-8')
-        self.send_header('Cache-Control', 'no-store')
-        self.send_header('Connection', 'close')
-        self.end_headers()
-        self.close_connection = True
-        disconnected = False
-
-        def emit(event, **fields):
-            nonlocal disconnected
-            if disconnected:
-                return
-            try:
-                self.wfile.write((json.dumps({'event': event, **fields}, ensure_ascii=False) + '\n').encode())
-                self.wfile.flush()
-            except (ConnectionError, TimeoutError):
-                disconnected = True
-
-        try:
-            emit('intake')
-            result = runner(store, **data, on_progress=emit)
-            if not store.owner_id:
-                self.record_guest_run(result)
-            emit('answer', status=result['status'], sources=result.get('sources', []),
-                 citations=result.get('citations', []),
-                 risk_references=result.get('risk_references', []),
-                 answer_context=result.get('answer_context'),
-                 guidance_references=result.get('guidance_references', []))
-            sections = result.get('answer_sections', [])
-            for section in sections:
-                emit('section', section={**section, 'excerpts': []})
-                for point in section['excerpts']:
-                    emit('point', point=point)
-            if not sections and result['status'] != 'needs_clarification':
-                for paragraph in result['answer'].split('\n\n'):
-                    emit('paragraph', text=paragraph)
-            emit('done', result=result)
-        except (ValueError, TypeError) as exc:
-            emit('error', message=str(exc))
-        except ImportError:
-            emit('error', message='服务缺少 Agent 依赖')
-        except Exception as exc:
-            from meditouch.consultation import SessionError
-            emit('error', message=exc.code if isinstance(exc, SessionError) else '服务器异常，请查看本地日志')
-
     def account(self):
         with connect() as db:
             return accounts.current_account(db,self.browser_token())
@@ -270,14 +224,24 @@ class Handler(BaseHTTPRequestHandler):
                 except SessionError as e:
                     return self.send_json({'error':e.code},e.status)
                 return self.send_json({'entries':entries})
-            if self.path in ('/api/agent', '/api/agent/stream'):
+            if self.path == '/api/pharmacy/copilot':
+                from meditouch.agent_graph import run_graph
+                from meditouch.pharmacy_context import validate_workspace
+                from meditouch.pharmacy_graph import inventory_engine_for_store
+                if set(data) - {'question', 'corpus', 'workspace'} or data.get('workspace') is None:
+                    raise ValueError('药店请求需要 workspace；仅支持 question、corpus、workspace')
+                workspace = validate_workspace(data['workspace'])
+                return self.send_json(run_graph(data.get('question'), corpus=data.get('corpus', 'real'),
+                                                workspace=workspace,
+                                                inventory_engine=inventory_engine_for_store(workspace['store_id'])))
+            if self.path == '/api/agent/stream':
+                return self.send_json({'error':'旧服务已退役，请使用 FastAPI SSE 入口'},410)
+            if self.path == '/api/agent':
                 try:
                     from meditouch.consultation import run_consultation, SessionError
                     store = self.consultation_store()
                     arguments = {key: data.get(key) for key in
                                  ('question', 'corpus', 'known_context', 'session_id', 'revision', 'append_turn')}
-                    if self.path.endswith('/stream'):
-                        return self.stream_consultation(store, run_consultation, arguments)
                     r=run_consultation(store, **arguments)
                 except SessionError as e:
                     return self.send_json({'error':e.code},e.status)
@@ -317,9 +281,8 @@ class Handler(BaseHTTPRequestHandler):
         except Exception: return self.send_json({'error':'服务器异常，请查看本地日志'},500)
 
 def main():
-    init(); port=int(os.getenv('PORT','8765'))
-    print(f'Medical Agent: http://127.0.0.1:{port}',flush=True)
-    ThreadingHTTPServer(('127.0.0.1',port),Handler).serve_forever()
+    from meditouch.api import main as api_main
+    api_main()
 
 
 if __name__ == '__main__':

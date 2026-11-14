@@ -1,0 +1,17 @@
+{
+  "schema_version": "pharmacy.eval.inventory.v1",
+  "notice": "隔离的合成库存与禁忌夹具，不是真实说明书或医学适用性金标，不可导入实际门店。",
+  "drugs": [
+    {"name":"布洛芬缓释胶囊","brand":"芬必得","stock":15,"shelf_location":"A1","is_rx":false,"ingredients":"布洛芬","contraindications":"孕妇禁用（合成测试规则）"},
+    {"name":"对乙酰氨基酚片","brand":"泰诺林","stock":20,"shelf_location":"A2","is_rx":false,"ingredients":"对乙酰氨基酚","contraindications":"严重肝病禁用（合成测试规则）"},
+    {"name":"复方感冒灵颗粒","brand":"999","stock":10,"shelf_location":"A3","is_rx":false,"ingredients":"对乙酰氨基酚","contraindications":"孕妇禁用（合成测试规则）"},
+    {"name":"板蓝根颗粒","brand":"白云山","stock":20,"shelf_location":"A4","is_rx":false,"ingredients":null,"contraindications":null},
+    {"name":"阿莫西林胶囊","brand":"联邦","stock":10,"shelf_location":"B1","is_rx":true,"ingredients":"阿莫西林","contraindications":"青霉素过敏禁用（合成测试规则）"},
+    {"name":"氯雷他定片","brand":"开瑞坦","stock":12,"shelf_location":"B2","is_rx":false,"ingredients":"氯雷他定","contraindications":null},
+    {"name":"盐酸西替利嗪片","brand":null,"stock":12,"shelf_location":"B3","is_rx":false,"ingredients":"盐酸西替利嗪","contraindications":null},
+    {"name":"蒙脱石散","brand":"思密达","stock":8,"shelf_location":"C1","is_rx":false,"ingredients":"蒙脱石","contraindications":null},
+    {"name":"口服补液盐散","brand":null,"stock":20,"shelf_location":"C2","is_rx":false,"ingredients":null,"contraindications":null},
+    {"name":"盐酸氨溴索片","brand":null,"stock":12,"shelf_location":"D1","is_rx":false,"ingredients":"盐酸氨溴索","contraindications":null},
+    {"name":"氢溴酸右美沙芬片","brand":null,"stock":12,"shelf_location":"D2","is_rx":false,"ingredients":"氢溴酸右美沙芬","contraindications":null}
+  ]
+}

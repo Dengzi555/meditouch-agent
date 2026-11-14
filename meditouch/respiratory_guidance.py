@@ -2,7 +2,7 @@
 import re
 from meditouch.patient_context import FEVER_STATUS
 
-SORE_THROAT = r'咽痛|嗓子(?:疼|痛)|喉咙(?:疼|痛)|喉痛'
+from meditouch.risk import SORE_THROAT
 BODY_ACHES = r'(?:浑身|全身)(?:酸)?(?:疼|痛)|肌肉(?:酸)?(?:疼|痛)|酸痛'
 FEVER = r'发热|发烧|高热|高烧'
 OPTIONS = {

@@ -1,0 +1,92 @@
+[
+  {
+    "schema_version": "pharmacy.ui.v1",
+    "run_id": "demo-run-01",
+    "seq": 1,
+    "event": "progress",
+    "emitted_at": "2026-11-13T08:31:47.682216+00:00",
+    "payload": {
+      "stage": "inventory",
+      "attempt": 1,
+      "label": "查询本店库存"
+    }
+  },
+  {
+    "schema_version": "pharmacy.ui.v1",
+    "run_id": "demo-run-01",
+    "seq": 2,
+    "event": "progress",
+    "emitted_at": "2026-11-13T08:31:47.682231+00:00",
+    "payload": {
+      "stage": "safety",
+      "attempt": 1,
+      "label": "逐项核对禁忌"
+    }
+  },
+  {
+    "schema_version": "pharmacy.ui.v1",
+    "run_id": "demo-run-01",
+    "seq": 3,
+    "event": "cards.snapshot",
+    "emitted_at": "2026-11-13T08:31:47.682243+00:00",
+    "payload": {
+      "safety_status": "unknown",
+      "cards": [
+        {
+          "id": "intercepts",
+          "type": "intercept_warning",
+          "title": "已拦截药品",
+          "items": [
+            {
+              "name": "演示药甲",
+              "reason": "演示标签禁用"
+            }
+          ]
+        },
+        {
+          "id": "missing",
+          "type": "missing_information",
+          "title": "需要人工核对",
+          "message": "请人工核对病史",
+          "reason": "缺乏禁忌数据，建议咨询药师"
+        },
+        {
+          "id": "drug:2",
+          "type": "drug_candidate",
+          "title": "库存候选 · 待核对",
+          "drug": {
+            "inventory_id": 2,
+            "name": "演示药乙",
+            "brand": null,
+            "specification": "演示规格",
+            "shelf_location": "3排2号",
+            "stock": 5,
+            "is_rx": false
+          },
+          "safety_status": "unknown",
+          "availability": "in_stock",
+          "warning": null,
+          "requires_pharmacist_review": true,
+          "sale_authorized": false
+        },
+        {
+          "id": "staff-script",
+          "type": "staff_script",
+          "title": "店员话术",
+          "text": "我先帮您核对病史，再请药师确认。"
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": "pharmacy.ui.v1",
+    "run_id": "demo-run-01",
+    "seq": 4,
+    "event": "done",
+    "emitted_at": "2026-11-13T08:31:47.682246+00:00",
+    "payload": {
+      "status": "completed",
+      "sale_authorized": false
+    }
+  }
+]

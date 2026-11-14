@@ -1,211 +1,138 @@
 # 医点通 · MediTouch
 
-面向日常健康咨询的医疗证据 Agent。理解口语与多轮追问，查询公开医学资料和本地知识库，将回答关联到可核对的原文与出处。
+面向实体药店店员与实习生的接待、找药和库存工作台。用自然语言查询本店商品、货架和库存，结合顾客信息筛查已录入的禁忌，再通过卡片呈现结果；支持多药盒拍照预填、人工确认入库，以及销售、补货、退货和盘点记账。
 
 [![CI](https://github.com/Dengzi555/meditouch-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/Dengzi555/meditouch-agent/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/Python-3.12%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-![医点通首页](docs/images/home.png)
+## 核心能力
 
-## 能力
-
-- **连续咨询** — 保留原问、已知症状、否定信息和未知条件。结合历史改写省略式追问，补充信息后重新选择适用资料。
-- **结合已知信息回答** — 展示当前条件、本轮新增信息与发生变化的判断依据。对有来源支持的护理、用药注意事项和就医条件分别展开。
-- **按需追问** — 在当前回答下方展示独立选择卡片，每轮只问一个关键问题。合并新增信息后继续咨询，风险选项优先触发就医提醒。
-- **输入一致性检查** — 互斥选项不能同时选中。发热描述与体温记录矛盾时先确认当前状态，区分已退热、记录填错与尚未确认，旧会话重新打开时同样检查。
-- **多源检索** — 公开资料优先，本地 BM25 + BGE 混合检索补充缺口。外部资料支持短期缓存，联网搜索和通用医学知识回退可选开启。
-- **证据校验** — 核对引用身份、原文、快照指纹及已标注的适用条件。显式版本关系参与仲裁，未解决的结构化冲突保留双方。
-- **流式呈现** — 展示实际处理阶段，分段逐步呈现回答。引用侧栏可展开原文、跳转来源。
-- **会话管理** — SQLite 保存账号和咨询记录，支持对话重命名、置顶、删除及多选管理。通用聊天单独分流。
+- **多轮理解**：模型识别找药、安全核查、急症与闲聊；结合当前聊天历史归一化症状，保留否认与未知。
+- **会话保存**：聊天记录保存在本地 SQLite，刷新或重新打开会话可继续查询；不同会话分别保存接待上下文。
+- **批量找药**：多药名、品牌一次 SQL 模糊查询，返回实际商品、货架、库存与处方标记；模糊结果明确要求核对具体产品。
+- **知识补全**：症状映射未支持、禁忌拦截或缺货时，检索本地医学资料生成待核查药名；模型知识兜底单独标记来源，不伪装成检索证据。
+- **强制核查**：每批库存候选必须核安全。排除药品及缺货记录跨轮保留，最多三轮库存、两轮知识补查；联合用药不依据单药检查直接放行。
+- **未知不放行**：禁忌缺失、重名、未命中或工具失败均不视为安全；处方标记默认值也不构成非处方确认。
+- **卡片回答**：红色拦截、黄色人工核对、库存候选和灰色店员话术。绿色仅保留给未来明确通过核验且有货的候选。
+- **真实 SSE**：FastAPI 遍历 LangGraph 节点更新，React Hook 逐帧解析并替换卡片快照。新问题、停止或断线均不会残留旧推荐。
+- **受限话术**：模型只在合规话术中选择；库存事实、风险分支和处方警示由宿主程序渲染。
+- **多药盒识别**：一张图最多提取 12 种药品，分条保留品牌、规格及可见说明；员工逐条核对、补填货架与库存，确认后才写入。[配置与接口](docs/pharmacy-image-import.md)。
+- **库存管理**：统一搜索和维护入库商品，登记销售、补货、退货与盘点；库存与变动记录同事务更新，防止重复扣减及超卖。[操作与接口](docs/inventory-management.md)。
 
 ## 界面
 
-以下为本地配置模型与资料后的真实页面截图，回答内容随资料、配置与用户输入变化。
+下图使用**隔离的合成库存和脚本模型**验证真实 FastAPI → LangGraph → SSE → React 链路，不代表真实药品资料或医学验证。默认服务不自动导入演示商品。
 
-### 症状咨询
+![药店卡片界面](docs/images/pharmacy-copilot-cards.png)
 
-回答按可能原因、当前处理、用药注意事项和就医情况组织，保留可核对的出处入口。
+<details><summary>库存管理与多药盒入库</summary>
 
-![症状咨询与分段建议](docs/images/symptom-consultation.png)
+![库存管理](docs/images/pharmacy-inventory-management.png)
+![多药盒识别与人工确认](docs/images/pharmacy-inventory-import-multi.png)
 
-### 原文核对
+</details>
 
-以“感冒有什么症状”为例，分组呈现常见表现、病程与有来源支持的就医警示。侧栏展示对应原文与链接。
-
-![感冒症状回答与引用侧栏](docs/images/cold-symptoms-and-sources.png)
-
-### 追问卡片
-
-先呈现当前可支持的回答，再用一张小卡片追问相关表现。用户可单选或多选，也可暂不补充。后续轮次保留已有信息，更新检索范围和可支持的回答。
-
-![动态症状追问](docs/images/followup-consultation.png)
-
-### 实时处理状态
-
-界面展示当前执行阶段，包括问题识别、路径选择、公开资料查询和结果呈现。
-
-![公开资料查询进度](docs/images/retrieval-progress.png)
-
-## 处理流程
+## 执行流程
 
 ```mermaid
 flowchart TD
-    A[用户提问 / 补充信息] --> B[读取会话与已知条件]
-    B --> C[理解意图与上下文改写]
-    C --> D{选择处理路径}
-    D -->|通用 / 风险 / 已有科普| E[按路径组织回答与提醒]
-    G -->|用户补充| H[保存补充信息]
-    H --> B
-    D -->|需要检索证据| J[公开资料查询 / 有效缓存]
-    J --> K{证据覆盖是否足够}
-    K -->|足够| N[筛选适用证据]
-    K -->|不足| L[本地 BM25 + BGE / RRF 融合]
-    L --> M[可选重排 / 缺失意图补查]
-    M --> N
-    N --> O[校验引用与适用范围 / 结构化冲突仲裁]
-    O --> P{能否形成有依据的回答}
-    P -->|可以| Q[组织回答与原文引用]
-    P -->|仍不足| R[可选官方来源联网检索]
-    R --> S{是否取得适用证据}
-    S -->|可以| Q
-    S -->|未取得| T[按配置给出通用科普或说明证据缺口]
-    E --> U[分段呈现并保存会话]
-    Q --> G[有待确认条件时附加单题卡片]
-    T --> G
-    G --> U
+    A[店员输入与当前聊天历史] --> B[语义理解及独立风险拦截]
+    B --> C{任务类型}
+    C -->|急症| D[停止查药并提示紧急就医]
+    C -->|闲聊| E[通用回复，不查询库存]
+    C -->|找药或核安全| F[批量库存模糊查询]
+    F -->|未命中症状映射| G[本地资料检索与明确标记的模型知识兜底]
+    G --> F
+    F -->|有候选| H[逐药禁忌及联合用药缺口检查]
+    H -->|禁忌或缺货且预算允许| G
+    H -->|无候选或预算耗尽| I[人工核对]
+    H -->|有待核查候选| J[卡片与受限店员话术]
+    D --> K[SSE 卡片快照]
+    I --> K
+    J --> K
+    K --> L[React 卡片渲染]
 ```
 
-检索分支由 LangGraph 单 Agent 完成模型与工具往返。宿主限制执行时间、模型及工具调用预算，验证模型选择的证据后再输出。前端进度对应服务端阶段事件，回答经处理后通过事件流逐段传输。
+## 本地启动
 
-## 快速开始
+可点击左下角“本地门店”→“API 配置”，统一设置文本模型、视觉识别及可选公开知识接口。密钥不回显，点击保存后写入项目根目录 `.env`，下一次请求生效，重启后自动加载。配置入口仅限本机访问；`.env` 已被 Git 忽略。[配置说明](docs/api-settings.md)。
 
-需要 Python 3.12 或更高版本。CI 使用 Python 3.12，在 Ubuntu 和 Windows 运行。
-
-```sh
-git clone https://github.com/Dengzi555/meditouch-agent.git
-cd meditouch-agent
-python -m venv .venv
-```
-
-激活虚拟环境。Windows PowerShell 使用 `..venvScriptsActivate.ps1`，macOS / Linux 使用 `source .venv/bin/activate`。
-
-```sh
-python -m pip install -r requirements.txt
-python demo.py
-```
-
-`demo.py` 无需密钥，使用合成证据和 ScriptedModel 验证正常回答、需要追问、证据不足、证据冲突与工具失败五类终止结果。
-
-### 启动网页
-
-配置兼容 Chat Completions、支持工具调用和结构化输出的模型。以 PowerShell 为例，在同一终端设置环境变量并启动服务。
+需要 Python 3.12+、Node.js 24。依赖：FastAPI、LangGraph、SQLModel、SQLite、React、TypeScript、Vite。
 
 ```powershell
-$env:MED_AGENT_API_KEY = "你的模型密钥"
-$env:MED_AGENT_BASE_URL = "https://api.openai.com/v1"
-$env:MED_AGENT_MODEL = "gpt-4.1-mini"
-python server.py
+python -m venv .venv-agent
+.\.venv-agent\Scripts\python.exe -m pip install -r requirements.txt
+npm --prefix web ci
+npm --prefix web run build
 ```
 
-访问 **http://127.0.0.1:8765/**。模型与提供商可替换，具体可用性取决于接口兼容性。完整变量见 [.env.example](.env.example)，服务不会自动加载 `.env` 文件。
+先使用独立的演示库存启动。以下四条商品是合成夹具，不是真实说明书或经过医学审核的数据：
 
-### 资料与模型配置
+```powershell
+.\.venv-agent\Scripts\python.exe seed_data.py
+$env:MED_AGENT_INVENTORY_DB = (Join-Path (Get-Location) 'data/pharmacy_inventory_mock.db')
+$env:MED_AGENT_INVENTORY_STORE_ID = 'local-store'
+$env:MED_AGENT_API_KEY = '<模型密钥>'
+$env:MED_AGENT_BASE_URL = '<兼容 Chat Completions 的地址>'
+$env:MED_AGENT_MODEL = '<模型名称>'
+.\.venv-agent\Scripts\python.exe server.py
+```
 
-| 配置 | 默认 / 作用 |
+打开 [本地页面](http://127.0.0.1:8765/)。未配置库存时页面明确提示，不返回演示库存。模型不可用时不猜测药名，查询按原文尝试，话术回退为固定内容。
+
+接入本店商品时，按 [库存模型与录入说明](docs/pharmacy-copilot.md) 创建独立数据库，再使用入库页面录入。页面标出演示模式；空禁忌仍判为未知。已有药品缺少计数单位时，先在库存管理中确认单位，再登记出入库。
+
+前端开发：`npm --prefix web run dev`；Vite 在 5173 端口代理 `/api` 到后端 8765。
+
+## API 与代码
+
+`POST /api/agent/stream`（别名 `/api/pharmacy/copilot/stream`）：
+
+```json
+{
+  "question": "查找布洛芬缓释胶囊",
+  "workspace": {
+    "store_id": "local-store",
+    "task": "drug_lookup",
+    "customer": { "customer_tags": ["孕妇"] }
+  }
+}
+```
+
+返回 `text/event-stream`：`progress` → `cards.snapshot` → `done`，异常为 `error`。done 表示执行结束，不代表允许售药。原 NDJSON 实现已删除。
+
+| 模块 | 位置 |
 | --- | --- |
-| `MED_AGENT_PUBLIC_KNOWLEDGE` | `1`，公开资料优先，覆盖不足时补查本地资料 |
-| `MED_AGENT_NHS_API_KEY` | 可选，启用 NHS Website Content API 适配器 |
-| `MED_AGENT_SHOWAPI_APP_KEY` | 可选，启用万维易源适配器。接口权限依提供商方案而定 |
-| `MED_AGENT_DEEPSEEK_SEARCH_KEY` | 可选，启用官方来源联网检索回退 |
-| `MED_AGENT_RERANK` | `0`，设为 `1` 开启本地 Cross-Encoder 重排 |
-| `MED_AGENT_GENERAL_HEALTH_FALLBACK` | `0`，设为 `1` 允许低风险科普在无证据时使用带明确标记的模型知识 |
-| `PORT` | `8765`，网页服务端口 |
+| FastAPI 路由与静态页面 | `meditouch/api.py` |
+| 库存表与只读工具 | `meditouch/inventory_models.py`、`inventory_tools.py` |
+| 图节点与条件路由 | `meditouch/pharmacy_graph.py` |
+| 独立药店 State | `meditouch/pharmacy_state.py` |
+| 共用风险检查与停止响应 | `meditouch/risk.py` |
+| System Prompt 与受限生成 | `meditouch/pharmacy_generation.py` |
+| JSON 卡片与 SSE 协议 | `meditouch/pharmacy_ui.py` |
+| React Hook 与流解析 | `web/src/useCopilotStream.ts`、`sse.ts` |
+| 卡片组件 | `web/src/CopilotCards.tsx` |
+| 事务库存与出入库记录 | `meditouch/inventory_management.py`、`web/src/InventoryManager.tsx` |
 
-公开资料入口包括 MedlinePlus / NLM，NHS 和万维易源通过可选适配器接入。资料覆盖、网络可达性和接口权限影响实际返回。成功查询的公开证据缓存到 SQLite，有效期 12 小时。
+完整说明：[药店流程](docs/pharmacy-copilot.md) · [UI 协议](docs/pharmacy-ui-protocol.md)。
 
-安装本地向量检索依赖并准备模型。
+## 验证
 
-```sh
-python -m pip install -r requirements-agent.txt
-python -m meditouch.hybrid_retrieval
-python -m meditouch.hybrid_retrieval --check
+```powershell
+.\.venv-agent\Scripts\python.exe -m unittest discover -s tests -t .
+npm --prefix web test
+npm --prefix web run build
 ```
 
-BGE 使用 `BAAI/bge-small-zh-v1.5`，段落向量缓存于 `data/bge-passage-cache/`。模型不可用时回退到 BM25。可选重排模型为 `BAAI/bge-reranker-base`，通过 `python -m meditouch.reranking` 准备。
+测试覆盖库存默认值与约束、禁忌未知、排除重查、循环上限、真实 ASGI SSE、非法参数、风险中断、UTF-8 分片和卡片解析。浏览器核对使用独立合成库存，不混入真实资料评测。
 
-真实资料快照和派生索引由使用者本地准备，不随仓库分发。运行 `python -m meditouch.symptom_reference_pack --download` 可下载并切分 NHS 主题资料用于检索评测。该包标记为 `retrieval_only`，不会自动进入咨询回答池。其他资料的构建逻辑见 `meditouch/reference_ingestion.py`、`meditouch/common_reference_pack.py` 和 `meditouch/rag_pipeline.py`，各入口需对应来源清单与原件。
+当前药店工作流的 [30 条合成场景评测](docs/evaluation/pharmacy-agentic-rag-30.md) 覆盖找药、风险拦截、联合用药、缺货与急症。该报告是固定版本的工程基线，包含失败案例，不代表临床效果；旧健康资料检索指标不能直接代表当前药店流程。
 
-## 检索评测
+## 当前边界
 
-使用相同索引、查询预处理和 Top-5 对比三种方案。以下为真实公开资料的 **40 题新增段落级验证子集**，每题有目标小节。延迟为本机离线检索耗时。
+目前是单店 demo：门店标识与数据库在宿主绑定，尚无员工权限、批号效期、收银对接、订单库存预占、结算或自动售药审批。禁忌工具仅做已录入文本的标签筛查，不能替代完整说明书、配伍核查或药师判断，也不会返回“安全通过”。
 
-| 方案 | Hit@1 | Hit@5 | MRR@5 | P95 |
-| --- | ---: | ---: | ---: | ---: |
-| BM25 | 35.0% | 57.5% | 0.428 | 8.5 ms |
-| BM25 + BGE | 35.0% | 75.0% | 0.483 | 11.5 ms |
-| 混合 + 重排 | 62.5% | 75.0% | 0.688 | 1,079.7 ms |
+生成节点目前选择预设店员话术，不开放自由医学建议。检索药名是待核查线索，不能把“本店有货”解释成适合当前顾客。
 
-混合检索提高候选召回。重排改善前列排序，同时增加约 1.07 秒 P95，因此作为可选能力，默认关闭。
+原健康咨询与证据检索模块保留在代码中，默认页面已切换为药店工作流；旧账号、会话及患者页面未迁入此版 React 入口。
 
-真实资料集共 84 题，包含 24 道开发题和 60 道验证题。验证部分由上述 40 道新题与 20 道历史题组成，历史题使用来源组级标签，报告单独列出。另保留 200 题合成检索夹具，用于检索管线回归。数据、完整指标及标注限制见 [评测报告](docs/eval-report.md)。
-
-```sh
-python -m meditouch.symptom_reference_pack --download
-python -m scripts.eval_retrieval_ab --mode source
-python -m scripts.eval_retrieval_symptom_200
-```
-
-评测题由资料反向编写，检索命中率衡量目标证据的可检索性。它与医学回答准确性、真实用户满意度及端到端响应时间分别度量。复现时记录提交号、语料快照与本机模型版本。
-
-## 开发与集成
-
-```sh
-python -m unittest
-python demo.py
-```
-
-测试覆盖工具往返、证据适用性、引用校验、会话修订与并发、公开资料缓存和追问流程。缺少可选依赖或本地资料时，对应用例标记跳过。GitHub Actions 执行 Ruff 核心错误检查、单元测试与五类场景验证。
-
-### 目录结构
-
-```text
-meditouch-agent/
-├── meditouch/         # Agent、咨询、检索、证据校验与服务实现
-├── tests/             # 自动化测试
-├── scripts/           # 下载、验收、评测与连接检查
-├── web/               # 网页界面
-├── knowledge/         # 症状追问配置
-├── docs/              # 文档与界面截图
-├── integrations/      # MCP 与外部客户端配置
-├── eval_data/         # 评测问题与标注
-├── eval_corpus/       # 合成检索夹具
-├── demo_corpus/       # 离线演示资料
-├── server.py          # 网页启动入口
-├── demo.py            # 离线演示入口
-└── medical_mcp.py     # MCP 启动入口
-```
-
-在仓库根目录运行命令。业务模块使用 `python -m meditouch.模块名`，工具脚本使用 `python -m scripts.脚本名`，单独运行测试可用 `python -m unittest tests.test_contextual_answers`。三个根目录入口调用对应模块，资料、数据库和模型缓存仍相对于项目目录定位。
-
-| 目录 / 模块 | 职责 |
-| --- | --- |
-| `meditouch/agent_graph.py` / `meditouch/model_gateway.py` | Agent 循环、模型接口与调用预算 |
-| `meditouch/consultation.py` / `meditouch/query_plan.py` | 会话状态、多轮改写与查询计划 |
-| `meditouch/symptom_clarification.py` / `knowledge/` | 症状追问与条件收集 |
-| `meditouch/evidence_service.py` | 统一证据接口、仲裁与回答校验 |
-| `meditouch/hybrid_retrieval.py` / `meditouch/reranking.py` | 混合检索、向量缓存与可选重排 |
-| `meditouch/public_health*.py` / `meditouch/web_evidence.py` | 公开资料、缓存及联网回退 |
-| `meditouch/server.py` / `meditouch/accounts.py` / `web/` | HTTP 服务、账号与网页 |
-| `tests/` / `scripts/` | 自动化测试、资料处理和评测入口 |
-| `eval_data/` / `eval_corpus/` | 评测问题与合成夹具 |
-
-HTTP 入口为 `POST /api/agent`、`POST /api/agent/stream` 和 `GET /api/session/{id}`。会话通过 `session_id` 和 `revision` 延续，过期修订返回 `409`。MCP 接入见 [集成说明](integrations/craft/README.md)。
-
-## 使用边界与许可
-
-医点通提供健康科普与资料核对，涉及诊断、个体剂量和处方的请求受范围限制。症状追问目前由注册表覆盖的主题驱动，证据收缩受资料与条件标注约束。英文来源可能保留英文摘录，外部数据服务也可能不可用。
-
-账号、会话、缓存及本地配置存储于 `data/`。密钥通过环境变量提供，原始资料、运行数据库和凭据已配置为 Git 忽略项。对外部署应配置 HTTPS、访问控制、数据保留策略及适用场景的独立评估。
-
-源码采用 [MIT License](LICENSE)。外部医学资料遵循各来源许可，公开访问不等于可自由再分发。NHS 内容许可见 [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/)。版本记录见 [CHANGELOG](CHANGELOG.md)。
+代码采用 MIT License。药品资料、外部内容及品牌素材的权利归各自权利人。

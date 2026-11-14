@@ -50,6 +50,49 @@ class AgentHttpTests(unittest.TestCase):
             urllib.request.urlopen(self.url+'/api/runs')
         self.assertEqual(error.exception.code,404)
 
+    def test_pharmacy_entry_uses_b_side_role_and_rejects_forged_clearance(self):
+        scripted = ScriptedModel('normal')
+        with patch('meditouch.agent_graph.EvidenceService', return_value=fixture_service()), patch(
+            'meditouch.model_gateway.ModelGateway.complete', side_effect=scripted.complete):
+            result = self.post('/api/pharmacy/copilot', {
+                'question': '演示措施X', 'corpus': 'demo', 'workspace': {'store_id': 'store-A'},
+            })
+        self.assertEqual(result['audience'], 'pharmacy_intern')
+        self.assertFalse(result['pharmacy_workflow']['handoff']['sale_authorized'])
+        with self.assertRaises(urllib.error.HTTPError) as error:
+            self.post('/api/pharmacy/copilot', {'question': '找药',
+                      'workspace': {'store_id': 'A', 'sale_authorized': True}})
+        self.assertEqual(error.exception.code, 400)
+
+    def test_pharmacy_endpoint_runs_configured_inventory_and_mandatory_safety(self):
+        from sqlmodel import Session
+        from meditouch.inventory_models import DrugInventory, create_inventory_engine, create_inventory_tables
+        path = Path(self.temp.name) / 'stock.db'
+        engine = create_inventory_engine('sqlite:///' + path.as_posix())
+        create_inventory_tables(engine)
+        with Session(engine) as session:
+            session.add(DrugInventory(name='演示药', stock=2, shelf_location='B2'))
+            session.commit()
+        engine.dispose()
+        with patch.dict('os.environ', {'MED_AGENT_INVENTORY_DB': str(path),
+                                      'MED_AGENT_INVENTORY_STORE_ID': 'store-A'}), patch(
+            'meditouch.pharmacy_generation.ModelGateway.complete',
+            side_effect=lambda messages, *args, **kwargs: {'role': 'assistant', 'content': json.dumps(
+                {'intent': 'find_drug', 'symptoms': [], 'target_drugs': ['演示药'], 'customer_tags': ['标签甲']}
+                if 'query' in json.loads(messages[1]['content']) else {'script_id': 'ask_history'})},
+        ):
+            result = self.post('/api/pharmacy/copilot', {
+                'question': '查演示药', 'workspace': {'store_id': 'store-A', 'task': 'drug_lookup',
+                'customer': {'requested_drug': '演示药', 'customer_tags': ['标签甲']}},
+            })
+            from meditouch.pharmacy_graph import inventory_engine_for_store
+            inventory_engine_for_store('store-A').dispose()
+        self.assertEqual(result['status'], 'inventory_candidates')
+        self.assertEqual(result['safety_status'], 'unknown')
+        self.assertIn('请人工核对病史', result['answer'])
+        self.assertEqual([event['node'] for event in result['trace']],
+                         ['query_understanding', 'inventory_node', 'safety_node', 'generator_node'])
+
     def test_unrecognized_general_intents_use_the_same_text_route(self):
         for question in ('你好', '初次见面，我能请你搭把手做些什么？', '彩虹有哪几种颜色？'):
             with self.subTest(question=question), patch(
@@ -115,23 +158,15 @@ class AgentHttpTests(unittest.TestCase):
             self.assertEqual(risk['status'], 'risk_alert')
             self.assertEqual(complete.call_count, 3)
 
-    def test_stream_reports_retrieval_before_validated_answer(self):
-        scripted = ScriptedModel('normal')
+    def test_legacy_stream_is_retired_instead_of_serving_ndjson(self):
         request = urllib.request.Request(
             self.url + '/api/agent/stream',
             json.dumps({'question': '演示措施X', 'corpus': 'demo'}).encode(),
             {'Content-Type': 'application/json'},
         )
-        with patch('meditouch.agent_graph.EvidenceService', return_value=fixture_service()), patch(
-            'meditouch.model_gateway.ModelGateway.complete', side_effect=scripted.complete
-        ), urllib.request.urlopen(request, timeout=8) as response:
-            self.assertEqual(response.headers.get_content_type(), 'application/x-ndjson')
-            events = [json.loads(line) for line in response]
-        names = [entry['event'] for entry in events]
-        self.assertEqual(names[:3], ['intake', 'route', 'search'])
-        self.assertLess(names.index('validate'), names.index('paragraph'))
-        self.assertEqual(events[-1]['event'], 'done')
-        self.assertEqual(events[-1]['result']['status'], 'answered')
+        with self.assertRaises(urllib.error.HTTPError) as error:
+            urllib.request.urlopen(request, timeout=8)
+        self.assertEqual(error.exception.code, 410)
 
     def test_measured_fever_answers_first_and_preserves_temperature_on_followup(self):
         first = self.post('/api/agent', {'question': '39度高烧怎么办'})

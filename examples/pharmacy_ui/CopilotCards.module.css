@@ -1,0 +1,28 @@
+.shell { max-width: 740px; margin: 48px auto; padding: 0 24px 48px; color: #20302b; font-family: "Noto Sans SC", "Microsoft YaHei", sans-serif; }
+.shell h1 { margin: 12px 0; font-size: 30px; letter-spacing: -1px; }
+.shell header p { color: #64746d; font-size: 14px; line-height: 1.8; }
+.kicker { font-size: 12px; letter-spacing: 2px; color: #426352; }
+.actions { display: flex; gap: 12px; margin: 24px 0; }
+.actions button { cursor: pointer; border: 1px solid #285c42; border-radius: 8px; background: #285c42; color: white; padding: 10px 18px; font: inherit; }
+.actions button:disabled { opacity: .5; cursor: wait; }
+.actions button:focus-visible { outline: 3px solid #a4ceb1; outline-offset: 3px; }
+.steps { display: flex; gap: 28px; padding-left: 20px; color: #64746d; font-size: 13px; }
+.cards { display: grid; gap: 16px; }
+.card { border: 1px solid; border-left-width: 4px; border-radius: 10px; padding: 20px 22px; }
+.card h2 { font-size: 16px; margin: 0 0 12px; }
+.card p, .card blockquote { font-size: 14px; line-height: 1.8; margin: 8px 0 0; white-space: pre-wrap; }
+.card ul { padding: 0; margin: 0; list-style: none; }
+.card li { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; line-height: 1.8; }
+.red { background: #fff3f1; border-color: #e6afa8; color: #8a2922; }
+.yellow { background: #fffbeb; border-color: #ddc37c; color: #755611; }
+.green { background: #f0faf3; border-color: #9dc6a9; color: #27553a; }
+.gray { background: #f4f6f5; border-color: #d7dfda; color: #45584c; }
+.cardTop { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; }
+.cardTop span { font-size: 12px; }
+.card dl { display: flex; flex-wrap: wrap; gap: 20px 40px; margin: 6px 0 16px; }
+.card dt { font-size: 12px; opacity: .7; margin-bottom: 6px; }
+.card dd { margin: 0; font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.card small { font-size: 12px; }
+.rx { font-weight: 600; }
+.error { background: #fff3f1; color: #8a2922; padding: 14px; border-radius: 8px; }
+@media (max-width: 520px) { .shell { margin-top: 24px; padding-inline: 16px; } .card { padding: 16px; } .steps { flex-direction: column; gap: 8px; } }

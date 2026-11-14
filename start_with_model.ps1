@@ -8,7 +8,11 @@ $ErrorActionPreference = 'Stop'
 # contains modules from a different PowerShell installation.
 $securityModule = Join-Path $PSHOME 'Modules\Microsoft.PowerShell.Security\Microsoft.PowerShell.Security.psd1'
 Import-Module -Name $securityModule -ErrorAction Stop
-$modelSettings = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'data\model-config.json') -Raw | ConvertFrom-Json
+$modelSettingsPath = Join-Path $PSScriptRoot 'data\model-config.json'
+$modelKeyPath = Join-Path $PSScriptRoot 'data\model-key.dpapi'
+$secureKey = $null
+if ((Test-Path -LiteralPath $modelSettingsPath) -and (Test-Path -LiteralPath $modelKeyPath)) {
+$modelSettings = Get-Content -LiteralPath $modelSettingsPath -Raw | ConvertFrom-Json
 $protectedKey = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'data\model-key.dpapi') -Raw
 $secureKey = ConvertTo-SecureString $protectedKey.Trim()
 $keyPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureKey)
@@ -19,12 +23,30 @@ try {
 }
 $env:MED_AGENT_BASE_URL = $modelSettings.base_url
 $env:MED_AGENT_MODEL = $modelSettings.model
+}
 $env:CLAW_EVAL_API_KEY = $env:MED_AGENT_API_KEY
 $env:CLAW_EVAL_BASE_URL = $env:MED_AGENT_BASE_URL
 $env:CLAW_EVAL_MODEL = $env:MED_AGENT_MODEL
 $env:PYTHONUTF8 = '1'
 Push-Location -LiteralPath $PSScriptRoot
 try {
+    # OCR uses a separately configured vision model and encrypted local key.
+    $visionSettingsPath = Join-Path $PSScriptRoot 'data\vision-config.json'
+    $visionKeyPath = Join-Path $PSScriptRoot 'data\vision-key.dpapi'
+    if ($Action -eq 'Agent' -and -not $env:MED_AGENT_VISION_API_KEY -and
+        (Test-Path -LiteralPath $visionSettingsPath) -and
+        (Test-Path -LiteralPath $visionKeyPath)) {
+        $visionSettings = Get-Content -LiteralPath $visionSettingsPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        $visionKey = ConvertTo-SecureString (Get-Content -LiteralPath $visionKeyPath -Raw).Trim()
+        try {
+            $env:MED_AGENT_VISION_API_KEY = [System.Net.NetworkCredential]::new('', $visionKey).Password
+            $env:MED_AGENT_VISION_BASE_URL = $visionSettings.base_url
+            $env:MED_AGENT_VISION_MODEL = $visionSettings.model
+            $loadedVisionKey = $true
+        } finally {
+            $visionKey.Dispose()
+        }
+    }
     if ($Action -eq 'Agent' -and -not $env:MED_AGENT_DEEPSEEK_SEARCH_KEY) {
         $searchKeyPath = Join-Path $PSScriptRoot 'data\deepseek-search-key.dpapi'
         if (Test-Path -LiteralPath $searchKeyPath) {
@@ -64,7 +86,12 @@ try {
     if ($loadedSearchKey) {
         Remove-Item Env:MED_AGENT_DEEPSEEK_SEARCH_KEY -ErrorAction SilentlyContinue
     }
-    $secureKey.Dispose()
+    if ($loadedVisionKey) {
+        Remove-Item Env:MED_AGENT_VISION_API_KEY -ErrorAction SilentlyContinue
+        Remove-Item Env:MED_AGENT_VISION_BASE_URL -ErrorAction SilentlyContinue
+        Remove-Item Env:MED_AGENT_VISION_MODEL -ErrorAction SilentlyContinue
+    }
+    if ($secureKey) { $secureKey.Dispose() }
     Pop-Location
 }
 exit $modelExitCode

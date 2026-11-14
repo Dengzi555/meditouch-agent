@@ -5,7 +5,6 @@ Draft answers are never returned directly. Tools only read data.
 import json
 import re
 import time
-from typing import TypedDict
 from uuid import uuid4
 
 from meditouch.evidence_service import EvidenceService, EvidenceError, adjudicate, validate_answer, validate_request
@@ -13,6 +12,11 @@ from meditouch.model_gateway import ModelGateway, ModelError, tool_schema
 from meditouch.patient_context import QUESTIONS, missing_context, resolve_fever_intent, validate_context
 from meditouch.consultation_flow import route, stopped_result
 from meditouch.query_plan import INTENTS, display_points, requested_intents, understand_question
+from meditouch.pharmacy_state import PharmacyState
+from meditouch.pharmacy_context import (
+    SYSTEM as PHARMACY_SYSTEM,
+    attach_workflow, initial_workflow, validate_workspace,
+)
 
 TOOLS = [
     tool_schema('search_evidence','检索资料，返回 evidence.v1 原文、页码和来源。无主张不代表无冲突。',
@@ -35,12 +39,10 @@ missing_context 非空时调用 ask_user。未知条件不可猜测。未解决�
 工具失败可在 retryable=true 时重试一次。不要循环执行相同成功调用。'''
 
 
-class AgentState(TypedDict, total=False):
+class AgentState(PharmacyState, total=False):
+    """Legacy evidence graph; pharmacy fields remain available for old callers."""
     messages: list
     evidence: list
-    trace: list
-    model_calls: int
-    tool_calls: int
     attempts: dict
     errors: list
     draft: dict
@@ -51,15 +53,40 @@ class AgentState(TypedDict, total=False):
 
 
 def run_graph(question, *, corpus='real', known_context=None, model=None, service=None,
-              max_model_calls=5, max_tool_calls=6, deadline_seconds=90, on_progress=None, plan=None):
+              max_model_calls=5, max_tool_calls=6, deadline_seconds=90, on_progress=None, plan=None,
+              workspace=None, inventory_engine=None, history=None):
     from langgraph.graph import StateGraph, START, END
     validate_request(question)
     if corpus not in ('real','demo'): raise ValueError('corpus 必须为 real 或 demo')
     context = validate_context({} if known_context is None else known_context)
+    pharmacy = validate_workspace(workspace) if workspace is not None else None
+    workflow = initial_workflow() if pharmacy is not None else None
+    if pharmacy is not None:
+        if known_context:
+            raise ValueError('药店请求请统一使用 workspace.customer，不能混用患者上下文')
+        if inventory_engine is not None and pharmacy['task'] != 'coaching':
+            from meditouch.pharmacy_graph import run_inventory_workflow
+            return run_inventory_workflow(question, pharmacy, inventory_engine, model=model,
+                on_progress=on_progress, deadline_seconds=deadline_seconds, history=history)
+        customer = pharmacy['customer']
+        context = {key: customer[key] for key in
+                   ('population', 'symptoms', 'duration', 'medications') if customer.get(key)}
+        if customer.get('age'):
+            context['population'] = '、'.join(filter(None, [context.get('population'), customer['age']]))
+        if customer.get('denied_symptoms'):
+            context['associated_symptoms'] = customer['denied_symptoms']
+        if customer.get('medical_history'):
+            context['risk_factors'] = customer['medical_history']
+        if customer.get('requested_drug'):
+            context['drug_name'] = customer['requested_drug']
     original_question = question
     effective_question = resolve_fever_intent(question, context) or question
     plan = plan or understand_question(effective_question, context)
     routing=route(question,context,plan=plan)
+    if routing['kind'] == 'risk' and pharmacy is not None:
+        return attach_workflow(stopped_result(question, routing), pharmacy, workflow)
+    if pharmacy is not None:
+        routing = {'kind': 'pharmacy_copilot', 'task': pharmacy['task']}
     if routing['kind'] in ('risk','insufficient'): return stopped_result(question,routing)
     if routing['kind'] == 'general_text':
         from meditouch.general_text import generate_text
@@ -68,7 +95,8 @@ def run_graph(question, *, corpus='real', known_context=None, model=None, servic
         raise ValueError('无效执行预算')
     service = service or EvidenceService()
     model = model or ModelGateway()
-    missing = missing_context(question,context)
+    missing = [] if pharmacy is not None else missing_context(question,context)
+    active_tools = TOOLS[:2] if pharmacy is not None else TOOLS
     question = effective_question
     started = time.monotonic()
 
@@ -83,7 +111,7 @@ def run_graph(question, *, corpus='real', known_context=None, model=None, servic
             if isinstance(model,ModelGateway): model.timeout = max(1,min(35,deadline_seconds-(time.monotonic()-started)))
             # Missing mandatory context is a host policy, not an optional model preference.
             choice = {'type':'function','function':{'name':'ask_user'}} if missing and not s['clarification'] else 'auto'
-            response = model.complete(s['messages'],TOOLS,tool_choice=choice)
+            response = model.complete(s['messages'],active_tools,tool_choice=choice)
             if response.get('role')!='assistant': raise ValueError('invalid role')
             calls = response.get('tool_calls') or []
             if not isinstance(calls,list) or len(calls)>3: raise ValueError('invalid tool calls')
@@ -143,7 +171,7 @@ def run_graph(question, *, corpus='real', known_context=None, model=None, servic
                         raise ValueError('only retrieved ids may be read')
                     # Reuse the exact retrieval snapshot, never silently swap versions.
                     observation = {'schema_version':'evidence.v1','status':'ok','item':evidence[args['evidence_id']]}
-                elif name=='ask_user':
+                elif name=='ask_user' and pharmacy is None:
                     fields = args.get('fields')
                     if set(args)!={'fields'} or not isinstance(fields,list) or not fields or any(f not in missing for f in fields):
                         raise ValueError('unknown or unnecessary context fields')
@@ -215,12 +243,20 @@ def run_graph(question, *, corpus='real', known_context=None, model=None, servic
     graph.add_conditional_edges('model',after_model,{'tools':'tools','validate':'validate',END:END})
     graph.add_conditional_edges('tools',after_tools,{'model':'model',END:END})
     graph.add_conditional_edges('validate',lambda s:END if s.get('terminal') else 'model',{'model':'model',END:END})
-    state = graph.compile().invoke(dict(messages=[{'role':'system','content':SYSTEM},
-        {'role':'user','content':json.dumps({'question':question,'known_context':context,'missing_context':missing,'corpus':corpus,'consultation_type':routing['kind']},ensure_ascii=False)}],
+    payload = {'question': question, 'known_context': context, 'missing_context': missing,
+               'corpus': corpus, 'consultation_type': routing['kind']}
+    if pharmacy is not None:
+        payload.update(workspace=pharmacy, pharmacy_workflow=workflow)
+    state = graph.compile().invoke(dict(messages=[{'role':'system','content':PHARMACY_SYSTEM if pharmacy is not None else SYSTEM},
+        {'role':'user','content':json.dumps(payload,ensure_ascii=False)}],
+        audience='pharmacy_intern' if pharmacy is not None else 'consumer',
+        workspace=pharmacy, pharmacy_workflow=workflow,
         evidence=[],trace=[],model_calls=0,tool_calls=0,attempts={},errors=[],repairs=0,clarification=[]),
         config={'recursion_limit':40})
     result=render_result(question,state,corpus,missing,started)
     result['flow']=routing
+    if pharmacy is not None:
+        return attach_workflow(result, state['workspace'], state['pharmacy_workflow'])
     return result
 
 

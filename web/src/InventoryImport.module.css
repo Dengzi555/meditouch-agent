@@ -1,0 +1,33 @@
+.layout { display: grid; grid-template-columns: minmax(260px, .8fr) minmax(390px, 1.2fr); gap: 24px; align-items: start; }
+.uploadPanel, .formPanel { background: #fff; border: 1px solid #d5dfd1; border-radius: 12px; padding: 24px; }
+.step { font-size: 11px; color: #7d917e; letter-spacing: 1.5px; }
+.layout h2 { font-size: 19px; margin: 10px 0 20px; }
+.dropzone { cursor: pointer; display: grid; place-items: center; min-height: 260px; padding: 16px; border: 1px dashed #aabb9f; background: #f7f9f3; border-radius: 8px; text-align: center; }
+.dropzone strong, .dropzone small { display: block; font-size: 13px; line-height: 1.8; color: #5d725b; }
+.dropzone small { font-size: 11px; color: #8b9a85; margin-top: 8px; }
+.dropzone img { max-width: 100%; max-height: 350px; object-fit: contain; }
+.dropzone:focus-visible { outline: 2px solid #8da889; outline-offset: 3px; }
+.uploadIcon { display: block; font-size: 34px; color: #7a9876; margin-bottom: 14px; }
+.uploadActions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.uploadActions button { font: inherit; font-size: 12px; padding: 8px 12px; border-radius: 6px; border: 1px solid #ced9c8; background: white; color: #365b3c; cursor: pointer; }
+.caption { color: #879180; font-size: 11px; line-height: 1.9; margin: 16px 0; }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.fields label { font-size: 12px; color: #576f54; line-height: 1.8; }
+.fields input, .fields select, .fields textarea { display: block; width: 100%; margin-top: 6px; padding: 10px 11px; border: 1px solid #d6dfd0; border-radius: 6px; background: white; color: #263b27; font: inherit; font-size: 14px; }
+.fields input:focus, .fields select:focus, .fields textarea:focus { outline: 2px solid #e1ebdc; border-color: #92ac87; }
+.fields textarea { resize: vertical; }
+.fields input::placeholder, .fields textarea::placeholder { color: #a1aa9b; font-size: 12px; }
+.wide { grid-column: 1 / -1; }
+.confirm { width: 100%; padding: 12px; border: 0; border-radius: 7px; font: inherit; color: white; background: #285c42; cursor: pointer; }
+.confirm:focus-visible { outline: 3px solid #a4ceb1; outline-offset: 3px; }
+.layout button:disabled, .fields :disabled { opacity: .55; cursor: wait; }
+.error { color: #9b3731; background: #fff3f1; padding: 12px; font-size: 12px; line-height: 1.8; border-radius: 6px; }
+.success, .prefilled { color: #356b41; background: #eff7ed; padding: 12px; font-size: 12px; line-height: 1.8; border-radius: 6px; }
+.progress { font-size: 13px; color: #5b7757; }
+.draftList { display: grid; gap: 8px; margin-top: 18px; max-height: 360px; overflow: auto; }
+.draftList button { text-align: left; border: 1px solid #d9dce9; border-radius: 10px; background: #fafaff; padding: 12px; color: #34385a; cursor: pointer; }
+.draftList button[aria-pressed="true"] { background: #eeecff; border-color: #8981d6; }
+.draftList strong, .draftList small { display: block; overflow-wrap: anywhere; }
+.draftList small { font-size: 11px; margin-top: 7px; color: #85869c; }
+@media (max-width: 760px) { .layout { grid-template-columns: 1fr; } .uploadPanel, .formPanel { padding: 18px; } }
+@media (max-width: 440px) { .fields { grid-template-columns: 1fr; } }
