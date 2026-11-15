@@ -55,7 +55,8 @@ def main():
         expect(page.get_by_text('没有匹配的药品，试试其他关键词或新增入库。')).to_be_visible()
         page.get_by_label('搜索库存').fill('')
         expect(page.get_by_role('row')).to_have_count(3)
-        output = Path(__file__).resolve().parent.parent / 'docs/images/pharmacy-inventory-management.png'
+        output = Path(__file__).resolve().parent.parent / 'tmp/browser-checks/pharmacy-inventory-management.png'
+        output.parent.mkdir(parents=True, exist_ok=True)
         page.screenshot(path=str(output), full_page=True)
         page.set_viewport_size({'width': 390, 'height': 844})
         page.get_by_role('button', name='收起侧栏').click()

@@ -46,4 +46,4 @@ python -m unittest tests.test_inventory_management -v
 
 浏览器验收脚本 `scripts/check_inventory_management_ui.py` 连接 8767 端口的隔离夹具服务 `scripts.pharmacy_ui_fixture`，只操作临时合成库存，不访问正式门店库存。
 
-![隔离合成库存管理界面](images/pharmacy-inventory-management.png)
+![本店已入库药品](images/pharmacy-inventory-management.png)

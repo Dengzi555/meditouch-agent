@@ -11,6 +11,8 @@ from playwright.sync_api import sync_playwright, expect
 
 
 def main():
+    screenshots = Path(__file__).resolve().parent.parent / 'tmp/browser-checks'
+    screenshots.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(channel='msedge', headless=True)
         page = browser.new_page(viewport={'width': 1440, 'height': 1050})
@@ -36,7 +38,7 @@ def main():
             settings = page.get_by_role('dialog', name='API 配置')
             expect(settings.locator('#MED_AGENT_MODEL')).to_have_value('scripted-text-updated')
             expect(settings.locator('#MED_AGENT_API_KEY')).to_have_value('')
-            page.screenshot(path=str(Path(__file__).resolve().parent.parent / 'docs/images/api-settings.png'))
+            page.screenshot(path=str(screenshots / 'api-settings.png'))
             settings.get_by_role('button', name='关闭 API 配置', exact=True).click()
             expect(page.get_by_text('库存已连接', exact=False)).to_be_visible()
             page.get_by_text('已知情况', exact=False).click()
@@ -54,7 +56,7 @@ def main():
             expect(page.locator('[data-card-type="missing_information"]')).to_contain_text('请人工核对病史')
             expect(page.locator('[data-card-type="staff_script"]')).to_be_visible()
             expect(page.get_by_label('顾客想找什么药？')).to_have_value('')
-            path = Path(__file__).resolve().parent.parent / 'docs/images/pharmacy-copilot-cards.png'
+            path = screenshots / 'pharmacy-copilot-cards.png'
             page.screenshot(path=str(path), full_page=True)
 
             page.get_by_role('button', name='收起侧栏').click()

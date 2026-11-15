@@ -11,53 +11,31 @@
 | 功能 | 说明 |
 | --- | --- |
 | 健康问答 | 查询疾病、症状及药品一般知识，按主题组织回答，突出重点并附参考来源 |
-| 多轮接待 | 结合历史补全省略问句，识别症状、药名、人群及否认信息，通过点选追问继续补充情况 |
-| 本店找药 | 按通用名、品牌或症状线索查询商品，展示货架、库存、规格与处方标记 |
-| 禁忌筛查 | 对库存候选逐药检查，记录禁忌命中原因，携带排除清单重新查找候选 |
+| 多轮接待 | 结合历史补全问题，识别症状、药名、人群及否认信息，通过点选追问继续补充情况 |
+| 本店找药与禁忌筛查 | 查询本店药品、货架和库存，逐药筛查禁忌，携带排除清单重新查找候选 |
 | 应急处置 | 优先显示呼救与条件式急救提示，记录现场情况并生成可复制的交接摘要 |
 | 拍照入库 | 一张图片识别多种药品，分条预填表单，确认药品信息、货架与数量后入库 |
-| 库存管理 | 搜索和编辑商品，登记销售、补货、退货、盘点；删除前确认，保留历史流水 |
 | 会话与恢复 | SQLite 保存聊天和图检查点，中断后继续处理；恢复库存任务时重新核验库存与禁忌 |
 
 ## 界面
 
-**本店找药与禁忌拦截**
-
-![本店找药与禁忌拦截](docs/images/pharmacy-copilot-cards.png)
-
-**健康问答与点选追问**
+**健康问答与多轮接待**
 
 ![健康问答与点选追问](docs/images/pharmacy-health-answer.png)
 
-**库存管理与删除确认**
+**本店药品查询**
 
-![库存管理](docs/images/pharmacy-inventory-management.png)
-![删除药品确认](docs/images/pharmacy-inventory-delete.png)
+![本店药品与货架查询](docs/images/pharmacy-copilot-cards.png)
 
-<details><summary>拍照入库、重复提示与库存流水</summary>
+**门店库存**
 
-![多药盒识别与确认入库](docs/images/pharmacy-inventory-import-multi.png)
-![已有商品提示](docs/images/pharmacy-duplicate-import.png)
-![销售出库确认](docs/images/pharmacy-stock-movement.png)
-![库存变动记录](docs/images/pharmacy-stock-ledger.png)
-
-</details>
+![本店已入库药品](docs/images/pharmacy-inventory-management.png)
 
 <details><summary>应急处置与现场交接</summary>
 
 ![应急处置提示](docs/images/pharmacy-emergency-guidance.png)
-![现场记录与交接摘要](docs/images/pharmacy-emergency-handover.png)
 
 </details>
-
-<details><summary>首页与模型设置</summary>
-
-![首页](docs/images/home.png)
-![模型设置](docs/images/api-settings.png)
-
-</details>
-
-[界面示例与截图复现](docs/interface-examples.md)
 
 ## 工作流程
 
@@ -91,9 +69,9 @@ LangGraph 组织健康问答、库存查询、禁忌筛查、知识补查和应�
 
 SQLite Checkpointer 保存节点状态。恢复任务时继续原会话、原轮次，库存分支重新执行查询和筛查。[恢复机制](docs/checkpoint-recovery.md)
 
-### 库存事务
+### 门店工具
 
-库存、货架和商品属性由 SQLModel 查询提供。出入库使用事务、版本校验和请求幂等控制，库存变化与流水同时保存。同药名、品牌入库时提示已有记录，支持跳转编辑或确认新建。删除操作保存删除标记与快照，历史流水持续可查。[库存设计](docs/inventory-management.md)
+药品工具由宿主绑定门店数据库，通过 SQLModel 查询商品、货架和库存。模型生成的候选回到本店库存匹配，再进入禁忌筛查节点。多模态识别将药盒信息预填为结构化商品资料，连接门店接待与库存业务。[工具与数据模型](docs/pharmacy-copilot.md)
 
 ## 技术栈
 
@@ -117,11 +95,12 @@ npm --prefix web ci
 npm --prefix web run build
 ```
 
-加载演示商品并启动：
+初始化本店库存并启动：
 
 ```powershell
-.\.venv-agent\Scripts\python.exe seed_data.py
-$env:MED_AGENT_INVENTORY_DB = (Join-Path (Get-Location) 'data/pharmacy_inventory_mock.db')
+New-Item -ItemType Directory -Force data | Out-Null
+.\.venv-agent\Scripts\python.exe -c "from meditouch.inventory_models import create_inventory_engine, create_inventory_tables; create_inventory_tables(create_inventory_engine('sqlite:///data/pharmacy_inventory.db'))"
+$env:MED_AGENT_INVENTORY_DB = (Join-Path (Get-Location) 'data/pharmacy_inventory.db')
 $env:MED_AGENT_INVENTORY_STORE_ID = 'local-store'
 $env:MED_AGENT_API_KEY = '<模型密钥>'
 $env:MED_AGENT_BASE_URL = '<兼容 Chat Completions 的接口地址>'
@@ -179,7 +158,7 @@ npm --prefix web test
 npm --prefix web run build
 ```
 
-自动化测试覆盖路由、引用校验、流式协议、库存事务、删除确认、并发冲突、重复入库、节点恢复和应急记录。后端357项通过、4项跳过；前端17项通过。
+自动化测试覆盖意图路由、工具调用、引用校验、流式协议、并发一致性、节点恢复和应急记录。后端357项通过、4项跳过；前端17项通过。
 
 | 评测集 | 用途 | 报告 |
 | --- | --- | --- |
