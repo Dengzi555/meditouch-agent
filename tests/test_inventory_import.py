@@ -147,6 +147,52 @@ class InventoryImportTests(unittest.TestCase):
         self.assertEqual(response.status_code, 409)
         self.assertEqual(self.counts(), (1, 1))
 
+    def test_same_name_brand_warns_across_shelves_and_missing_specification(self):
+        first = self.client.post('/api/pharmacy/confirm_import', json=self.body).json()
+        changed = {**self.body, 'shelf_location': 'B1', 'specification': None}
+        response = self.client.post('/api/pharmacy/confirm_import', json=changed)
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.json()['detail']['code'], 'DUPLICATE_INVENTORY')
+        self.assertEqual(response.json()['detail']['items'][0]['id'], first['inventory_id'])
+        matches = self.client.get('/api/pharmacy/import_matches', params={
+            'store_id': 'A', 'name': self.body['name'], 'brand': ''}).json()
+        self.assertEqual(len(matches['items']), 1)
+        self.assertEqual(self.counts(), (1, 1))
+
+    def test_confirmed_duplicate_is_allowed_but_request_replay_does_not_create_again(self):
+        first = self.client.post('/api/pharmacy/confirm_import', json=self.body).json()
+        duplicate = {**self.body, 'request_id': 'explicit-duplicate-01',
+                     'acknowledged_inventory_ids': [first['inventory_id']]}
+        second = self.client.post('/api/pharmacy/confirm_import', json=duplicate)
+        self.assertEqual(second.status_code, 201)
+        replay = self.client.post('/api/pharmacy/confirm_import', json=duplicate)
+        self.assertEqual(replay.json(), second.json())
+        self.assertNotEqual(second.json()['inventory_id'], first['inventory_id'])
+        self.assertEqual(self.counts(), (2, 2))
+        detail = self.client.get(f"/api/pharmacy/inventory/{first['inventory_id']}", params={'store_id': 'A'})
+        self.assertEqual(detail.status_code, 200)
+        edit = {key: value for key, value in self.body.items() if key != 'stock'}
+        edit.update(expected_version=0, unit='盒', contraindications='补充说明')
+        saved = self.client.post(f"/api/pharmacy/inventory/{first['inventory_id']}/edit", json=edit)
+        self.assertEqual(saved.status_code, 200)
+        changed = {**duplicate, 'stock': 99}
+        self.assertEqual(self.client.post('/api/pharmacy/confirm_import', json=changed).status_code, 409)
+
+    def test_stale_duplicate_acknowledgement_must_be_confirmed_again(self):
+        first = self.client.post('/api/pharmacy/confirm_import', json=self.body).json()
+        old = [first['inventory_id']]
+        self.client.post('/api/pharmacy/confirm_import', json={**self.body,
+            'request_id': 'other-import-01', 'acknowledged_inventory_ids': old})
+        response = self.client.post('/api/pharmacy/confirm_import', json={**self.body,
+            'request_id': 'stale-import-01', 'acknowledged_inventory_ids': old})
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(len(response.json()['detail']['items']), 2)
+
+    def test_different_brand_does_not_trigger_duplicate_warning(self):
+        self.client.post('/api/pharmacy/confirm_import', json=self.body)
+        response = self.client.post('/api/pharmacy/confirm_import', json={**self.body, 'brand': '其他品牌'})
+        self.assertEqual(response.status_code, 201)
+
     def test_invalid_and_oversize_images_do_not_invoke_vision_or_write(self):
         with patch.object(FakeVision, 'extract') as model:
             self.assertEqual(self.ocr(content=b'not an image').status_code, 422)

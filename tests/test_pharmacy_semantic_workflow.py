@@ -85,7 +85,7 @@ class SemanticWorkflowTests(unittest.TestCase):
         result = build_pharmacy_graph(self.engine, model=model).invoke(state)
         self.assertEqual(result['safety_status'], 'unknown')
         self.assertIn('重复成分', result['safety_reason'])
-        self.assertTrue(any(card['id'] == 'combination' for card in result['ui_cards']))
+        self.assertFalse(any(card['type'] == 'missing_information' for card in result['ui_cards']))
 
     def test_stockout_searches_alternative_and_preserves_stockout_record(self):
         self.seed('演示甲', stock=0)
@@ -173,7 +173,9 @@ class CandidateProvenanceTests(unittest.TestCase):
             query_candidates(['测试症状'], [], [], model=Model(result), service=self.service([]))
 
     def test_retrieval_requires_actual_name_and_valid_evidence_id(self):
-        items = [{'id': 'e1', 'text': '演示甲：测试段落', 'source': {'title': '合成夹具'}}]
+        items = [{'id': 'e1', 'text': '演示甲：测试段落', 'review_status': 'approved',
+                  'generation_allowed': True,
+                  'source': {'title': '合成夹具', 'url': 'https://www.nhs.uk/conditions/common-cold/'}}]
         result = {'recommended_drugs': ['演示甲'], 'source': 'retrieval', 'evidence_ids': ['e1']}
         self.assertEqual(query_candidates(['测试症状'], [], [], model=Model(result), service=self.service(items))['source'], 'retrieval')
         for change in ({'evidence_ids': ['invented']}, {'recommended_drugs': ['未在原文出现的药']}):

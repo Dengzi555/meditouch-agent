@@ -43,7 +43,7 @@ python -B -m meditouch.reviewed_content check data/completed-reviews.json
 python -B -m meditouch.reviewed_content install data/completed-reviews.json
 ```
 
-注册表位于Git忽略的 `data/reviewed-content.json`。安装是开发者CLI动作，没有暴露给Agent、HTTP导入文档工具或MCP工具。审核人身份在本机记录，尚未认证；不能把这个文件机制当作正式机构的审批系统。有权限同时修改源码、原件和注册表的人仍可篡改内容，需要部署层的访问控制另行治理。
+注册表位于Git忽略的 `data/reviewed-content.json`。安装是开发者CLI动作，没有暴露给Agent或HTTP导入文档工具。审核人身份在本机记录，尚未认证；不能把这个文件机制当作正式机构的审批系统。有权限同时修改源码、原件和注册表的人仍可篡改内容，需要部署层的访问控制另行治理。
 
 模型检索到reviewed_statements后只能输出statement_id列表。宿主按审核文本原样组合回答，每条同时给出处、适用条件和限制；模型不能自由改写或补充医疗事实。引用保留完整原文用于核对。未知ID、额外编造文本、来源改变、撤销或范围不符时阻断；最多一次修复。真实语料未导入合格记录前仍只预览。旧抽取式协议保留用于原有工程夹具，审核表述存在时必须走新协议，不能绕回自由输出。
 

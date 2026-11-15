@@ -8,9 +8,32 @@
 .actions button:focus-visible { outline: 3px solid #a4ceb1; outline-offset: 3px; }
 .steps { display: flex; gap: 28px; padding-left: 20px; color: #64746d; font-size: 13px; }
 .cards { display: grid; gap: 16px; }
+.liveProgress { color: #6e6886; font-size: 14px; line-height: 1.9; overflow-wrap: anywhere; }
+.liveProgress p { margin: 0 0 8px; }
+.cursor { display: inline-block; width: 2px; height: 1em; margin-left: 5px; background: #7465cb; vertical-align: -.1em; animation: breathe 1.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .cursor { animation: none; } }
+.health { color: #232546; font-size: 15px; line-height: 1.95; }
+.healthSection + .healthSection { margin-top: 24px; }
+.healthSection h2 { font-size: 16px; margin: 0 0 10px; }
+.healthSection ul { margin: 0; padding-left: 22px; }
+.healthSection li { margin: 7px 0; padding-left: 2px; }
+.healthSection strong { color: #302584; font-weight: 650; }
+.knowledgeBasis { color: #8d7953; background: #fbf8ef; padding: 8px 12px; border-radius: 7px; font-size: 11px; line-height: 1.8; margin: 0 0 20px; }
+.citation { text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 22px; color: #6655c7; background: #f0edff; border-radius: 12px; font-size: 12px; vertical-align: middle; }
+.healthSources { color: #8f88a0; font-size: 11px; line-height: 1.8; margin-top: 22px; }
+.healthSources summary { cursor: pointer; color: #81789e; }
+.healthSources > div { margin-top: 14px; padding-top: 12px; border-top: 1px solid #efedf5; }
+.healthSources a { color: #6d609f; }
+.healthSources p { margin: 4px 0; }
+.healthSources blockquote { margin: 8px 0; white-space: pre-wrap; }
+.followUp { margin-top: 24px; padding: 16px 18px; border: 1px solid #e8e3f3; border-radius: 12px; background: #faf9ff; }
+.followUp p { margin: 0 0 12px; font-size: 13px; color: #6e608e; }
+.followUp > div { display: flex; flex-wrap: wrap; gap: 9px; }
+.followUp button { background: white; border: 1px solid #e2dbef; border-radius: 8px; padding: 8px 13px; font: inherit; font-size: 12px; color: #594d79; cursor: pointer; }
+.followUp button:focus-visible { outline: 2px solid #9080db; outline-offset: 2px; }
+.followUp button:disabled { opacity: .5; cursor: default; }
 .demoBadge { justify-self: start; color: #85849b; border: 1px solid #e3e3ef; border-radius: 5px; padding: 3px 7px; font-size: 10px; }
-.compactWarning, .compactNotice { display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px 10px; padding: 9px 12px; border-radius: 8px; font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }
-.compactWarning { background: #fff9e9; color: #7d6019; border-left: 2px solid #d8bd76; }
+.compactNotice { display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px 10px; padding: 9px 12px; border-radius: 8px; font-size: 12px; line-height: 1.8; overflow-wrap: anywhere; }
 .compactNotice { color: #6f7188; background: #f6f6fb; }
 .explanation { color: #9091a5; font-size: 11px; line-height: 1.8; }
 .explanation summary, .drugDetails summary { cursor: pointer; font-size: 12px; }

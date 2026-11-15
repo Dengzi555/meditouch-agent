@@ -149,4 +149,4 @@ class ApiPersistenceTests(unittest.TestCase):
         self.assertEqual(events[-1]['event'], 'done')
         saved = self.store.get(self.id, 'u1', 'A')['turns'][0]
         self.assertTrue(saved['completed'])
-        self.assertEqual(saved['cards'][0]['type'], 'intercept_warning')
+        self.assertEqual(saved['cards'][0]['type'], 'emergency_support')

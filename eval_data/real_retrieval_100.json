@@ -1,0 +1,1308 @@
+{
+  "schema_version": "real-retrieval-100.v1",
+  "scope": "真实NHS公开资料上的中文段落检索；Agent编写金标，未经独立医学审核；不代表医学正确率。",
+  "provenance": "20篇既有公开资料、100个不同小节；50直接问法、50口语问法。替换旧40题结果；部分来源与旧金标小节复用，因此不是全新盲测。",
+  "annotation": "单个精确小节正向金标，不保证穷尽同样相关的其他段落；题目与金标在本轮检索运行前固定。",
+  "questions": [
+    {
+      "id": "R001",
+      "split": "validation_100",
+      "topic": "eyelid-swelling",
+      "kind": "direct",
+      "question": "眼皮轻微起皮发痒，哪些常见眼睑问题可能自行缓解？",
+      "gold": [
+        "nhs-symptom-eyelid-swelling-2"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/eyelid-problems/#symptoms",
+      "section": "Most eyelid problems are harmless",
+      "gold_text_sha256": "9a4207244b5c9dcf02d72bd71e0e5afb71b75b46496019d0151bf6bbea7871c4"
+    },
+    {
+      "id": "R002",
+      "split": "validation_100",
+      "topic": "eyelid-swelling",
+      "kind": "colloquial",
+      "question": "眼皮上长个包和眼皮痒脱皮，可能对应的原因有啥不同？",
+      "gold": [
+        "nhs-symptom-eyelid-swelling-3"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/eyelid-problems/#causes",
+      "section": "Types of eyelid problems",
+      "gold_text_sha256": "87d5e213b3085f14cca4df396cfad04130046d894f6257d33e42a3616207fd83"
+    },
+    {
+      "id": "R003",
+      "split": "validation_100",
+      "topic": "eyelid-swelling",
+      "kind": "direct",
+      "question": "眼睑不适时，药师可以提供哪些处理帮助？",
+      "gold": [
+        "nhs-symptom-eyelid-swelling-4"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/eyelid-problems/#self-care",
+      "section": "A pharmacist can help with eyelid problems",
+      "gold_text_sha256": "a218d7c1d5bdd259150236ef391c67507e7e49e6af664e269cbc55aea4298dae"
+    },
+    {
+      "id": "R004",
+      "split": "validation_100",
+      "topic": "eyelid-swelling",
+      "kind": "colloquial",
+      "question": "眼皮不舒服老不好，还长黄斑，这时候该去看医生吗？",
+      "gold": [
+        "nhs-symptom-eyelid-swelling-5"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/eyelid-problems/",
+      "section": "Non-urgent advice: See a GP if:",
+      "gold_text_sha256": "cfc9bbe710678aaebea2c98ba6fa66484094473bd362c610b2174648ec7275af"
+    },
+    {
+      "id": "R005",
+      "split": "validation_100",
+      "topic": "eyelid-swelling",
+      "kind": "direct",
+      "question": "眼皮红热疼痛并且睁不开眼，属于需要尽快评估的表现吗？",
+      "gold": [
+        "nhs-symptom-eyelid-swelling-6"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/eyelid-problems/",
+      "section": "Urgent advice: Ask for an urgent GP or optician appointment or get help from NHS 111 if:",
+      "gold_text_sha256": "3ad60280d9d61034b4040a616d62adbc514a71e34a1b6fb53a1ac056c08d6904"
+    },
+    {
+      "id": "R006",
+      "split": "validation_100",
+      "topic": "abdominal-pain",
+      "kind": "colloquial",
+      "question": "肚子疼是不是都代表大毛病，有些能不能过几天自己好？",
+      "gold": [
+        "nhs-symptom-abdominal-pain-1"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/stomach-ache/",
+      "section": "Overview",
+      "gold_text_sha256": "18a3cf79c304a928bda9e51c66629e87d58c5df9196ac7ae8f7fce43246ac0f4"
+    },
+    {
+      "id": "R007",
+      "split": "validation_100",
+      "topic": "abdominal-pain",
+      "kind": "direct",
+      "question": "腹痛伴胀气、便秘或消化不良时，常见原因如何区分？",
+      "gold": [
+        "nhs-symptom-abdominal-pain-2"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/stomach-ache/#causes",
+      "section": "Common causes of stomach ache",
+      "gold_text_sha256": "8c332af2d1fcc1aaab9d4ad1a5b97e91e486239e0a369bc8e0d3dc1b666a276b"
+    },
+    {
+      "id": "R008",
+      "split": "validation_100",
+      "topic": "abdominal-pain",
+      "kind": "colloquial",
+      "question": "肚子不舒服想先问药师，他能帮忙看啥？",
+      "gold": [
+        "nhs-symptom-abdominal-pain-3"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/stomach-ache/#self-care",
+      "section": "A pharmacist can help with stomach ache",
+      "gold_text_sha256": "6f704cbaff67ae504fb9ca6ed3e289958b7c364f7a94e20705c670779520a19f"
+    },
+    {
+      "id": "R009",
+      "split": "validation_100",
+      "topic": "abdominal-pain",
+      "kind": "direct",
+      "question": "腹痛、腹胀反复出现一直不缓解，应在何时寻求医疗帮助？",
+      "gold": [
+        "nhs-symptom-abdominal-pain-4"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/stomach-ache/#medical-help",
+      "section": "When and where to get medical help",
+      "gold_text_sha256": "0605b6412f71c35c0619291464af08a46475b71b736963412cc159a6e7e6d244"
+    },
+    {
+      "id": "R010",
+      "split": "validation_100",
+      "topic": "abdominal-pain",
+      "kind": "colloquial",
+      "question": "右下腹痛和月经时肚子绞痛，资料里列的可能原因一样吗？",
+      "gold": [
+        "nhs-symptom-abdominal-pain-5"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/stomach-ache/",
+      "section": "Other causes of stomach ache",
+      "gold_text_sha256": "44ff1cb0d1ed52b9828a8c7a88727aec3d4cff25e6220e11eb1b726046ca515b"
+    },
+    {
+      "id": "R011",
+      "split": "validation_100",
+      "topic": "headache",
+      "kind": "direct",
+      "question": "多数头痛是否会自行缓解，是否通常代表严重疾病？",
+      "gold": [
+        "nhs-symptom-headache-1"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/headaches/",
+      "section": "Overview",
+      "gold_text_sha256": "ec9311a64883e3b9a3846847c4c5f9d60baf5e8352f93fcd207f101c3a3c69e1"
+    },
+    {
+      "id": "R012",
+      "split": "validation_100",
+      "topic": "headache",
+      "kind": "colloquial",
+      "question": "头疼的时候能做点啥缓解，喝水休息有帮助吗？",
+      "gold": [
+        "nhs-symptom-headache-2"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/headaches/#self-care",
+      "section": "How you can ease headaches yourself",
+      "gold_text_sha256": "35b21acec62daec1df3599f8f13c58179bc06dcd4caf219ed351d6121d7d83a8"
+    },
+    {
+      "id": "R013",
+      "split": "validation_100",
+      "topic": "headache",
+      "kind": "direct",
+      "question": "头痛自行处理后继续加重，或伴视力异常，应如何就医？",
+      "gold": [
+        "nhs-symptom-headache-3"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/headaches/#medical-help",
+      "section": "When and where to get medical help",
+      "gold_text_sha256": "0a2a4cd40c9a0032f81663f540062abe24da224b1aac1dab0f9d1cf5e6163bad"
+    },
+    {
+      "id": "R014",
+      "split": "validation_100",
+      "topic": "headache",
+      "kind": "colloquial",
+      "question": "我老是头疼，是不是跟喝水少、没按时吃饭也有关系？",
+      "gold": [
+        "nhs-symptom-headache-4"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/headaches/#causes",
+      "section": "What can cause headaches",
+      "gold_text_sha256": "ea25d495be0a1469aae45019d037ae84271407686425640713d4f6f9cefed672"
+    },
+    {
+      "id": "R015",
+      "split": "validation_100",
+      "topic": "ankle-swelling",
+      "kind": "direct",
+      "question": "久坐久站、吃盐过多或某些药物为什么可能与脚踝水肿有关？",
+      "gold": [
+        "nhs-symptom-ankle-swelling-2"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/oedema/#causes",
+      "section": "Common causes of swollen ankles, feet and legs",
+      "gold_text_sha256": "f0b0bd61aad77aff43ca1c40e2773f49b98e2397e9ad091958054b9bcb747f37"
+    },
+    {
+      "id": "R016",
+      "split": "validation_100",
+      "topic": "ankle-swelling",
+      "kind": "colloquial",
+      "question": "两边脚脖子肿了好几天，自己处理没用，要找医生了吗？",
+      "gold": [
+        "nhs-symptom-ankle-swelling-4"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/oedema/",
+      "section": "Non-urgent advice: See a GP if:",
+      "gold_text_sha256": "c5c379eb4400211fb2aaf8fda08feb119368ef64e0d2d4a66b84233744356fd9"
+    },
+    {
+      "id": "R017",
+      "split": "validation_100",
+      "topic": "ankle-swelling",
+      "kind": "direct",
+      "question": "单侧脚踝突然肿痛、发红发热，哪些情况需要尽快处理？",
+      "gold": [
+        "nhs-symptom-ankle-swelling-5"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/oedema/",
+      "section": "Urgent advice: Ask for an urgent GP appointment or get help from NHS 111 if:",
+      "gold_text_sha256": "a982fa96c886784c768ba511256ec2a3dacc1c183ac3ccd2f44af5e26a62586a"
+    },
+    {
+      "id": "R018",
+      "split": "validation_100",
+      "topic": "ankle-swelling",
+      "kind": "colloquial",
+      "question": "脚肿还胸口发紧、喘不上气，这算不能等的危险情况吗？",
+      "gold": [
+        "nhs-symptom-ankle-swelling-6"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/oedema/",
+      "section": "Immediate action required: Call 999 if:",
+      "gold_text_sha256": "fbfff5ec7e17e57847adcdfc659e4b1804099654c8d6847e57bae171b500ee75"
+    },
+    {
+      "id": "R019",
+      "split": "validation_100",
+      "topic": "ankle-swelling",
+      "kind": "direct",
+      "question": "脚踝水肿时抬高腿部、温和活动和鞋袜选择有什么建议？",
+      "gold": [
+        "nhs-symptom-ankle-swelling-7"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/oedema/#self-care",
+      "section": "Things that may ease swelling",
+      "gold_text_sha256": "245439f80ac0bdfc579e03c3fd1db94401277db162180fda8f9fa15b54d5be3d"
+    },
+    {
+      "id": "R020",
+      "split": "validation_100",
+      "topic": "common-cold",
+      "kind": "colloquial",
+      "question": "感冒一般是慢慢加重还是一下子来，常见表现有哪些？",
+      "gold": [
+        "nhs-symptom-common-cold-2"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/common-cold/#symptoms",
+      "section": "Symptoms of a cold",
+      "gold_text_sha256": "ddec8127e202dc193f95d41e0dfbc8657f10878df316f68a075aaac79fb7e9fa"
+    },
+    {
+      "id": "R021",
+      "split": "validation_100",
+      "topic": "common-cold",
+      "kind": "direct",
+      "question": "普通感冒居家恢复时，休息、补水和饮食有哪些处理建议？",
+      "gold": [
+        "nhs-symptom-common-cold-3"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/common-cold/#self-care",
+      "section": "How you can treat a cold yourself",
+      "gold_text_sha256": "62b93b1bce37dc68f305c59ea939764c36128fae3b60241ef43ae1ab31c3a438"
+    },
+    {
+      "id": "R022",
+      "split": "validation_100",
+      "topic": "common-cold",
+      "kind": "colloquial",
+      "question": "感冒十多天没见好，咳了好几周，是不是该看医生了？",
+      "gold": [
+        "nhs-symptom-common-cold-4"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/common-cold/",
+      "section": "Non-urgent advice: See a GP if:",
+      "gold_text_sha256": "5ed7e8b44ce989465903cd1246a2801b2f7b4ddd36f2eb2d4c558a6dba5ae833"
+    },
+    {
+      "id": "R023",
+      "split": "validation_100",
+      "topic": "common-cold",
+      "kind": "direct",
+      "question": "感冒患者如何减少通过咳嗽、喷嚏和接触传播给他人？",
+      "gold": [
+        "nhs-symptom-common-cold-5"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/common-cold/#transmission",
+      "section": "How to avoid spreading a cold",
+      "gold_text_sha256": "589a94141ec481bbfdc6906ae813eae6fb2e5221d1a923d1440ebc6d2673e7a8"
+    },
+    {
+      "id": "R024",
+      "split": "validation_100",
+      "topic": "common-cold",
+      "kind": "colloquial",
+      "question": "家里有人伤风，我咋做能少被传染，共用毛巾行不行？",
+      "gold": [
+        "nhs-symptom-common-cold-6"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/common-cold/#prevention",
+      "section": "How to prevent catching a cold",
+      "gold_text_sha256": "21dfb01ba12c9760fa1918e4aec37312683eaccab931c96100a060c9934b3e46"
+    },
+    {
+      "id": "R025",
+      "split": "validation_100",
+      "topic": "adult-fever",
+      "kind": "direct",
+      "question": "成人通常从多少摄氏度开始被认为发热，正常体温是否固定？",
+      "gold": [
+        "nhs-symptom-adult-fever-2"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/fever-in-adults/",
+      "section": "What is a high temperature?",
+      "gold_text_sha256": "643c6854aca82e3c52261abbfe34e3ab0cef68310b069d73ace7f38d33cd25ee"
+    },
+    {
+      "id": "R026",
+      "split": "validation_100",
+      "topic": "adult-fever",
+      "kind": "colloquial",
+      "question": "我身上发热打寒战，可温度计没到三十八，这能完全排除发烧吗？",
+      "gold": [
+        "nhs-symptom-adult-fever-3"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/fever-in-adults/#symptoms",
+      "section": "Check if you have a high temperature",
+      "gold_text_sha256": "cb04655c37323e9bf6f3ca3d937b67c5ffd731a9b2ed5f25244bb145fc5704be"
+    },
+    {
+      "id": "R027",
+      "split": "validation_100",
+      "topic": "adult-fever",
+      "kind": "direct",
+      "question": "成人发热不适时，休息、饮水及一般对症处理有哪些建议？",
+      "gold": [
+        "nhs-symptom-adult-fever-4"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/fever-in-adults/#self-care",
+      "section": "Treating a high temperature",
+      "gold_text_sha256": "409138c6a27a69b0f43b88eb4bcdcc5ae0fd36edfcc1f54ac37b910591c39b08"
+    },
+    {
+      "id": "R028",
+      "split": "validation_100",
+      "topic": "adult-fever",
+      "kind": "colloquial",
+      "question": "大人发烧在家处理了还越来越难受，啥时候不能再拖？",
+      "gold": [
+        "nhs-symptom-adult-fever-5"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/fever-in-adults/#medical-help",
+      "section": "When and where to get medical help",
+      "gold_text_sha256": "de1ef81c592bf27c17045e4fea5ec25125024507182160478d0e000352cfe1b9"
+    },
+    {
+      "id": "R029",
+      "split": "validation_100",
+      "topic": "adult-fever",
+      "kind": "direct",
+      "question": "成人发热通常与哪些原因有关，是否常见于感冒或流感感染？",
+      "gold": [
+        "nhs-symptom-adult-fever-6"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/fever-in-adults/#causes",
+      "section": "Causes of a high temperature",
+      "gold_text_sha256": "59ec6bf68d7ae8e3610d824b3a830ae1dfa1e6ecbe606481291e9ae420c20a22"
+    },
+    {
+      "id": "R030",
+      "split": "validation_100",
+      "topic": "pediatric-fever",
+      "kind": "colloquial",
+      "question": "给孩子量体温应该用什么温度计，多少度算发热？",
+      "gold": [
+        "nhs-symptom-pediatric-fever-2"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/fever-in-children/#symptoms",
+      "section": "Checking a high temperature",
+      "gold_text_sha256": "7f872d2bcc3b6cf8b9af3b3e93a10ced09b93f8c7765775a8a92304137c982e1"
+    },
+    {
+      "id": "R031",
+      "split": "validation_100",
+      "topic": "pediatric-fever",
+      "kind": "direct",
+      "question": "儿童发热期间如何补水、观察脱水并安排日常照护？",
+      "gold": [
+        "nhs-symptom-pediatric-fever-3"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/fever-in-children/#self-care",
+      "section": "What to do if your child has a high temperature",
+      "gold_text_sha256": "a59b0c1ec9a9976a4e62ec2e3a48ef6102eb6adf5239b4e3b2aa501df35c6f0b"
+    },
+    {
+      "id": "R032",
+      "split": "validation_100",
+      "topic": "pediatric-fever",
+      "kind": "colloquial",
+      "question": "宝宝不到三个月量到三十八度，或者大点的孩子烧了五天，要赶紧咨询吗？",
+      "gold": [
+        "nhs-symptom-pediatric-fever-4"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/fever-in-children/",
+      "section": "Urgent advice: Call 111 if your child:",
+      "gold_text_sha256": "420dd77046a61bf981aa04b1fc3737067b90a4423a91d47e91349b46a5bd3ecc"
+    },
+    {
+      "id": "R033",
+      "split": "validation_100",
+      "topic": "pediatric-fever",
+      "kind": "direct",
+      "question": "儿童发热伴颈部僵硬、不褪色皮疹或首次抽搐，哪些属于急症信号？",
+      "gold": [
+        "nhs-symptom-pediatric-fever-5"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/fever-in-children/",
+      "section": "Immediate action required: Call 999 if your child:",
+      "gold_text_sha256": "77f8db08d523bbade7a1c1c565abc6d31ddea86af501cf7a3f2ee2ff1bf87cfe"
+    },
+    {
+      "id": "R034",
+      "split": "validation_100",
+      "topic": "pediatric-fever",
+      "kind": "colloquial",
+      "question": "孩子发烧除了咳嗽感冒，也可能是水痘扁桃体炎或者打疫苗引起的吗？",
+      "gold": [
+        "nhs-symptom-pediatric-fever-6"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/fever-in-children/#causes",
+      "section": "Causes of a high temperature in children",
+      "gold_text_sha256": "c9c118dda232f0f163ae9e8b3a118ea5001349cea33e2f3253f49637cf5dc676"
+    },
+    {
+      "id": "R035",
+      "split": "validation_100",
+      "topic": "rash",
+      "kind": "direct",
+      "question": "荨麻疹的皮疹通常有什么外观、感觉和分布特点？",
+      "gold": [
+        "nhs-symptom-rash-2"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/hives/#symptoms",
+      "section": "Symptoms of hives",
+      "gold_text_sha256": "aa8f1a96d7e5e7e30e5f8ae27e05478a8f4108f0a30df59c9f8c2f0c37b6b3c0"
+    },
+    {
+      "id": "R036",
+      "split": "validation_100",
+      "topic": "rash",
+      "kind": "colloquial",
+      "question": "起风团想去药店买抗过敏药，有长期病或者是小孩子要先说明吗？",
+      "gold": [
+        "nhs-symptom-rash-3"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/hives/#self-care",
+      "section": "A pharmacist can help with hives",
+      "gold_text_sha256": "ad2d636567981d9b865c5266a7b6e30d81b8e9dc59934f105874595eec90d923"
+    },
+    {
+      "id": "R037",
+      "split": "validation_100",
+      "topic": "rash",
+      "kind": "direct",
+      "question": "荨麻疹超过两天未改善、反复发作或伴发热时，应如何就医？",
+      "gold": [
+        "nhs-symptom-rash-4"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/hives/",
+      "section": "Non-urgent advice: Ask for an urgent GP appointment or get help from NHS 111 if:",
+      "gold_text_sha256": "a481e4a2a863b5117a02f62b924dff779c5a8e7c79a12f27169bbddd1b881c7b"
+    },
+    {
+      "id": "R038",
+      "split": "validation_100",
+      "topic": "rash",
+      "kind": "colloquial",
+      "question": "起疹子同时嘴唇舌头肿了、吞咽费劲，这时候能等药起效吗？",
+      "gold": [
+        "nhs-symptom-rash-5"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/hives/",
+      "section": "Immediate action required: Call 999 if:",
+      "gold_text_sha256": "bb0462f5f32e1532a05c861ec9d9641e8c3d929c4b833db92f73dd14261ac59b"
+    },
+    {
+      "id": "R039",
+      "split": "validation_100",
+      "topic": "rash",
+      "kind": "direct",
+      "question": "食物、冷热刺激、药物或感染可能如何诱发荨麻疹？",
+      "gold": [
+        "nhs-symptom-rash-7"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/hives/#prevention",
+      "section": "You cannot always prevent hives",
+      "gold_text_sha256": "d9b7900412a9f128dea1c8a4fde1d813340e4b2345bea8c72aeadb9faa7de2c0"
+    },
+    {
+      "id": "R040",
+      "split": "validation_100",
+      "topic": "knee-pain",
+      "kind": "colloquial",
+      "question": "膝盖疼又肿，先少站一会儿和敷冰袋这些具体怎么做？",
+      "gold": [
+        "nhs-symptom-knee-pain-2"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/knee-pain/#self-care",
+      "section": "How to ease knee pain and swelling",
+      "gold_text_sha256": "fce9767a434f92938235c0946d416715e3bdb80ed5633f083974f45b6f2337ef"
+    },
+    {
+      "id": "R041",
+      "split": "validation_100",
+      "topic": "knee-pain",
+      "kind": "direct",
+      "question": "膝关节疼痛数周仍未改善，是否应寻求医生或康复帮助？",
+      "gold": [
+        "nhs-symptom-knee-pain-3"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/knee-pain/",
+      "section": "Non-urgent advice: See a GP if:",
+      "gold_text_sha256": "a8129f534dfd1219696afe7a268e938c640a4ee710ec762ad56ec0d4430762be"
+    },
+    {
+      "id": "R042",
+      "split": "validation_100",
+      "topic": "knee-pain",
+      "kind": "colloquial",
+      "question": "膝盖疼到踩不了地还又红又热，哪些表现不能继续硬扛？",
+      "gold": [
+        "nhs-symptom-knee-pain-4"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/knee-pain/",
+      "section": "Urgent advice: Get advice from 111 now if:",
+      "gold_text_sha256": "2e28c1458a28cb3dcad74a2b6ca577fbc3b5b7e712024d99e10a623b87197cbe"
+    },
+    {
+      "id": "R043",
+      "split": "validation_100",
+      "topic": "knee-pain",
+      "kind": "direct",
+      "question": "医生可能为持续膝痛安排哪些药物、物理治疗或进一步检查？",
+      "gold": [
+        "nhs-symptom-knee-pain-5"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/knee-pain/#medical-treatments",
+      "section": "Treatments for knee pain",
+      "gold_text_sha256": "6e9123faf2bf16fa7af9c0e0c7c8d0f4c8eab4726e35014370919154c1afced5"
+    },
+    {
+      "id": "R044",
+      "split": "validation_100",
+      "topic": "knee-pain",
+      "kind": "colloquial",
+      "question": "运动扭了一下膝盖和反复跑跳后疼，可能的原因有啥区别？",
+      "gold": [
+        "nhs-symptom-knee-pain-6"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/knee-pain/#causes",
+      "section": "Common causes of knee pain",
+      "gold_text_sha256": "89ff6745ceb86591a53e6b874f09fc7dac5763477f7b1bd5660dae8e76a13a82"
+    },
+    {
+      "id": "R045",
+      "split": "validation_100",
+      "topic": "chest-tightness",
+      "kind": "direct",
+      "question": "胸痛是否一定由严重疾病引起，为什么仍应寻求医疗建议？",
+      "gold": [
+        "nhs-symptom-chest-tightness-1"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/chest-pain/",
+      "section": "Overview",
+      "gold_text_sha256": "0dbc85c1b360101d73e74fa4ce9ab0104190b11a16fcff5a7ac2f4a2c5e40fa5"
+    },
+    {
+      "id": "R046",
+      "split": "validation_100",
+      "topic": "chest-tightness",
+      "kind": "colloquial",
+      "question": "胸口突然一直压着疼，还往胳膊上串、冒冷汗，是否得立刻求助？",
+      "gold": [
+        "nhs-symptom-chest-tightness-2"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/chest-pain/",
+      "section": "Immediate action required: Call 999 if:",
+      "gold_text_sha256": "59ff424d36e8d7b0f8f1d8904d2327fced53c1dcc9765dedb1438f6aeb96b156"
+    },
+    {
+      "id": "R047",
+      "split": "validation_100",
+      "topic": "chest-tightness",
+      "kind": "direct",
+      "question": "胸痛反复出现又消失，即使每次很短是否仍应看医生？",
+      "gold": [
+        "nhs-symptom-chest-tightness-3"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/chest-pain/",
+      "section": "Non-urgent advice: See a GP if:",
+      "gold_text_sha256": "a63d520737d67d9ddec43a89cfc2a6b1e1214c5578e6bf84dfa9df8b5e240827"
+    },
+    {
+      "id": "R048",
+      "split": "validation_100",
+      "topic": "chest-tightness",
+      "kind": "colloquial",
+      "question": "饭后胸口烧、泛酸，和运动拉伤后的胸疼，资料里可能是哪些原因？",
+      "gold": [
+        "nhs-symptom-chest-tightness-4"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/chest-pain/#causes",
+      "section": "Common causes of chest pain",
+      "gold_text_sha256": "53c1b6f0e10bea5d9efc45e745dc184e2fb8bd3cdefc02cf98a8068edd9b0ad3"
+    },
+    {
+      "id": "R049",
+      "split": "validation_100",
+      "topic": "chest-tightness",
+      "kind": "direct",
+      "question": "心包炎、心绞痛和心肌梗死与胸痛有什么关系？",
+      "gold": [
+        "nhs-symptom-chest-tightness-5"
+      ],
+      "source_url": "https://www.nhs.uk/symptoms/chest-pain/",
+      "section": "Chest pain and heart problems",
+      "gold_text_sha256": "9e7a43c096b9bccc27de1daa6f6517c5355c5d4ffec200cff5db77881e28278d"
+    },
+    {
+      "id": "R050",
+      "split": "validation_100",
+      "topic": "gout",
+      "kind": "colloquial",
+      "question": "大脚趾突然疼得厉害又红又烫，是痛风常见的表现吗？",
+      "gold": [
+        "nhs-symptom-gout-2"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/gout/#symptoms",
+      "section": "Symptoms of gout",
+      "gold_text_sha256": "8f9e14ee68f2202d41fcea9cb3ce1d3c736fb6df44d75fece286ecb16d579ade"
+    },
+    {
+      "id": "R051",
+      "split": "validation_100",
+      "topic": "gout",
+      "kind": "direct",
+      "question": "首次出现疑似痛风或惯用治疗无效时，为什么应接受医生评估？",
+      "gold": [
+        "nhs-symptom-gout-3"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/gout/",
+      "section": "Non-urgent advice: See a GP if:",
+      "gold_text_sha256": "ba4619df4f5788083062ead428bf3061c36cc5577ef0695cc7ad14ebe09fde22"
+    },
+    {
+      "id": "R052",
+      "split": "validation_100",
+      "topic": "gout",
+      "kind": "colloquial",
+      "question": "关节突然肿痛还发高烧、恶心，是不是不能只当痛风处理？",
+      "gold": [
+        "nhs-symptom-gout-4"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/gout/",
+      "section": "Urgent advice: Ask for an urgent GP appointment or get help from NHS 111 if:",
+      "gold_text_sha256": "0f9e0994b229e0bd9005cbdb24963f84975e19f7061e4d3dd94c0bc297b7dbb9"
+    },
+    {
+      "id": "R053",
+      "split": "validation_100",
+      "topic": "gout",
+      "kind": "direct",
+      "question": "疑似痛风就诊时，尿酸检测和关节液检查分别可能用于什么？",
+      "gold": [
+        "nhs-symptom-gout-5"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/gout/#diagnosis",
+      "section": "What happens at your appointment",
+      "gold_text_sha256": "d11e084b5a2cd708f8ba73c4aba32d7a18cdc36e3acb4223b21d69544f9e83e9"
+    },
+    {
+      "id": "R054",
+      "split": "validation_100",
+      "topic": "gout",
+      "kind": "colloquial",
+      "question": "痛风发作时的治疗，和为了少复发而长期吃的药，是一回事吗？",
+      "gold": [
+        "nhs-symptom-gout-6"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/gout/#medical-treatments",
+      "section": "Treatments for gout",
+      "gold_text_sha256": "20ce69532e88e87ef85aabcb87124ffbec7a55bab7bf6086c2751bc4ad314d80"
+    },
+    {
+      "id": "R055",
+      "split": "validation_100",
+      "topic": "gout",
+      "kind": "direct",
+      "question": "为减少痛风复发，体重、饮酒、饮水及运动有哪些调整建议？",
+      "gold": [
+        "nhs-symptom-gout-9"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/gout/#prevention",
+      "section": "Things you can do to help prevent gout coming back",
+      "gold_text_sha256": "3b12af6c661e4a45f47ba4a547a208159640bdef52512d3ee77a3070e17c267a"
+    },
+    {
+      "id": "R056",
+      "split": "validation_100",
+      "topic": "chickenpox",
+      "kind": "colloquial",
+      "question": "水痘一般多久能好，所有人得了都不严重吗？",
+      "gold": [
+        "nhs-symptom-chickenpox-1"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/chickenpox/",
+      "section": "Overview",
+      "gold_text_sha256": "c89ae3e8b7c3d639a2e571424fb80d2ceb54d650637d0946f46611d778bdf411"
+    },
+    {
+      "id": "R057",
+      "split": "validation_100",
+      "topic": "chickenpox",
+      "kind": "direct",
+      "question": "水痘的皮疹分哪些阶段，除皮疹外还可能有哪些症状？",
+      "gold": [
+        "nhs-symptom-chickenpox-2"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/chickenpox/#symptoms",
+      "section": "Symptoms of chickenpox",
+      "gold_text_sha256": "abc9de2f0a906e1203a484bb3fe41a51b691a2981fe9eac63772424e94c6da12"
+    },
+    {
+      "id": "R058",
+      "split": "validation_100",
+      "topic": "chickenpox",
+      "kind": "colloquial",
+      "question": "孩子出水痘很痒，指甲、喝水和返校时间这些在家要咋安排？",
+      "gold": [
+        "nhs-symptom-chickenpox-3"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/chickenpox/#self-care",
+      "section": "How you can treat chickenpox yourself",
+      "gold_text_sha256": "7b305c1397594f0ad125b6b30ede6557006c22168b1a068b4ab27c316225b633"
+    },
+    {
+      "id": "R059",
+      "split": "validation_100",
+      "topic": "chickenpox",
+      "kind": "direct",
+      "question": "水痘症状加重或不确定是否水痘时，何时应寻求医疗帮助？",
+      "gold": [
+        "nhs-symptom-chickenpox-4"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/chickenpox/#medical-help",
+      "section": "When and where to get medical help",
+      "gold_text_sha256": "382c3913538a62d4d6f75bb32ba0bb50f11ae86b323735f5bc32fd30aaed9bc5"
+    },
+    {
+      "id": "R060",
+      "split": "validation_100",
+      "topic": "chickenpox",
+      "kind": "colloquial",
+      "question": "水痘还没出疹子也会传人吗，接触水疱液会不会被传染？",
+      "gold": [
+        "nhs-symptom-chickenpox-5"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/chickenpox/#transmission",
+      "section": "How chickenpox is spread",
+      "gold_text_sha256": "f259a625f4dd1c93fedc51880ecc4320321e0f70deaba763763b2c8ab1c1169b"
+    },
+    {
+      "id": "R061",
+      "split": "validation_100",
+      "topic": "migraine",
+      "kind": "direct",
+      "question": "偏头痛发作除单侧搏动性头痛外，还可能出现哪些表现？",
+      "gold": [
+        "nhs-symptom-migraine-2"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/migraine/#symptoms",
+      "section": "Symptoms of migraine",
+      "gold_text_sha256": "042515fdd495f69fef9c7b676616fee385b218ff3266909cb7b289c0c90b996b"
+    },
+    {
+      "id": "R062",
+      "split": "validation_100",
+      "topic": "migraine",
+      "kind": "colloquial",
+      "question": "偏头痛拖了三天多，先兆超过一小时，或者刚生完孩子，这时候怎么办？",
+      "gold": [
+        "nhs-symptom-migraine-4"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/migraine/",
+      "section": "Urgent advice: Ask for an urgent GP appointment or get help from NHS 111 if:",
+      "gold_text_sha256": "b91a49d1b31d04b23609950a4d36ec290feb20582f4b84acd3ed13a88696ba4d"
+    },
+    {
+      "id": "R063",
+      "split": "validation_100",
+      "topic": "migraine",
+      "kind": "direct",
+      "question": "头痛突然极其剧烈并伴说话困难或单侧无力，为什么需要紧急处理？",
+      "gold": [
+        "nhs-symptom-migraine-5"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/migraine/",
+      "section": "Immediate action required: Call 999 if you or your child:",
+      "gold_text_sha256": "6dc7b67a6e35513575a537d5e00d7a26a95419e0ae28d22084dc7544d1cd7fec"
+    },
+    {
+      "id": "R064",
+      "split": "validation_100",
+      "topic": "migraine",
+      "kind": "colloquial",
+      "question": "偏头痛的急性缓解治疗跟预防下次发作，有哪些不同路子？",
+      "gold": [
+        "nhs-symptom-migraine-6"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/migraine/#medical-treatments",
+      "section": "Treatment for migraine",
+      "gold_text_sha256": "7a9739cc2ad0ab44facd1f914bc1efb6d20a8eebe07b4a01a2069e8370475354"
+    },
+    {
+      "id": "R065",
+      "split": "validation_100",
+      "topic": "migraine",
+      "kind": "direct",
+      "question": "偏头痛发作时暗室休息及日常作息、饮水和压力管理有哪些建议？",
+      "gold": [
+        "nhs-symptom-migraine-8"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/migraine/#self-care",
+      "section": "Things you can do to ease or reduce migraine",
+      "gold_text_sha256": "7c6cb64324cac3ac6de75c02da088c3e7e140988331cca73e62ab07ef2d91e82"
+    },
+    {
+      "id": "R066",
+      "split": "validation_100",
+      "topic": "sprains",
+      "kind": "colloquial",
+      "question": "脚踝崴了又肿又青，使不上劲，扭伤拉伤通常都啥表现？",
+      "gold": [
+        "nhs-symptom-sprains-2"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/sprains-and-strains/#symptoms",
+      "section": "Symptoms of a sprain or strain",
+      "gold_text_sha256": "1dfff501b81c4417baf9ea000cf47930edfb1687a6f9130237c86705cacb19c5"
+    },
+    {
+      "id": "R067",
+      "split": "validation_100",
+      "topic": "sprains",
+      "kind": "direct",
+      "question": "扭伤或拉伤后最初两三天，PRICE 处理分别包括哪些措施？",
+      "gold": [
+        "nhs-symptom-sprains-3"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/sprains-and-strains/#self-care",
+      "section": "How to treat sprains and strains yourself",
+      "gold_text_sha256": "88bcb02a5d88ebc2c7ba1961ecfd1c8ebfe149f92cb2bc1bf05a23e76a564557"
+    },
+    {
+      "id": "R068",
+      "split": "validation_100",
+      "topic": "sprains",
+      "kind": "colloquial",
+      "question": "扭伤两周好一些了能马上去跑步吗，严重拉伤会拖多久？",
+      "gold": [
+        "nhs-symptom-sprains-4"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/sprains-and-strains/#prognosis-or-recovery",
+      "section": "How long it takes for a sprain or strain to heal",
+      "gold_text_sha256": "fdfe2b71fcf9e9d33f53e21d652771874a162d3592c8ef2dd253e4ff704c5d4c"
+    },
+    {
+      "id": "R069",
+      "split": "validation_100",
+      "topic": "sprains",
+      "kind": "direct",
+      "question": "扭伤后疼痛和肿胀加重、不能负重或出现发热，应何时就医？",
+      "gold": [
+        "nhs-symptom-sprains-6"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/sprains-and-strains/",
+      "section": "Urgent advice: Get help from NHS 111 if:",
+      "gold_text_sha256": "99e45b1e8703d74aed4b616fb75e49997b516fdbc500c15f655d1cec4f8896b6"
+    },
+    {
+      "id": "R070",
+      "split": "validation_100",
+      "topic": "sprains",
+      "kind": "colloquial",
+      "question": "受伤时听到咔嚓声，现在变形还发麻发凉，是不是可能骨折了？",
+      "gold": [
+        "nhs-symptom-sprains-9"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/sprains-and-strains/",
+      "section": "Immediate action required: Call 999 or go to A&E if:",
+      "gold_text_sha256": "18364856df79812ba2808638db249539da2aa1a5481fa69797b60918a499f1df"
+    },
+    {
+      "id": "R071",
+      "split": "validation_100",
+      "topic": "flu",
+      "kind": "direct",
+      "question": "流感常见症状包括哪些，与普通感冒的起病方式有什么区别？",
+      "gold": [
+        "nhs-symptom-flu-3"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/flu/#symptoms",
+      "section": "Symptoms of flu",
+      "gold_text_sha256": "d8be6893ebba82024d28201ad052ee968963606f167c3c003646c25849f66fd3"
+    },
+    {
+      "id": "R072",
+      "split": "validation_100",
+      "topic": "flu",
+      "kind": "colloquial",
+      "question": "得流感发热浑身疼，在家能怎么照顾自己、缓解不舒服？",
+      "gold": [
+        "nhs-symptom-flu-4"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/flu/#self-care",
+      "section": "How to treat flu yourself",
+      "gold_text_sha256": "f23c0cec2a9a21c7e717f04014131c7fa81fed1ad6818460f6c97120a770f9f7"
+    },
+    {
+      "id": "R073",
+      "split": "validation_100",
+      "topic": "flu",
+      "kind": "direct",
+      "question": "哪些高风险人群出现流感症状应尽快咨询医生？",
+      "gold": [
+        "nhs-symptom-flu-5"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/flu/",
+      "section": "Urgent advice: Ask for an urgent GP appointment or get help from NHS 111 if:",
+      "gold_text_sha256": "7b0a449a58f00c8ae7b25ffece9aef5aace0514d6adc417b8af43bf060154d88"
+    },
+    {
+      "id": "R074",
+      "split": "validation_100",
+      "topic": "flu",
+      "kind": "colloquial",
+      "question": "得流感突然胸口疼、喘得说不出话或咳血，是不是得紧急处理？",
+      "gold": [
+        "nhs-symptom-flu-6"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/flu/",
+      "section": "Immediate action required: Call 999 or go to A&E if:",
+      "gold_text_sha256": "000cffd6789b7bc34109934980ef9e86508957ecddb52fceabb1e811ad9e1ab2"
+    },
+    {
+      "id": "R075",
+      "split": "validation_100",
+      "topic": "flu",
+      "kind": "direct",
+      "question": "流感患者怎样通过手卫生和咳嗽礼仪减少传播？",
+      "gold": [
+        "nhs-symptom-flu-7"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/flu/#transmission",
+      "section": "How to avoid spreading the flu",
+      "gold_text_sha256": "72eb9cc94355030c153bee99ce5c9b9274ac2ccef09b619f4cb8f4f98b921a81"
+    },
+    {
+      "id": "R076",
+      "split": "validation_100",
+      "topic": "sinusitis",
+      "kind": "colloquial",
+      "question": "鼻窦炎是不是常在感冒后，脸颊额头疼、黄绿鼻涕这些算表现吗？",
+      "gold": [
+        "nhs-symptom-sinusitis-2"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/sinusitis-sinus-infection/#symptoms",
+      "section": "Symptoms of sinusitis",
+      "gold_text_sha256": "f58bb0b391d3aaf4404afaee9149a6b03de9f11b1f2f2bfa790de121469a744f"
+    },
+    {
+      "id": "R077",
+      "split": "validation_100",
+      "topic": "sinusitis",
+      "kind": "direct",
+      "question": "轻度鼻窦炎在休息、饮水、避免刺激及盐水清洁鼻腔方面有哪些建议？",
+      "gold": [
+        "nhs-symptom-sinusitis-3"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/sinusitis-sinus-infection/#self-care",
+      "section": "How you can treat sinusitis yourself",
+      "gold_text_sha256": "a4d009f842e5be066b568055b1b947be9cf3830c52f4fa71d9157a3c88edfbe9"
+    },
+    {
+      "id": "R078",
+      "split": "validation_100",
+      "topic": "sinusitis",
+      "kind": "colloquial",
+      "question": "鼻窦炎自己弄了三周没好，或者药店处理一周没用，要看医生吗？",
+      "gold": [
+        "nhs-symptom-sinusitis-5"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/sinusitis-sinus-infection/",
+      "section": "Non-urgent advice: See a GP if:",
+      "gold_text_sha256": "53440b86c3d1b4cba99220317c065635ef35013f8177f31d57fe7bbed9bd7298"
+    },
+    {
+      "id": "R079",
+      "split": "validation_100",
+      "topic": "sinusitis",
+      "kind": "direct",
+      "question": "鼻窦炎伴明显全身不适、止痛无效或免疫力低下时，应如何求助？",
+      "gold": [
+        "nhs-symptom-sinusitis-6"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/sinusitis-sinus-infection/",
+      "section": "Urgent advice: Ask for an urgent GP appointment or get help from NHS 111 if:",
+      "gold_text_sha256": "de96af72a2a4dd2ddde36d6e5febf1d03893e36cb6c86de348975075e818bd23"
+    },
+    {
+      "id": "R080",
+      "split": "validation_100",
+      "topic": "sinusitis",
+      "kind": "colloquial",
+      "question": "鼻窦炎是不是都得吃抗生素，鼻喷激素和抗过敏药什么时候会考虑？",
+      "gold": [
+        "nhs-symptom-sinusitis-7"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/sinusitis-sinus-infection/#medical-treatments",
+      "section": "Treatment for sinusitis",
+      "gold_text_sha256": "50a1dceee920c2a8688ecaba84a9d52604002a33106c8af83b1471852e925462"
+    },
+    {
+      "id": "R081",
+      "split": "validation_100",
+      "topic": "tonsillitis",
+      "kind": "direct",
+      "question": "扁桃体炎在儿童和成人中可能出现哪些症状？",
+      "gold": [
+        "nhs-symptom-tonsillitis-2"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/tonsillitis/#symptoms",
+      "section": "Symptoms of tonsillitis",
+      "gold_text_sha256": "c5daecd9b0c5aeb69a29e344e8e38c0cbadf211c85a552ca0595f02594f2245d"
+    },
+    {
+      "id": "R082",
+      "split": "validation_100",
+      "topic": "tonsillitis",
+      "kind": "colloquial",
+      "question": "扁桃体发炎嗓子痛，喝凉饮、休息和盐水漱口这些有啥讲究？",
+      "gold": [
+        "nhs-symptom-tonsillitis-4"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/tonsillitis/#self-care",
+      "section": "How to treat tonsillitis yourself",
+      "gold_text_sha256": "4ec17e17c998b2d56450fc199564a035f9206ebe8712007abf9e1f38f51e5b5a"
+    },
+    {
+      "id": "R083",
+      "split": "validation_100",
+      "topic": "tonsillitis",
+      "kind": "direct",
+      "question": "扁桃体有脓点或咽痛严重到无法进食饮水时，应如何处理？",
+      "gold": [
+        "nhs-symptom-tonsillitis-6"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/tonsillitis/",
+      "section": "Urgent advice: Get help from NHS 111 now if:",
+      "gold_text_sha256": "f3cc9ec7721c0122c36c6825faeff988bb1a6de25146ef7e754d34eba179eaf2"
+    },
+    {
+      "id": "R084",
+      "split": "validation_100",
+      "topic": "tonsillitis",
+      "kind": "colloquial",
+      "question": "看扁桃体发炎，医生为啥有时要拿棉签擦嗓子或者抽血？",
+      "gold": [
+        "nhs-symptom-tonsillitis-7"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/tonsillitis/#diagnosis",
+      "section": "What happens at your GP appointment",
+      "gold_text_sha256": "1ed02d1a36fb4406d1757e14e3e415a18d602052ca792e18258c657b1dddbc5c"
+    },
+    {
+      "id": "R085",
+      "split": "validation_100",
+      "topic": "tonsillitis",
+      "kind": "direct",
+      "question": "病毒性和细菌性扁桃体炎的治疗有什么区别，是否都需要抗生素？",
+      "gold": [
+        "nhs-symptom-tonsillitis-8"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/tonsillitis/#medical-treatments",
+      "section": "Treatment from a GP for tonsillitis",
+      "gold_text_sha256": "53aa1e633669fb7b69f25e401984cf4e5136e67866e2a0894262a748a5a335d1"
+    },
+    {
+      "id": "R086",
+      "split": "validation_100",
+      "topic": "contact-dermatitis",
+      "kind": "colloquial",
+      "question": "碰到东西后手上又痒又起疱还开裂，是接触性皮炎的表现吗？",
+      "gold": [
+        "nhs-symptom-contact-dermatitis-2"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/contact-dermatitis/",
+      "section": "Symptoms of contact dermatitis",
+      "gold_text_sha256": "c217820a6256a8667cfe68811fc721dc0aceb0977efdb7cee1f1e6248995a243"
+    },
+    {
+      "id": "R087",
+      "split": "validation_100",
+      "topic": "contact-dermatitis",
+      "kind": "direct",
+      "question": "接触性皮炎困扰日常生活时，药师能提供哪些保湿处理建议？",
+      "gold": [
+        "nhs-symptom-contact-dermatitis-3"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/contact-dermatitis/",
+      "section": "When to see a pharmacist",
+      "gold_text_sha256": "43ae7721a3913a615d865ad315121aa3e07565c9ad24ddf25faa41e5a9c3ebcf"
+    },
+    {
+      "id": "R088",
+      "split": "validation_100",
+      "topic": "contact-dermatitis",
+      "kind": "colloquial",
+      "question": "皮炎老是反复很严重，又找不到碰了啥导致的，要不要去看皮肤科？",
+      "gold": [
+        "nhs-symptom-contact-dermatitis-4"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/contact-dermatitis/",
+      "section": "When to see a GP",
+      "gold_text_sha256": "73b799df2ee93cc212076c309a5e5f72a562794d9dca2c2ec5d218b9f3258079"
+    },
+    {
+      "id": "R089",
+      "split": "validation_100",
+      "topic": "contact-dermatitis",
+      "kind": "direct",
+      "question": "刺激性与过敏性接触性皮炎在致病机制上有何不同？",
+      "gold": [
+        "nhs-symptom-contact-dermatitis-5"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/contact-dermatitis/",
+      "section": "Causes of contact dermatitis",
+      "gold_text_sha256": "8283272f126fcc7c1c9f4243eb534a31e2c89c2664b68132c03ef758ed641a43"
+    },
+    {
+      "id": "R090",
+      "split": "validation_100",
+      "topic": "contact-dermatitis",
+      "kind": "colloquial",
+      "question": "工作老接触清洁剂，怎么洗护和防护才能少犯接触性皮炎？",
+      "gold": [
+        "nhs-symptom-contact-dermatitis-7"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/contact-dermatitis/",
+      "section": "Preventing contact dermatitis",
+      "gold_text_sha256": "dd3b90e560f1899e12be4acc1bacf36158a3f47fe375e4d4cb2017af62717a21"
+    },
+    {
+      "id": "R091",
+      "split": "validation_100",
+      "topic": "back-pain",
+      "kind": "direct",
+      "question": "腰背痛可能由哪些常见损伤或疾病引起？",
+      "gold": [
+        "nhs-symptom-back-pain-2"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/back-pain/#causes",
+      "section": "Causes of back pain",
+      "gold_text_sha256": "15595f21ac09e9b02b9e5e9c87df4fdb8772413f90159addb1204559fd5ee514"
+    },
+    {
+      "id": "R092",
+      "split": "validation_100",
+      "topic": "back-pain",
+      "kind": "colloquial",
+      "question": "腰疼好几周没好，晚上更痛还莫名变瘦，这时候要找医生吗？",
+      "gold": [
+        "nhs-symptom-back-pain-3"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/back-pain/",
+      "section": "Non-urgent advice: See a GP if:",
+      "gold_text_sha256": "20a33e285132a65a58e787383bcde58c441773e6bfe2e6cf3e1ea4742b647966"
+    },
+    {
+      "id": "R093",
+      "split": "validation_100",
+      "topic": "back-pain",
+      "kind": "direct",
+      "question": "腰背痛突然严重或快速加重，并伴寒战和全身不适，应如何求助？",
+      "gold": [
+        "nhs-symptom-back-pain-4"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/back-pain/",
+      "section": "Urgent advice: Ask for an urgent GP appointment or get help from 111 if:",
+      "gold_text_sha256": "d1b30c4967a00b7dc1ddab4c6ff491e11eefc0ce7645ad7ec28cca2b0a4a9e7e"
+    },
+    {
+      "id": "R094",
+      "split": "validation_100",
+      "topic": "back-pain",
+      "kind": "colloquial",
+      "question": "腰疼还两条腿都麻、大小便控制不住，这是不是急症信号？",
+      "gold": [
+        "nhs-symptom-back-pain-5"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/back-pain/",
+      "section": "Immediate action required: Call 999 or go to A&E if:",
+      "gold_text_sha256": "6606146ff3bb63e2333a3076131d7e58d5f2d9d1581da2e19169c5a979e9cba1"
+    },
+    {
+      "id": "R095",
+      "split": "validation_100",
+      "topic": "back-pain",
+      "kind": "direct",
+      "question": "普通腰背痛的居家护理中，活动、休息与冷热敷有哪些建议？",
+      "gold": [
+        "nhs-symptom-back-pain-6"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/back-pain/#self-care",
+      "section": "How to ease back pain yourself",
+      "gold_text_sha256": "202d970b0f543a9900977e3246bc2ed859273e1c8b911ac9ca81fbd8c9a61e33"
+    },
+    {
+      "id": "R096",
+      "split": "validation_100",
+      "topic": "hypertension",
+      "kind": "colloquial",
+      "question": "没啥感觉的人也可能血压高吗，哪些因素会增加风险？",
+      "gold": [
+        "nhs-symptom-hypertension-2"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/high-blood-pressure-hypertension/#causes",
+      "section": "Check if you're at risk of high blood pressure",
+      "gold_text_sha256": "8ce4ab894d443ff2a8811effe0df8b8489127540cc96f92263544d4e55e6ebd7"
+    },
+    {
+      "id": "R097",
+      "split": "validation_100",
+      "topic": "hypertension",
+      "kind": "direct",
+      "question": "高血压通常有哪些症状，为什么不能只凭感觉判断血压？",
+      "gold": [
+        "nhs-symptom-hypertension-4"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/high-blood-pressure-hypertension/#symptoms",
+      "section": "Symptoms of high blood pressure",
+      "gold_text_sha256": "99fa99902102baa54e63b5b981a21b988e2aae13c20420365bc941af03d5610f"
+    },
+    {
+      "id": "R098",
+      "split": "validation_100",
+      "topic": "hypertension",
+      "kind": "colloquial",
+      "question": "胳膊绑袖带测出血压高后，为啥还可能让回家继续量几天？",
+      "gold": [
+        "nhs-symptom-hypertension-7"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/high-blood-pressure-hypertension/#diagnosis",
+      "section": "What happens at a blood pressure check",
+      "gold_text_sha256": "f82a551737dd45686866e7d9ee072876c52300d693b2170f065e4c975cc1e750"
+    },
+    {
+      "id": "R099",
+      "split": "validation_100",
+      "topic": "hypertension",
+      "kind": "direct",
+      "question": "长期高血压未控制会增加哪些心脑血管和肾脏风险？",
+      "gold": [
+        "nhs-symptom-hypertension-8"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/high-blood-pressure-hypertension/#complications",
+      "section": "Risks of having high blood pressure",
+      "gold_text_sha256": "59c9f86133e92c3ee324b7c849ac1f5ef8a3b5822e108f9415577d99c19574b6"
+    },
+    {
+      "id": "R100",
+      "split": "validation_100",
+      "topic": "hypertension",
+      "kind": "colloquial",
+      "question": "想靠生活习惯降点血压，吃盐、运动和控制体重都怎么改？",
+      "gold": [
+        "nhs-symptom-hypertension-9"
+      ],
+      "source_url": "https://www.nhs.uk/conditions/high-blood-pressure-hypertension/#self-care",
+      "section": "How you can help lower your blood pressure",
+      "gold_text_sha256": "b558fb117136edd6aa5c4ab76a4950de1de5f67c172071cfd7707e4a067fe457"
+    }
+  ]
+}

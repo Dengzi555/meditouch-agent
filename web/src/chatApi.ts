@@ -2,7 +2,7 @@ import type { Card, Safety } from './protocol';
 import { card, safety } from './protocol';
 
 export type Turn = { id: string; question: string; cards: Card[]; overall: Safety;
-  stages: string[]; error: string; completed: boolean; loading: boolean; status?: string };
+  stages: string[]; error: string; completed: boolean; loading: boolean; status?: string; animate?: boolean };
 export type Chat = { id: string; title: string; turns: Turn[]; customer?: {customer_tags?: string[]} };
 
 async function read(response: Response) {

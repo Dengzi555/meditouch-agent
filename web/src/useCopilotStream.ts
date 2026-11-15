@@ -7,6 +7,7 @@ export type CopilotPayload = {
   question: string;
   session_id?: string;
   turn_id?: string;
+  resume?: boolean;
   history?: {role: 'user' | 'assistant'; content: string}[];
   workspace: { store_id: string; task: 'reception' | 'drug_lookup' | 'safety_check';
     customer: { customer_tags: string[] } };

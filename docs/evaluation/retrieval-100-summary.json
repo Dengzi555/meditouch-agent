@@ -1,0 +1,1117 @@
+{
+  "started_utc": "2026-11-14T12:39:52.685318+00:00",
+  "suite_sha256": "dacc5b4c60063f2b736458331e4c358d0fedb99b898cf91f9acf12865ac8c438",
+  "corpus_sha256": "3d8256ae1069a68cc190e3af59b75d2afadff99bfa4fc9395be67ddc8e8eb692",
+  "git_head": "a3f956ae3600c38bf564d759a13f4fa174cfc2ff",
+  "runtime_code_sha256": {
+    "scripts/eval_retrieval_ab.py": "14cafea58aca95ac5e9c464d3a533c4540b9634beafdbbc3d3b45e5464f01ca7",
+    "meditouch/hybrid_retrieval.py": "81a49acb12d70bfa3b9b6107da42ac80228b322f4fa899e1743ac6bb33090aa1",
+    "meditouch/rag_pipeline.py": "0fcd90e1f80c8a3d14bd7cf0d86703bd8e4c4fb6ce9bba6b7cce875bb7a7d215",
+    "meditouch/query_plan.py": "77d02e382d50146b859af21cf1fb54fd04d824e2e1119d2e59085fa9cc7f527f",
+    "meditouch/reranking.py": "a08ea93581a11f0a8fbe003dd1bac9c74ecdc1a858199ea1c6d80e8189b10c68"
+  },
+  "python": "3.13.12",
+  "platform": "Windows-11-10.0.22631-SP0",
+  "versions": {
+    "fastembed": "0.9.1",
+    "numpy": "2.5.4",
+    "onnxruntime": "1.31.1"
+  },
+  "embedding": "BAAI/bge-small-zh-v1.5",
+  "reranker": "BAAI/bge-reranker-base",
+  "repeats": 3,
+  "seed": 20261114,
+  "k": 5,
+  "indexed_units": 183,
+  "query_preprocessing": "shared normalize_terms + first retrieval_queries; no LLM rewrite",
+  "rerank_pool": "same hybrid top-5; no extra recall",
+  "timing": "warmed models/corpus, serial requests, shuffled questions each round; rerank_ms includes hybrid_ms",
+  "scope": "真实NHS公开资料上的中文段落检索；Agent编写金标，未经独立医学审核；不代表医学正确率。",
+  "provenance": "20篇既有公开资料、100个不同小节；50直接问法、50口语问法。替换旧40题结果；部分来源与旧金标小节复用，因此不是全新盲测。",
+  "completed_utc": "2026-11-14T12:42:28.503112+00:00",
+  "summary": [
+    {
+      "arm": "lexical",
+      "questions": 100,
+      "timed_requests": 300,
+      "hit_at_1": 15,
+      "hit_at_3": 36,
+      "hit_at_5": 52,
+      "hit5_wilson95": [
+        0.4232,
+        0.6154
+      ],
+      "mrr5": 0.2755,
+      "p50_ms": 6.56,
+      "p95_ms": 9.71
+    },
+    {
+      "arm": "hybrid",
+      "questions": 100,
+      "timed_requests": 300,
+      "hit_at_1": 23,
+      "hit_at_3": 47,
+      "hit_at_5": 69,
+      "hit5_wilson95": [
+        0.5937,
+        0.7722
+      ],
+      "mrr5": 0.3822,
+      "p50_ms": 10.84,
+      "p95_ms": 13.56
+    },
+    {
+      "arm": "rerank",
+      "questions": 100,
+      "timed_requests": 300,
+      "hit_at_1": 56,
+      "hit_at_3": 68,
+      "hit_at_5": 69,
+      "hit5_wilson95": [
+        0.5937,
+        0.7722
+      ],
+      "mrr5": 0.622,
+      "p50_ms": 312.84,
+      "p95_ms": 1186.03
+    }
+  ],
+  "by_kind": {
+    "direct": [
+      {
+        "arm": "lexical",
+        "questions": 50,
+        "timed_requests": 150,
+        "hit_at_1": 8,
+        "hit_at_3": 16,
+        "hit_at_5": 21,
+        "hit5_wilson95": [
+          0.2938,
+          0.5577
+        ],
+        "mrr5": 0.244,
+        "p50_ms": 6.62,
+        "p95_ms": 10.1
+      },
+      {
+        "arm": "hybrid",
+        "questions": 50,
+        "timed_requests": 150,
+        "hit_at_1": 12,
+        "hit_at_3": 21,
+        "hit_at_5": 32,
+        "hit5_wilson95": [
+          0.5014,
+          0.7586
+        ],
+        "mrr5": 0.3643,
+        "p50_ms": 10.75,
+        "p95_ms": 13.51
+      },
+      {
+        "arm": "rerank",
+        "questions": 50,
+        "timed_requests": 150,
+        "hit_at_1": 26,
+        "hit_at_3": 31,
+        "hit_at_5": 32,
+        "hit5_wilson95": [
+          0.5014,
+          0.7586
+        ],
+        "mrr5": 0.574,
+        "p50_ms": 409.19,
+        "p95_ms": 1193.08
+      }
+    ],
+    "colloquial": [
+      {
+        "arm": "lexical",
+        "questions": 50,
+        "timed_requests": 150,
+        "hit_at_1": 7,
+        "hit_at_3": 20,
+        "hit_at_5": 31,
+        "hit5_wilson95": [
+          0.4815,
+          0.7414
+        ],
+        "mrr5": 0.307,
+        "p50_ms": 6.51,
+        "p95_ms": 9.46
+      },
+      {
+        "arm": "hybrid",
+        "questions": 50,
+        "timed_requests": 150,
+        "hit_at_1": 11,
+        "hit_at_3": 26,
+        "hit_at_5": 37,
+        "hit5_wilson95": [
+          0.6045,
+          0.8413
+        ],
+        "mrr5": 0.4,
+        "p50_ms": 10.97,
+        "p95_ms": 14.4
+      },
+      {
+        "arm": "rerank",
+        "questions": 50,
+        "timed_requests": 150,
+        "hit_at_1": 30,
+        "hit_at_3": 37,
+        "hit_at_5": 37,
+        "hit5_wilson95": [
+          0.6045,
+          0.8413
+        ],
+        "mrr5": 0.67,
+        "p50_ms": 297.87,
+        "p95_ms": 1147.1
+      }
+    ]
+  },
+  "by_topic": {
+    "abdominal-pain": [
+      {
+        "arm": "lexical",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 4,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.5,
+        "p50_ms": 6.39,
+        "p95_ms": 10.09
+      },
+      {
+        "arm": "hybrid",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 2,
+        "hit_at_3": 4,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.6,
+        "p50_ms": 10.52,
+        "p95_ms": 15.34
+      },
+      {
+        "arm": "rerank",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 4,
+        "hit_at_3": 4,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.8,
+        "p50_ms": 273.29,
+        "p95_ms": 404.43
+      }
+    ],
+    "adult-fever": [
+      {
+        "arm": "lexical",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "hit_at_5": 0,
+        "hit5_wilson95": [
+          0.0,
+          0.4345
+        ],
+        "mrr5": 0.0,
+        "p50_ms": 6.74,
+        "p95_ms": 10.1
+      },
+      {
+        "arm": "hybrid",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 0,
+        "hit_at_3": 1,
+        "hit_at_5": 2,
+        "hit5_wilson95": [
+          0.1176,
+          0.7693
+        ],
+        "mrr5": 0.1067,
+        "p50_ms": 11.17,
+        "p95_ms": 13.3
+      },
+      {
+        "arm": "rerank",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 2,
+        "hit_at_3": 2,
+        "hit_at_5": 2,
+        "hit5_wilson95": [
+          0.1176,
+          0.7693
+        ],
+        "mrr5": 0.4,
+        "p50_ms": 750.2,
+        "p95_ms": 1196.61
+      }
+    ],
+    "ankle-swelling": [
+      {
+        "arm": "lexical",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 0,
+        "hit_at_3": 0,
+        "hit_at_5": 1,
+        "hit5_wilson95": [
+          0.0362,
+          0.6245
+        ],
+        "mrr5": 0.04,
+        "p50_ms": 6.28,
+        "p95_ms": 9.18
+      },
+      {
+        "arm": "hybrid",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 0,
+        "hit_at_3": 1,
+        "hit_at_5": 3,
+        "hit5_wilson95": [
+          0.2307,
+          0.8824
+        ],
+        "mrr5": 0.1567,
+        "p50_ms": 10.21,
+        "p95_ms": 13.12
+      },
+      {
+        "arm": "rerank",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 2,
+        "hit_at_3": 3,
+        "hit_at_5": 3,
+        "hit5_wilson95": [
+          0.2307,
+          0.8824
+        ],
+        "mrr5": 0.5,
+        "p50_ms": 417.6,
+        "p95_ms": 724.4
+      }
+    ],
+    "back-pain": [
+      {
+        "arm": "lexical",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 2,
+        "hit_at_3": 3,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.54,
+        "p50_ms": 6.38,
+        "p95_ms": 10.64
+      },
+      {
+        "arm": "hybrid",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 2,
+        "hit_at_3": 3,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.55,
+        "p50_ms": 11.39,
+        "p95_ms": 13.31
+      },
+      {
+        "arm": "rerank",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 3,
+        "hit_at_3": 4,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.7,
+        "p50_ms": 286.67,
+        "p95_ms": 1170.81
+      }
+    ],
+    "chest-tightness": [
+      {
+        "arm": "lexical",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "hit_at_5": 3,
+        "hit5_wilson95": [
+          0.2307,
+          0.8824
+        ],
+        "mrr5": 0.29,
+        "p50_ms": 6.7,
+        "p95_ms": 9.46
+      },
+      {
+        "arm": "hybrid",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.34,
+        "p50_ms": 10.78,
+        "p95_ms": 13.0
+      },
+      {
+        "arm": "rerank",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 4,
+        "hit_at_3": 4,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.8,
+        "p50_ms": 316.02,
+        "p95_ms": 1223.76
+      }
+    ],
+    "chickenpox": [
+      {
+        "arm": "lexical",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 2,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.39,
+        "p50_ms": 6.67,
+        "p95_ms": 13.18
+      },
+      {
+        "arm": "hybrid",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 2,
+        "hit_at_3": 3,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.5167,
+        "p50_ms": 11.1,
+        "p95_ms": 16.2
+      },
+      {
+        "arm": "rerank",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 3,
+        "hit_at_3": 4,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.7,
+        "p50_ms": 344.19,
+        "p95_ms": 997.59
+      }
+    ],
+    "common-cold": [
+      {
+        "arm": "lexical",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 0,
+        "hit_at_3": 3,
+        "hit_at_5": 3,
+        "hit5_wilson95": [
+          0.2307,
+          0.8824
+        ],
+        "mrr5": 0.2667,
+        "p50_ms": 7.05,
+        "p95_ms": 10.16
+      },
+      {
+        "arm": "hybrid",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 3,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.45,
+        "p50_ms": 11.46,
+        "p95_ms": 14.26
+      },
+      {
+        "arm": "rerank",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 3,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.44,
+        "p50_ms": 658.91,
+        "p95_ms": 1233.31
+      }
+    ],
+    "contact-dermatitis": [
+      {
+        "arm": "lexical",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "hit_at_5": 2,
+        "hit5_wilson95": [
+          0.1176,
+          0.7693
+        ],
+        "mrr5": 0.25,
+        "p50_ms": 6.31,
+        "p95_ms": 9.24
+      },
+      {
+        "arm": "hybrid",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.33,
+        "p50_ms": 10.19,
+        "p95_ms": 13.52
+      },
+      {
+        "arm": "rerank",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 4,
+        "hit_at_3": 4,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.8,
+        "p50_ms": 261.9,
+        "p95_ms": 302.92
+      }
+    ],
+    "eyelid-swelling": [
+      {
+        "arm": "lexical",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 3,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.3733,
+        "p50_ms": 6.52,
+        "p95_ms": 10.13
+      },
+      {
+        "arm": "hybrid",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 4,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.4333,
+        "p50_ms": 10.39,
+        "p95_ms": 14.36
+      },
+      {
+        "arm": "rerank",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 3,
+        "hit_at_3": 4,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.7,
+        "p50_ms": 301.59,
+        "p95_ms": 347.69
+      }
+    ],
+    "flu": [
+      {
+        "arm": "lexical",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 0,
+        "hit_at_3": 2,
+        "hit_at_5": 2,
+        "hit5_wilson95": [
+          0.1176,
+          0.7693
+        ],
+        "mrr5": 0.2,
+        "p50_ms": 7.12,
+        "p95_ms": 11.25
+      },
+      {
+        "arm": "hybrid",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 2,
+        "hit_at_3": 2,
+        "hit_at_5": 2,
+        "hit5_wilson95": [
+          0.1176,
+          0.7693
+        ],
+        "mrr5": 0.4,
+        "p50_ms": 11.26,
+        "p95_ms": 13.56
+      },
+      {
+        "arm": "rerank",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 2,
+        "hit_at_5": 2,
+        "hit5_wilson95": [
+          0.1176,
+          0.7693
+        ],
+        "mrr5": 0.3,
+        "p50_ms": 627.46,
+        "p95_ms": 1244.14
+      }
+    ],
+    "gout": [
+      {
+        "arm": "lexical",
+        "questions": 6,
+        "timed_requests": 18,
+        "hit_at_1": 1,
+        "hit_at_3": 3,
+        "hit_at_5": 3,
+        "hit5_wilson95": [
+          0.1876,
+          0.8124
+        ],
+        "mrr5": 0.2778,
+        "p50_ms": 6.62,
+        "p95_ms": 10.17
+      },
+      {
+        "arm": "hybrid",
+        "questions": 6,
+        "timed_requests": 18,
+        "hit_at_1": 2,
+        "hit_at_3": 3,
+        "hit_at_5": 3,
+        "hit5_wilson95": [
+          0.1876,
+          0.8124
+        ],
+        "mrr5": 0.3889,
+        "p50_ms": 11.04,
+        "p95_ms": 14.61
+      },
+      {
+        "arm": "rerank",
+        "questions": 6,
+        "timed_requests": 18,
+        "hit_at_1": 3,
+        "hit_at_3": 3,
+        "hit_at_5": 3,
+        "hit5_wilson95": [
+          0.1876,
+          0.8124
+        ],
+        "mrr5": 0.5,
+        "p50_ms": 267.63,
+        "p95_ms": 1238.06
+      }
+    ],
+    "headache": [
+      {
+        "arm": "lexical",
+        "questions": 4,
+        "timed_requests": 12,
+        "hit_at_1": 0,
+        "hit_at_3": 2,
+        "hit_at_5": 2,
+        "hit5_wilson95": [
+          0.15,
+          0.85
+        ],
+        "mrr5": 0.2083,
+        "p50_ms": 6.19,
+        "p95_ms": 8.2
+      },
+      {
+        "arm": "hybrid",
+        "questions": 4,
+        "timed_requests": 12,
+        "hit_at_1": 2,
+        "hit_at_3": 3,
+        "hit_at_5": 3,
+        "hit5_wilson95": [
+          0.3006,
+          0.9544
+        ],
+        "mrr5": 0.5833,
+        "p50_ms": 9.95,
+        "p95_ms": 12.27
+      },
+      {
+        "arm": "rerank",
+        "questions": 4,
+        "timed_requests": 12,
+        "hit_at_1": 3,
+        "hit_at_3": 3,
+        "hit_at_5": 3,
+        "hit5_wilson95": [
+          0.3006,
+          0.9544
+        ],
+        "mrr5": 0.75,
+        "p50_ms": 717.63,
+        "p95_ms": 1227.43
+      }
+    ],
+    "hypertension": [
+      {
+        "arm": "lexical",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "hit_at_5": 1,
+        "hit5_wilson95": [
+          0.0362,
+          0.6245
+        ],
+        "mrr5": 0.2,
+        "p50_ms": 6.62,
+        "p95_ms": 9.75
+      },
+      {
+        "arm": "hybrid",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "hit_at_5": 2,
+        "hit5_wilson95": [
+          0.1176,
+          0.7693
+        ],
+        "mrr5": 0.25,
+        "p50_ms": 10.14,
+        "p95_ms": 13.09
+      },
+      {
+        "arm": "rerank",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 2,
+        "hit_at_3": 2,
+        "hit_at_5": 2,
+        "hit5_wilson95": [
+          0.1176,
+          0.7693
+        ],
+        "mrr5": 0.4,
+        "p50_ms": 683.74,
+        "p95_ms": 1298.8
+      }
+    ],
+    "knee-pain": [
+      {
+        "arm": "lexical",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 2,
+        "hit_at_5": 2,
+        "hit5_wilson95": [
+          0.1176,
+          0.7693
+        ],
+        "mrr5": 0.3,
+        "p50_ms": 6.35,
+        "p95_ms": 9.29
+      },
+      {
+        "arm": "hybrid",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 2,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.39,
+        "p50_ms": 11.15,
+        "p95_ms": 13.11
+      },
+      {
+        "arm": "rerank",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 4,
+        "hit_at_3": 4,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.8,
+        "p50_ms": 316.36,
+        "p95_ms": 1195.12
+      }
+    ],
+    "migraine": [
+      {
+        "arm": "lexical",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "hit_at_5": 3,
+        "hit5_wilson95": [
+          0.2307,
+          0.8824
+        ],
+        "mrr5": 0.29,
+        "p50_ms": 6.77,
+        "p95_ms": 10.6
+      },
+      {
+        "arm": "hybrid",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 3,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.3733,
+        "p50_ms": 11.06,
+        "p95_ms": 14.73
+      },
+      {
+        "arm": "rerank",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 3,
+        "hit_at_3": 4,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.7,
+        "p50_ms": 262.87,
+        "p95_ms": 278.31
+      }
+    ],
+    "pediatric-fever": [
+      {
+        "arm": "lexical",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 0,
+        "hit_at_3": 2,
+        "hit_at_5": 3,
+        "hit5_wilson95": [
+          0.2307,
+          0.8824
+        ],
+        "mrr5": 0.2167,
+        "p50_ms": 7.19,
+        "p95_ms": 11.87
+      },
+      {
+        "arm": "hybrid",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 0,
+        "hit_at_3": 3,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.3167,
+        "p50_ms": 11.64,
+        "p95_ms": 14.67
+      },
+      {
+        "arm": "rerank",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 4,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.5,
+        "p50_ms": 331.49,
+        "p95_ms": 733.52
+      }
+    ],
+    "rash": [
+      {
+        "arm": "lexical",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 2,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.3567,
+        "p50_ms": 6.71,
+        "p95_ms": 9.34
+      },
+      {
+        "arm": "hybrid",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 3,
+        "hit_at_5": 5,
+        "hit5_wilson95": [
+          0.5655,
+          1.0
+        ],
+        "mrr5": 0.5,
+        "p50_ms": 10.61,
+        "p95_ms": 14.42
+      },
+      {
+        "arm": "rerank",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 5,
+        "hit_at_3": 5,
+        "hit_at_5": 5,
+        "hit5_wilson95": [
+          0.5655,
+          1.0
+        ],
+        "mrr5": 1.0,
+        "p50_ms": 305.64,
+        "p95_ms": 732.35
+      }
+    ],
+    "sinusitis": [
+      {
+        "arm": "lexical",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "hit_at_5": 3,
+        "hit5_wilson95": [
+          0.2307,
+          0.8824
+        ],
+        "mrr5": 0.29,
+        "p50_ms": 6.41,
+        "p95_ms": 9.27
+      },
+      {
+        "arm": "hybrid",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 2,
+        "hit_at_5": 3,
+        "hit5_wilson95": [
+          0.2307,
+          0.8824
+        ],
+        "mrr5": 0.3167,
+        "p50_ms": 10.79,
+        "p95_ms": 14.47
+      },
+      {
+        "arm": "rerank",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 3,
+        "hit_at_3": 3,
+        "hit_at_5": 3,
+        "hit5_wilson95": [
+          0.2307,
+          0.8824
+        ],
+        "mrr5": 0.6,
+        "p50_ms": 273.56,
+        "p95_ms": 293.17
+      }
+    ],
+    "sprains": [
+      {
+        "arm": "lexical",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 2,
+        "hit_at_5": 2,
+        "hit5_wilson95": [
+          0.1176,
+          0.7693
+        ],
+        "mrr5": 0.2667,
+        "p50_ms": 6.49,
+        "p95_ms": 10.31
+      },
+      {
+        "arm": "hybrid",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 3,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.44,
+        "p50_ms": 10.37,
+        "p95_ms": 15.04
+      },
+      {
+        "arm": "rerank",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 4,
+        "hit_at_3": 4,
+        "hit_at_5": 4,
+        "hit5_wilson95": [
+          0.3755,
+          0.9638
+        ],
+        "mrr5": 0.8,
+        "p50_ms": 306.41,
+        "p95_ms": 1214.05
+      }
+    ],
+    "tonsillitis": [
+      {
+        "arm": "lexical",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "hit_at_5": 2,
+        "hit5_wilson95": [
+          0.1176,
+          0.7693
+        ],
+        "mrr5": 0.24,
+        "p50_ms": 6.45,
+        "p95_ms": 7.34
+      },
+      {
+        "arm": "hybrid",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 1,
+        "hit_at_5": 2,
+        "hit5_wilson95": [
+          0.1176,
+          0.7693
+        ],
+        "mrr5": 0.24,
+        "p50_ms": 10.37,
+        "p95_ms": 12.83
+      },
+      {
+        "arm": "rerank",
+        "questions": 5,
+        "timed_requests": 15,
+        "hit_at_1": 1,
+        "hit_at_3": 2,
+        "hit_at_5": 2,
+        "hit5_wilson95": [
+          0.1176,
+          0.7693
+        ],
+        "mrr5": 0.3,
+        "p50_ms": 263.21,
+        "p95_ms": 289.28
+      }
+    ]
+  }
+}

@@ -16,7 +16,8 @@ RISK_SOURCES=[
 ]
 
 
-RISK_RULES=[('severe_breathing',r'喘不过气|无法呼吸|不能呼吸|呼吸困难|喘不上气|说不出话', 'emergency'),
+RISK_RULES=[('severe_breathing',r'喘不过气|无法呼吸|不能呼吸|呼吸困难|喘不上气|说不出话|呼吸停止|没有呼吸(?!困难)|无呼吸(?!困难)|仅有喘息', 'emergency'),
+            ('stroke_signs',r'口角歪斜|嘴歪|言语不清|说话不清|一侧肢体无力|单侧肢体无力','emergency'),
             ('consciousness',r'意识不清|昏迷|叫不醒|突然意识混乱','emergency'),
             ('seizure',r'正在抽搐|抽搐不止|首次抽搐|抽搐停不下来','emergency'),
             ('cyanosis',r'嘴唇发紫|口唇发紫','emergency'),

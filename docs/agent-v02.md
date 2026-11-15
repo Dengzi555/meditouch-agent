@@ -15,7 +15,7 @@ pwsh -NoProfile -File .\start_with_model.ps1 -Action Agent
 
 访问 http://127.0.0.1:8765 ，默认选择“单 Agent · 真实资料”。未配置模型时返回明确的模型错误，不伪造成功调用。没有 DPAPI 配置时，在启动终端配置 MED_AGENT_API_KEY、MED_AGENT_BASE_URL、MED_AGENT_MODEL，再用 .venv-agent 的 Python 运行 server.py。不要分享实际密钥或 DPAPI 文件。
 
-原 `python server.py`、旧 `/api/chat` 和三项 MCP 工具仍保留为规则基线。新增 MCP 统一工具是 `search_materials` 和 `read_material`；LangGraph 在同一进程直接调用其共享领域服务，不套一层 MCP 子进程，也不额外调用模型。
+旧规则服务保留为证据处理基线；LangGraph 在同一进程直接调用共享证据服务，不额外启动协议适配子进程。
 
 ## 实现链路
 
@@ -70,9 +70,8 @@ pwsh -NoProfile -File .\start_with_model.ps1 -Action AgentEval
 # 真实公开资料：检索结果发送给配置模型，仅原文预览
 pwsh -NoProfile -File .\start_with_model.ps1 -Action AgentPreview
 
-# 原回归与真实 MCP SDK 协议测试
+# 原回归测试
 .\.venv-eval\Scripts\python.exe -B -m unittest -v
-.\.venv-craft\Scripts\python.exe -B -m scripts.check_craft_mcp
 ```
 
 2026-11-02实际结果：
@@ -93,7 +92,7 @@ pwsh -NoProfile -File .\start_with_model.ps1 -Action AgentPreview
 
 结果文件位于忽略的 data/：agent-ping.json、agent-acceptance-live.json、agent-acceptance-offline.json、agent-real-preview.json。CLI 新运行同时保存带时间与随机后缀的报告，不覆盖历史归档。轨迹使用合成资料，不记录凭据。真实网页请求保存在原 runs 表，包含问题与证据，应按敏感数据处理。
 
-新增14项测试全部通过；原19项测试仍通过。在 .venv-eval 中发现33项测试，其中9项 graph/HTTP 测试因环境未装 LangGraph 跳过；这些9项已在 .venv-agent 实际执行通过。两环境合计覆盖全部33项不同测试，没有把跳过计为通过。MCP stdio 初始化、5工具、统一契约和只读校验通过。
+新增14项测试全部通过；原19项测试仍通过。在 .venv-eval 中发现33项测试，其中9项 graph/HTTP 测试因环境未装 LangGraph 跳过；这些9项已在 .venv-agent 实际执行通过。两环境合计覆盖全部33项不同测试，没有把跳过计为通过。
 
 HTTP集成测试还暴露了旧服务的SQLite连接未及时关闭：事务上下文退出不等于关闭连接。本轮将server.connect改为显式关闭的上下文管理器；隔离库写入、查询与清理均已回归通过。
 
@@ -109,6 +108,6 @@ HTTP集成测试还暴露了旧服务的SQLite连接未及时关闭：事务上�
 
 ## 依赖与参考
 
-本轮使用 LangGraph 1.2.19，直接依赖固定在 requirements-agent.txt；现有 MCP/Claw-Eval 环境未改变。首次克隆不会包含本地真实语料、DPAPI、虚拟环境或数据库，需独立准备；真实语料缺失时返回 CORPUS_UNAVAILABLE，不自动下载或伪造资料。
+本轮使用 LangGraph 1.2.19，直接依赖固定在 requirements-agent.txt；Claw-Eval 使用独立环境。首次克隆不会包含本地真实语料、DPAPI、虚拟环境或数据库，需独立准备；真实语料缺失时返回 CORPUS_UNAVAILABLE，不自动下载或伪造资料。
 
 StateGraph 循环依据官方 quickstart：https://github.com/langchain-ai/docs/blob/main/src/oss/langgraph/quickstart.mdx 。该实现自定义工具节点以执行白名单、预算和确定性领域约束，没有引入多 Agent。

@@ -1,16 +1,18 @@
 """Employee-confirmed stock ledger. Never exposed as an Agent write tool."""
 from datetime import datetime, timezone
+from threading import Lock
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request
-from pydantic import BaseModel, ConfigDict, Field as PField
+from pydantic import BaseModel, ConfigDict, Field as PField, field_validator
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import Field, Session, SQLModel, func, select
 
-from meditouch.inventory_models import DrugInventory, DrugDetails
+from meditouch.inventory_models import DrugInventory, DrugDetails, InventoryDeletion, active_inventory_clause
 
 MAX_STOCK = 2_147_483_647
+_SCHEMA_LOCK = Lock()
 
 
 class InventoryControl(SQLModel, table=True):
@@ -65,13 +67,27 @@ class MoveStock(Scoped):
     reason: str = PField(min_length=1, max_length=500)
 
 
+class DeleteDrug(Scoped):
+    expected_version: int = PField(ge=0)
+    expected_stock: int = PField(ge=0, le=MAX_STOCK)
+    confirmed: Literal[True]
+
+    @field_validator('confirmed', mode='before')
+    @classmethod
+    def explicit_confirmation(cls, value):
+        if value is not True:
+            raise ValueError('必须明确确认删除')
+        return value
+
+
 class InventoryProblem(Exception):
     def __init__(self, status, message):
         self.status, self.message = status, message
 
 
 def init_management(engine):
-    SQLModel.metadata.create_all(engine, tables=[InventoryControl.__table__, StockMovement.__table__])
+    with _SCHEMA_LOCK:
+        SQLModel.metadata.create_all(engine, tables=[InventoryControl.__table__, StockMovement.__table__, InventoryDeletion.__table__])
 
 
 def record(drug, details=None, control=None):
@@ -85,7 +101,7 @@ def record(drug, details=None, control=None):
 
 def get_drug(session, inventory_id):
     drug = session.get(DrugInventory, inventory_id)
-    if drug is None:
+    if drug is None or session.get(InventoryDeletion, inventory_id) is not None:
         raise InventoryProblem(404, '药品记录不存在')
     return drug, session.exec(select(DrugDetails).where(DrugDetails.inventory_id == inventory_id)).first(), session.get(InventoryControl, inventory_id)
 
@@ -105,8 +121,11 @@ def edit_drug(engine, inventory_id, body):
             DrugDetails.inventory_id == DrugInventory.id).where(DrugInventory.id != inventory_id,
                 DrugInventory.name == body.name, DrugInventory.brand == (body.brand or None),
                 DrugInventory.shelf_location == body.shelf_location,
-                DrugDetails.specification == (body.specification or None)).limit(1)).first()
-        if duplicate is not None:
+                DrugDetails.specification == (body.specification or None), active_inventory_clause(session)).limit(1)).first()
+        identity_changed = (drug.name, drug.brand or None, drug.shelf_location,
+                            details.specification if details else None) != (
+                                body.name, body.brand or None, body.shelf_location, body.specification or None)
+        if duplicate is not None and identity_changed:
             raise InventoryProblem(409, '同名、品牌、规格和货架的商品已存在，请核对后再保存')
         if control is None:
             control = InventoryControl(inventory_id=inventory_id)
@@ -162,6 +181,23 @@ def move_stock(engine, inventory_id, body, *, operator='local-demo'):
         return {'movement': movement.model_dump(), 'replayed': False}
 
 
+def delete_drug(engine, inventory_id, body, *, operator='local-demo'):
+    """Explicit employee action. Atomic version check; no stock sale or ledger deletion is fabricated."""
+    import json
+    with Session(engine) as session, session.begin():
+        locked(session, engine)
+        if session.get(InventoryDeletion, inventory_id):
+            return {'deleted': True, 'inventory_id': inventory_id, 'replayed': True}
+        drug, details, control = get_drug(session, inventory_id)
+        if (control.version if control else 0) != body.expected_version or drug.stock != body.expected_stock:
+            raise InventoryProblem(409, '库存或资料已变化，请刷新后重新确认删除')
+        snapshot = record(drug, details, control)
+        session.add(InventoryDeletion(inventory_id=inventory_id, operator=operator,
+                    snapshot_json=json.dumps(snapshot, ensure_ascii=False, default=str)))
+        session.flush()
+        return {'deleted': True, 'inventory_id': inventory_id, 'replayed': False}
+
+
 def management_router(resolve_writer, check_origin):
     router = APIRouter(prefix='/api/pharmacy/inventory')
 
@@ -195,6 +231,7 @@ def management_router(resolve_writer, check_origin):
                 statement = select(DrugInventory, DrugDetails, InventoryControl).outerjoin(
                     DrugDetails, DrugDetails.inventory_id == DrugInventory.id).outerjoin(
                     InventoryControl, InventoryControl.inventory_id == DrugInventory.id)
+                statement = statement.where(active_inventory_clause(session))
                 if q.strip():
                     term = q.strip()
                     statement = statement.where(DrugInventory.name.contains(term, autoescape=True)
@@ -230,6 +267,14 @@ def management_router(resolve_writer, check_origin):
                 return {'items': [item.model_dump() for item in items], 'total': total}
         return execute(action)
 
+    @router.get('/{inventory_id}')
+    def detail(inventory_id: int, store_id: str = Query(min_length=1, max_length=100)):
+        def action():
+            with Session(engine_for(store_id)) as session:
+                drug, details, control = get_drug(session, inventory_id)
+                return record(drug, details, control)
+        return execute(action)
+
     @router.post('/{inventory_id}/edit')
     def edit(inventory_id: int, body: EditDrug, request: Request):
         check_origin(request)
@@ -239,5 +284,10 @@ def management_router(resolve_writer, check_origin):
     def move(inventory_id: int, body: MoveStock, request: Request):
         check_origin(request)
         return execute(lambda: move_stock(engine_for(body.store_id), inventory_id, body))
+
+    @router.post('/{inventory_id}/delete')
+    def delete(inventory_id: int, body: DeleteDrug, request: Request):
+        check_origin(request)
+        return execute(lambda: delete_drug(engine_for(body.store_id), inventory_id, body))
 
     return router

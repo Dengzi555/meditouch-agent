@@ -4,7 +4,7 @@ from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel import Session, select
 
-from meditouch.inventory_models import DrugDetails, DrugInventory
+from meditouch.inventory_models import DrugDetails, DrugInventory, active_inventory_clause
 
 
 # Candidate lookup only. Not a treatment protocol or a special-population clearance.
@@ -20,7 +20,8 @@ def build_medical_rag_tool(*, model=None, service=None):
     @tool(parse_docstring=True)
     def query_medical_rag(symptoms: list[str], customer_tags: list[str],
                           excluded_drugs: list[str] | None = None,
-                          medical_topics: list[str] | None = None) -> dict:
+                          medical_topics: list[str] | None = None,
+                          standalone_query: str | None = None) -> dict:
         """检索医学资料生成待查库存药名；无支持资料时可使用明确标记的模型知识兜底。
 
         结果不保证同效、没有禁忌或适合顾客；替代候选必须重新查询产品并经过安全核查。
@@ -31,13 +32,14 @@ def build_medical_rag_tool(*, model=None, service=None):
             customer_tags: 顾客明确报告的人群或疾病标签。
             excluded_drugs: 此前因禁忌、缺货或无法匹配而排除的药名。
             medical_topics: 用户明确咨询的疾病或健康主题，仅作检索，不代表已确诊。
+            standalone_query: 结合当前会话补全的独立问题，不能添加未报告的病情。
 
         Returns:
             recommended_drugs、source、evidence 和 status；source 区分 retrieval 与 llm_knowledge。
         """
         from meditouch.medical_candidates import query_candidates
         return query_candidates(symptoms, customer_tags, excluded_drugs or [], model=model, service=service,
-                                medical_topics=medical_topics or [])
+                                medical_topics=medical_topics or [], standalone_query=standalone_query)
     return query_medical_rag
 
 
@@ -55,6 +57,7 @@ def search_inventory_batch(engine, names, *, excluded_drugs=()):
         statement = statement.where(DrugInventory.name.not_in(tuple(excluded_drugs)))
     try:
         with Session(engine) as session:
+            statement = statement.where(active_inventory_clause(session))
             rows = session.exec(statement.order_by(DrugInventory.id).limit(MAX_RESULTS + 1)).all()
             items = []
             for drug, details in rows[:MAX_RESULTS]:
@@ -168,6 +171,7 @@ def build_inventory_tools(engine, *, symptom_terms=None, excluded_drugs=(), exac
                         DrugDetails.ingredients.contains(term, autoescape=True)) for term in terms
                 ]))
             with Session(engine) as session:
+                statement = statement.where(active_inventory_clause(session))
                 rows = session.exec(statement.order_by(DrugInventory.id).limit(MAX_RESULTS + 1)).all()
                 items = [_item(drug, details) for drug, details in rows[:MAX_RESULTS]]
             return {'status': 'ok' if items else 'not_found', 'items': items,
@@ -175,7 +179,7 @@ def build_inventory_tools(engine, *, symptom_terms=None, excluded_drugs=(), exac
         except ValueError:
             return {'status': 'invalid_input', 'items': [], 'reason': '参数为空或长度超限'}
         except SQLAlchemyError:
-            return {'status': 'database_unavailable', 'items': [], 'reason': '库存查询暂不可用，请人工核对'}
+            return {'status': 'database_unavailable', 'items': [], 'reason': '库存查询暂不可用，请稍后重试'}
 
     @tool(parse_docstring=True)
     def check_drug_safety(drug_name: str, customer_tags: list[str]) -> dict:
@@ -206,6 +210,7 @@ def build_inventory_tools(engine, *, symptom_terms=None, excluded_drugs=(), exac
             statement = select(DrugInventory, DrugDetails).outerjoin(
                 DrugDetails, DrugDetails.inventory_id == DrugInventory.id)
             with Session(engine) as session:
+                statement = statement.where(active_inventory_clause(session))
                 rows = session.exec(statement.where(or_(DrugInventory.name == drug_name,
                                                         DrugInventory.brand == drug_name)).limit(2)).all()
                 if not rows:

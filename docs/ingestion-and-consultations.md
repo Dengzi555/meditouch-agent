@@ -20,7 +20,7 @@ python -B -m meditouch.reference_ingestion
 
 全部固定pending且generation_allowed=false，生成步骤不能自授审核。读取时校验原件和PDF文字抽取的哈希，从来源重新构造分块并与索引比较；修改原文、索引、引用或审批字段后会失败关闭，需要重新构建。指纹是内容一致性校验，不是医学审核、可信签名或防止有本机权限者同时篡改所有文件的机制。
 
-默认 `EvidenceService` 已合并新索引，HTTP、MCP统一入口与单Agent均可检索。自定义PDF语料不会自动混入新包；测试可显式注入reference_paths。新机器需先下载资料再构建，原件和派生内容仍被Git忽略，不随源码分发。
+默认 `EvidenceService` 已合并新索引，HTTP与单Agent均可检索。自定义PDF语料不会自动混入新包；测试可显式注入reference_paths。新机器需先下载资料再构建，原件和派生内容仍被Git忽略，不随源码分发。
 
 10 类症状的 NHS 公开资料仍保存在本机索引中，仅用于资料检索，尚未进入咨询回答池。可用 `python -m meditouch.symptom_reference_pack --download` 更新原文与清单。
 

@@ -10,6 +10,7 @@ from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parent.parent
 STALE_SECONDS = 300
+PROCESS_TOKEN = uuid4().hex  # Single-process demo: distinguishes a restarted server from a live request.
 
 
 class ChatNotFound(Exception):
@@ -53,6 +54,9 @@ class ChatStore:
                         CREATE INDEX IF NOT EXISTS idx_pharmacy_chat_message
                             ON pharmacy_chat_messages(session_id, id);
                     ''')
+                    columns = {row[1] for row in connection.execute('PRAGMA table_info(pharmacy_chat_messages)')}
+                    if 'executor_token' not in columns:
+                        connection.execute("ALTER TABLE pharmacy_chat_messages ADD COLUMN executor_token TEXT NOT NULL DEFAULT ''")
                 self._ready = True
         connection = sqlite3.connect(self.path, timeout=5, isolation_level=None)
         connection.row_factory = sqlite3.Row
@@ -68,8 +72,8 @@ class ChatStore:
 
     def _expire(self, db, session_id):
         db.execute("UPDATE pharmacy_chat_messages SET status='interrupted',updated_at=? "
-                   "WHERE session_id=? AND status='processing' AND updated_at<?",
-                   (time.time(), session_id, time.time() - STALE_SECONDS))
+                   "WHERE session_id=? AND status='processing' AND (updated_at<? OR executor_token<>?)",
+                   (time.time(), session_id, time.time() - STALE_SECONDS, PROCESS_TOKEN))
 
     def create(self, owner_id, store_id):
         session_id, now = uuid4().hex, time.time()
@@ -103,7 +107,7 @@ class ChatStore:
                     overall=data.get('overall', 'unknown') if completed else 'unknown',
                     stages=data.get('stages', []), completed=completed, status=row['status'],
                     error='' if completed else '上次请求尚在处理，请稍后重新打开此会话' if row['status'] == 'processing'
-                    else '上次请求未完成，请重新提问；未完成结果不可作为拿药依据')
+                    else '上次请求未完成，可继续处理；库存与禁忌将重新核查')
         return {key: session[key] for key in ('id', 'title', 'created_at', 'updated_at')} | {
             'turns': list(turns.values()), 'customer': customer}
 
@@ -119,10 +123,26 @@ class ChatStore:
                     text = '店员当时确认的信息：' + json.dumps(data['customer'], ensure_ascii=False) + '\n' + text
                 history.append({'role': 'user', 'content': text[:2000]})
             elif row['status'] == 'completed':
+                parts = []
+                business = data.get('business_state') or {}
+                if business.get('medical_topics'):
+                    parts.append('此前咨询主题（非确诊）：' + '、'.join(business['medical_topics']))
+                if business.get('standalone_query'):
+                    parts.append('此前完整问题：' + business['standalone_query'])
                 names = [card['drug']['name'] for card in data.get('cards', []) if card.get('type') == 'drug_candidate']
                 if names:
-                    history.append({'role': 'assistant', 'content':
-                        ('此前库存候选（不是顾客已用药或安全批准）：' + '、'.join(names))[:2000]})
+                    parts.append('此前库存候选（不是顾客已用药或安全批准）：' + '、'.join(names))
+                health = next((card for card in data.get('cards', []) if card.get('type') == 'health_answer'), None)
+                if health:
+                    parts.append('此前回答主题（不代表顾客病情或已用药）：' + '；'.join(
+                        section.get('title', '') + '：' + ' '.join(point.get('text', '') for point in section.get('items', []))
+                        for section in health.get('sections', [])))
+                emergency = next((card for card in data.get('cards', []) if card.get('type') == 'emergency_support'), None)
+                if emergency:
+                    parts.append('此前店员确认的现场观察（非诊断；未知不等于正常）：' +
+                                 json.dumps(emergency['facts'], ensure_ascii=False))
+                if parts:
+                    history.append({'role': 'assistant', 'content': '\n'.join(parts)[:2000]})
         return history[-20:]
 
     def begin_turn(self, session_id, owner_id, store_id, turn_id, question, customer):
@@ -147,6 +167,8 @@ class ChatStore:
                            (session_id, turn_id, role, content, json.dumps(payload, ensure_ascii=False), status, now, now))
             db.execute('UPDATE pharmacy_chat_sessions SET updated_at=?, title=CASE WHEN ? THEN ? ELSE title END WHERE id=?',
                        (now, first, question[:80], session_id))
+            db.execute('UPDATE pharmacy_chat_messages SET executor_token=? WHERE session_id=? AND turn_id=?',
+                       (PROCESS_TOKEN, session_id, turn_id))
             db.commit()
             return history
         except Exception:
@@ -155,9 +177,43 @@ class ChatStore:
         finally:
             db.close()
 
+    def resume_turn(self, session_id, owner_id, store_id, turn_id):
+        """Atomically claim only the latest incomplete turn; never create another user message."""
+        with closing(self._connect()) as db:
+            try:
+                db.execute('BEGIN IMMEDIATE')
+                self._session(db, session_id, owner_id, store_id)
+                self._expire(db, session_id)
+                row = db.execute("SELECT * FROM pharmacy_chat_messages WHERE session_id=? AND turn_id=? AND role='assistant'",
+                                 (session_id, turn_id)).fetchone()
+                latest = db.execute("SELECT turn_id FROM pharmacy_chat_messages WHERE session_id=? ORDER BY id DESC LIMIT 1",
+                                    (session_id,)).fetchone()
+                busy = db.execute("SELECT 1 FROM pharmacy_chat_messages WHERE session_id=? AND status='processing'",
+                                  (session_id,)).fetchone()
+                if row is None:
+                    raise ChatNotFound()
+                payload = json.loads(row['payload'])
+                attempts = payload.get('resume_count', 0)
+                if busy or row['status'] == 'completed' or latest['turn_id'] != turn_id or attempts >= 3:
+                    raise ChatBusy()
+                user = db.execute("SELECT content,payload FROM pharmacy_chat_messages WHERE session_id=? AND turn_id=? AND role='user'",
+                                  (session_id, turn_id)).fetchone()
+                payload['resume_count'] = attempts + 1
+                db.execute("UPDATE pharmacy_chat_messages SET status='processing',payload=?,executor_token=?,updated_at=? WHERE id=?",
+                           (json.dumps(payload, ensure_ascii=False), PROCESS_TOKEN, time.time(), row['id']))
+                history = self._history(db, session_id)
+                db.commit()
+                return {'question': user['content'], 'customer': json.loads(user['payload']).get('customer', {}),
+                        'history': history}
+            except Exception:
+                db.rollback()
+                raise
+
     def finish_turn(self, session_id, owner_id, store_id, turn_id, state, stages):
         fields = ('intent', 'symptoms', 'denied_symptoms', 'target_drugs', 'customer_tags',
-                  'excluded_drugs', 'excluded_reasons', 'safety_status', 'safety_reason')
+                  'excluded_drugs', 'excluded_reasons', 'safety_status', 'safety_reason',
+                  'medical_topics', 'standalone_query', 'context_resolution', 'knowledge_queries',
+                  'needs_inventory', 'needs_health_answer')
         payload = {'cards': state.get('ui_cards', []), 'overall': state.get('safety_status', 'unknown'),
                    'stages': stages, 'business_state': {key: state[key] for key in fields if key in state}}
         with closing(self._connect()) as db:
@@ -178,3 +234,32 @@ class ChatStore:
             db.execute("UPDATE pharmacy_chat_messages SET status=?,updated_at=? WHERE session_id=? "
                        "AND turn_id=? AND role='assistant' AND status='processing'",
                        ('failed' if failed else 'interrupted', time.time(), session_id, turn_id))
+
+    def update_emergency(self, session_id, owner_id, store_id, turn_id, revision, changes):
+        """Patch observations on the latest completed emergency turn, without invoking any graph/tools."""
+        from meditouch.emergency_support import build_emergency_card
+        with closing(self._connect()) as db:
+            try:
+                db.execute('BEGIN IMMEDIATE')
+                self._session(db, session_id, owner_id, store_id)
+                row = db.execute("SELECT * FROM pharmacy_chat_messages WHERE session_id=? AND turn_id=? AND role='assistant'",
+                                 (session_id, turn_id)).fetchone()
+                if row is None:
+                    raise ChatNotFound()
+                latest = db.execute('SELECT turn_id FROM pharmacy_chat_messages WHERE session_id=? ORDER BY id DESC LIMIT 1',
+                                    (session_id,)).fetchone()
+                payload = json.loads(row['payload'])
+                card = next((c for c in payload.get('cards', []) if c.get('type') == 'emergency_support'), None)
+                if row['status'] != 'completed' or latest['turn_id'] != turn_id or card is None or card['revision'] != revision:
+                    raise ChatBusy()
+                updated = build_emergency_card(card['original_query'], symptoms=card['symptoms'], previous=card, changes=changes)
+                payload['cards'] = [updated if c.get('id') == card['id'] else c for c in payload['cards']]
+                db.execute('UPDATE pharmacy_chat_messages SET content=?,payload=?,updated_at=? WHERE id=?',
+                           ('\n'.join(updated['actions']) + '\n\n' + updated['handover'],
+                            json.dumps(payload, ensure_ascii=False), time.time(), row['id']))
+                db.execute('UPDATE pharmacy_chat_sessions SET updated_at=? WHERE id=?', (time.time(), session_id))
+                db.commit()
+                return updated
+            except Exception:
+                db.rollback()
+                raise

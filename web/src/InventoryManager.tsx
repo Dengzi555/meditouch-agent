@@ -15,7 +15,9 @@ async function data(response: Response) {
   return result;
 }
 
-export default function InventoryManager({ storeId, onImport }: { storeId: string; onImport: () => void }) {
+export default function InventoryManager({ storeId, onImport, editInventoryId, onEditOpened }: {
+  storeId: string; onImport: () => void; editInventoryId?: number | null; onEditOpened?: () => void;
+}) {
   const [tab, setTab] = useState<'stock' | 'ledger'>('stock');
   const [query, setQuery] = useState('');
   const [search, setSearch] = useState('');
@@ -32,6 +34,7 @@ export default function InventoryManager({ storeId, onImport }: { storeId: strin
   const [success, setSuccess] = useState('');
   const [editor, setEditor] = useState<Drug | null>(null);
   const [transaction, setTransaction] = useState<Drug | null>(null);
+  const [deleting, setDeleting] = useState<Drug | null>(null);
   const [kind, setKind] = useState('sale');
   const [quantity, setQuantity] = useState('1');
   const [reason, setReason] = useState('');
@@ -43,6 +46,16 @@ export default function InventoryManager({ storeId, onImport }: { storeId: strin
   const opener = useRef<HTMLElement | null>(null);
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useEffect(() => {
+    if (!storeId || !editInventoryId) return;
+    const abort = new AbortController();
+    fetch(`/api/pharmacy/inventory/${editInventoryId}?${new URLSearchParams({ store_id: storeId })}`, { signal: abort.signal })
+      .then(data).then(drug => {
+        if (abort.signal.aborted) return;
+        setEditor(drug); setFormError(''); onEditOpened?.();
+      }).catch(cause => { if (!abort.signal.aborted) { setError(cause.message); onEditOpened?.(); } });
+    return () => abort.abort();
+  }, [storeId, editInventoryId, onEditOpened]);
   useEffect(() => {
     const timer = window.setTimeout(() => { setSearch(query.trim()); setOffset(0); }, 250);
     return () => window.clearTimeout(timer);
@@ -65,10 +78,10 @@ export default function InventoryManager({ storeId, onImport }: { storeId: strin
   }, [storeId, tab, search, filter, kindFilter, selectedId, offset, refresh]);
   function close() {
     if (lock.current) return;
-    setEditor(null); setTransaction(null); setFormError(''); opener.current?.focus();
+    setEditor(null); setTransaction(null); setDeleting(null); setFormError(''); opener.current?.focus();
   }
   useEffect(() => {
-    if (!editor && !transaction) return;
+    if (!editor && !transaction && !deleting) return;
     panel.current?.querySelector<HTMLElement>('input,button')?.focus();
     const key = (event: KeyboardEvent) => {
       if (event.key === 'Escape') { event.preventDefault(); close(); }
@@ -81,11 +94,12 @@ export default function InventoryManager({ storeId, onImport }: { storeId: strin
     };
     document.addEventListener('keydown', key);
     return () => document.removeEventListener('keydown', key);
-  }, [Boolean(editor), Boolean(transaction)]);
-  function open(drug: Drug, mode: 'edit' | 'move') {
+  }, [Boolean(editor), Boolean(transaction), Boolean(deleting)]);
+  function open(drug: Drug, mode: 'edit' | 'move' | 'delete') {
     opener.current = document.activeElement as HTMLElement;
     setFormError(''); setSuccess('');
-    if (mode === 'edit') setEditor({ ...drug });
+    if (mode === 'delete') setDeleting(drug);
+    else if (mode === 'edit') setEditor({ ...drug });
     else { setTransaction(drug); setKind(drug.stock ? 'sale' : 'restock'); setQuantity('1'); setReason(''); }
   }
   async function edit(event: FormEvent) {
@@ -128,9 +142,27 @@ export default function InventoryManager({ storeId, onImport }: { storeId: strin
     finally { lock.current = false; if (mounted.current) setSaving(false); }
   }
   function changeTab(next: 'stock' | 'ledger') { setTab(next); setOffset(0); setError(''); setSuccess(''); }
+  async function remove() {
+    if (!deleting || lock.current) return;
+    lock.current = true; setSaving(true); setFormError('');
+    try {
+      await data(await fetch(`/api/pharmacy/inventory/${deleting.id}/delete`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ store_id: storeId, expected_version: deleting.version,
+          expected_stock: deleting.stock, confirmed: true }),
+      }));
+      if (mounted.current) {
+        setDeleting(null); setSuccess(`已删除 ${deleting.name}`);
+        if (items.length === 1 && offset > 0) setOffset(value => Math.max(0, value - 30));
+        setRefresh(value => value + 1);
+        // The deleted row's opener will disappear; return focus to the stable refresh action.
+        document.querySelector<HTMLButtonElement>(`button.${styles.reload}`)?.focus();
+      }
+    } catch (cause) { if (mounted.current) setFormError(cause instanceof Error ? cause.message : '删除失败，请刷新后重试'); }
+    finally { lock.current = false; if (mounted.current) setSaving(false); }
+  }
   return <div className={styles.page}>
-    <div className={styles.heading}><div><p className={styles.eyebrow}>门店工作台 / INVENTORY</p>
-      <h2>每一盒，都有去向。</h2><p>查货、补资料、登记出入库，在一个地方完成。</p></div>
+    <div className={styles.heading}>
       <button className={styles.primary} onClick={onImport}>＋ 新增药品</button></div>
     <div className={styles.tabs} role="tablist" aria-label="库存管理视图">
       <button role="tab" aria-selected={tab === 'stock'} onClick={() => changeTab('stock')}>药品库存</button>
@@ -159,7 +191,8 @@ export default function InventoryManager({ storeId, onImport }: { storeId: strin
           <td><span className={styles.badge}>{drug.is_rx ? '处方' : '非处方'} · 录入值</span></td>
           <td><div className={styles.rowActions}><button onClick={() => open(drug, 'edit')}>编辑资料</button>
             <button onClick={() => open(drug, 'move')}>出入库</button>
-            <button onClick={() => { setSelectedId(drug.id); changeTab('ledger'); }}>记录</button></div></td>
+            <button onClick={() => { setSelectedId(drug.id); changeTab('ledger'); }}>记录</button>
+            <button className={styles.deleteLink} onClick={() => open(drug, 'delete')}>删除</button></div></td>
         </tr>)}</tbody>
       </table> : <table><caption className={styles.srOnly}>库存变动记录</caption>
         <thead><tr><th>时间 / 编号</th><th>药品</th><th>类型</th><th>数量变化</th><th>库存前 → 后</th><th>原因 / 操作人</th></tr></thead>
@@ -175,11 +208,19 @@ export default function InventoryManager({ storeId, onImport }: { storeId: strin
     <div className={styles.pagination}><span>共 {loading ? '…' : total} {tab === 'stock' ? '种药品' : '条记录'}</span>
       <div><button disabled={loading || offset === 0} onClick={() => setOffset(value => Math.max(0, value - 30))}>上一页</button>
         <span>{Math.floor(offset / 30) + 1}</span><button disabled={loading || offset + 30 >= total} onClick={() => setOffset(value => value + 30)}>下一页</button></div></div>
-    {(editor || transaction) && <div className={styles.overlay} onClick={event => { if (event.target === event.currentTarget) close(); }}>
+    {(editor || transaction || deleting) && <div className={styles.overlay} onClick={event => { if (event.target === event.currentTarget) close(); }}>
       <div className={styles.panel} role="dialog" aria-modal="true" aria-labelledby="inventory-dialog-title" ref={panel}>
-        <div className={styles.panelTop}><h3 id="inventory-dialog-title">{editor ? '编辑药品资料' : '登记出入库'}</h3>
+        <div className={styles.panelTop}><h3 id="inventory-dialog-title">{deleting ? '确认删除此药品？' : editor ? '编辑药品资料' : '登记出入库'}</h3>
           <button aria-label="关闭库存操作" onClick={close} disabled={saving}>×</button></div>
-        {editor ? <form onSubmit={edit}><fieldset disabled={saving} className={styles.fields}>
+        {deleting ? <>
+          <div className={styles.drugSummary}><strong>{deleting.name}</strong>
+            <span>{deleting.brand || '品牌未录入'} · {deleting.specification || '规格未录入'}</span>
+            <span>货架 {deleting.shelf_location} · 当前库存 {deleting.stock} {deleting.unit || '单位待确认'}</span></div>
+          <p className={styles.deleteDescription}>删除后，该药品将从库存列表和找药结果中移除。历史出入库记录保留。</p>
+          {formError && <p role="alert" className={styles.error}>{formError}</p>}
+          <div className={styles.formActions}><button type="button" onClick={close} disabled={saving}>取消</button>
+            <button type="button" className={styles.danger} disabled={saving} onClick={() => void remove()}>{saving ? '删除中…' : '确认删除'}</button></div>
+        </> : editor ? <form onSubmit={edit}><fieldset disabled={saving} className={styles.fields}>
           <label>药名<input required maxLength={200} value={editor.name} onChange={e => setEditor({ ...editor, name: e.target.value })} /></label>
           <label>品牌<input maxLength={100} placeholder="选填" value={editor.brand || ''} onChange={e => setEditor({ ...editor, brand: e.target.value })} /></label>
           <label>货架号<input required maxLength={100} value={editor.shelf_location} onChange={e => setEditor({ ...editor, shelf_location: e.target.value })} /></label>

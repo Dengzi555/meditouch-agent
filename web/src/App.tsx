@@ -7,6 +7,8 @@ import ApiSettings from './ApiSettings';
 import { useCopilotStream } from './useCopilotStream';
 import { chatUrl, createChat, listChats, loadChat } from './chatApi';
 import type { Chat, Turn } from './chatApi';
+import { card as validCard } from './protocol';
+import type { EmergencyCard, EmergencyFacts } from './protocol';
 import styles from './ChatLayout.module.css';
 import brand from '../brand.png';
 
@@ -21,6 +23,7 @@ export default function App() {
   const [ready, setReady] = useState(false);
   const [mock, setMock] = useState(false);
   const [view, setView] = useState<'query' | 'import' | 'inventory'>('query');
+  const [editInventoryId, setEditInventoryId] = useState<number | null>(null);
   const [visionReady, setVisionReady] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -40,6 +43,7 @@ export default function App() {
 
   useEffect(() => {
     const abort = new AbortController();
+    setConfigError('');
     fetch('/api/pharmacy/config', { signal: abort.signal }).then(async response => {
       if (!response.ok) throw new Error('无法读取门店配置');
       const config = await response.json();
@@ -47,8 +51,9 @@ export default function App() {
       setReady(config.inventory_ready === true);
       setVisionReady(config.vision_configured === true);
       setMock(config.inventory_data_mode === 'mock');
+      if (!config.store_id) setHistoryLoading(false);
       if (!config.inventory_ready) setConfigError('尚未配置库存数据库，请核对门店配置。');
-    }).catch(error => { if (!abort.signal.aborted) setConfigError(error.message); });
+    }).catch(error => { if (!abort.signal.aborted) { setConfigError(error.message); setHistoryLoading(false); } });
     return () => abort.abort();
   }, [configVersion]);
   useEffect(() => {
@@ -129,9 +134,9 @@ export default function App() {
       if (epoch === selectionEpoch.current) setHistoryError(error instanceof Error ? error.message : '无法加载会话');
     } finally { if (epoch === selectionEpoch.current) setHistoryLoading(false); }
   }
-  async function submit(event?: FormEvent) {
+  async function submit(event?: FormEvent, suggestion?: string) {
     event?.preventDefault();
-    const raw = question.trim();
+    const raw = (suggestion ?? question).trim();
     if (!raw || !storeId || stream.loading || historyLoading || submissionLock.current) return;
     submissionLock.current = true; setSending(true); setHistoryError('');
     const epoch = selectionEpoch.current;
@@ -145,7 +150,7 @@ export default function App() {
       }
       if (epoch !== selectionEpoch.current) return;
       const turn: Turn = { id: crypto.randomUUID(), question: raw, cards: [], overall: 'unknown',
-        stages: [], error: '', completed: false, loading: true };
+        stages: [], error: '', completed: false, loading: true, animate: true };
       pending.current = { chat: chatId, turn: turn.id };
       setChats(previous => previous.map(chat => chat.id === chatId
         ? { ...chat, title: chat.turns.length ? chat.title : raw.slice(0, 80), turns: [...chat.turns, turn] } : chat));
@@ -161,6 +166,34 @@ export default function App() {
     if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault(); submit();
     }
+  }
+  function resumeTurn(turn: Turn) {
+    if (!activeId || stream.loading || submissionLock.current) return;
+    pending.current = { chat: activeId, turn: turn.id };
+    setChats(previous => previous.map(chat => chat.id !== activeId ? chat : {
+      ...chat, turns: chat.turns.map(item => item.id !== turn.id ? item : {
+        ...item, cards: [], stages: [], error: '', loading: true, completed: false, animate: true,
+      }),
+    }));
+    void stream.start({ question: turn.question, session_id: activeId, turn_id: turn.id, resume: true,
+      workspace: { store_id: storeId, task: 'drug_lookup', customer: { customer_tags: tags } } });
+  }
+
+  async function updateEmergency(chatId: string, turnId: string, item: EmergencyCard, changes: Partial<EmergencyFacts>): Promise<EmergencyCard> {
+    const response = await fetch(`/api/chats/${encodeURIComponent(chatId)}/turns/${encodeURIComponent(turnId)}/emergency`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ store_id: storeId, expected_revision: item.revision,
+        changes: Object.fromEntries(Object.entries(changes).filter(([, value]) => value !== null)) }),
+    });
+    const value: unknown = await response.json();
+    if (!response.ok) throw new Error(response.status === 409 ? '记录已更新，请重新打开会话后再修改' : '保存失败，现场记录尚未更新');
+    if (!validCard(value) || value.type !== 'emergency_support') throw new Error('记录格式异常，请重新打开会话');
+    setChats(previous => previous.map(chat => chat.id !== chatId ? chat : {
+      ...chat, turns: chat.turns.map(turn => turn.id !== turnId ? turn : {
+        ...turn, cards: turn.cards.map(c => c.id === item.id ? value : c),
+      }),
+    }));
+    return value;
   }
 
   return <div className={`${styles.app} ${collapsed ? styles.collapsed : ''}`}>
@@ -188,7 +221,11 @@ export default function App() {
         <button className={styles.importButton} aria-label="库存管理" aria-pressed={view === 'inventory'}
           onClick={() => { stopPending(); setView('inventory'); }}><span aria-hidden>▦</span>{!collapsed && ' 库存管理'}</button>
         <button className={styles.importButton} aria-label="拍照入库" aria-pressed={view === 'import'}
-          onClick={() => { stopPending(); setView('import'); }}><span aria-hidden>▧</span>{!collapsed && ' 拍照入库'}</button>
+          onClick={() => { stopPending(); setView('import'); }}><svg width="18" height="18" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M14.5 4h-5L7.5 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.5z" />
+            <circle cx="12" cy="13.5" r="4" />
+          </svg>{!collapsed && ' 拍照入库'}</button>
         <div ref={accountArea} className={styles.accountArea}>
         {accountOpen && <div className={styles.accountMenu}>
           <button type="button" onClick={() => { stopPending(); setAccountOpen(false); setSettingsOpen(true); }}>⚙ <span>API 配置</span></button>
@@ -204,27 +241,36 @@ export default function App() {
       <header className={styles.topbar}><h1>{view === 'inventory' ? '库存管理' : view === 'import' ? '拍照入库' : active?.title || '新对话'}</h1>
         <span className={styles.connection}>{ready ? mock ? '演示库存' : '库存已连接' : '等待配置'}</span></header>
       {view === 'inventory' ? <div className={styles.importPage}>
-        <InventoryManager storeId={storeId} onImport={() => setView('import')} />
+        <InventoryManager storeId={storeId} onImport={() => setView('import')}
+          editInventoryId={editInventoryId} onEditOpened={() => setEditInventoryId(null)} />
       </div> : view === 'import' ? <div className={styles.importPage}>
         {configError && <p role="alert" className={styles.error}>{configError}</p>}
         {mock && <p className={styles.mock}>演示库存 · 记录仅供测试，不能作为真实售药依据</p>}
-        <InventoryImport storeId={storeId} visionReady={visionReady} />
+        <InventoryImport storeId={storeId} visionReady={visionReady} onEditExisting={id => {
+          setEditInventoryId(id); setView('inventory');
+        }} />
       </div> : <>
         <div className={styles.transcript}>
           {!active?.turns.length && <div className={styles.welcome}>
             <img src={brand} alt="医点通" />
-            <div><h2>我是<span>医点通</span><br />你的药店接待助手</h2><p>查库存、找货架、核对用药注意事项</p></div>
+            <div><h2>我是<span>医点通</span><br />你的药店接待助手</h2><p>健康问答、查库存、找货架、核对用药注意事项</p></div>
           </div>}
           <div className={styles.messages}>
             {active?.turns.map(turn => <section className={styles.turn} key={turn.id} aria-label="一轮对话">
               <div className={styles.question}>{turn.question}</div>
               <div className={styles.answer}>
-                {turn.stages.length > 0 && <details className={styles.process} open={turn.loading}>
-                  <summary>{turn.loading ? '正在处理' : turn.completed ? '本轮核对完成' : '执行记录'}</summary>
+                {!turn.loading && turn.stages.length > 0 && <details className={styles.process}>
+                  <summary>{turn.completed ? '本轮核对完成' : '执行记录'}</summary>
                   <ol>{turn.stages.map((stage, index) => <li key={index}>{stage}</li>)}</ol>
                 </details>}
                 {turn.error && <p className={styles.error} role="alert">{turn.error}</p>}
-                <CopilotCards cards={turn.cards} overall={turn.overall} loading={turn.loading} />
+                {turn.error && !turn.loading && !turn.completed && active.turns.at(-1)?.id === turn.id
+                  && turn.status !== 'processing' && <button type="button" className={styles.resume}
+                    disabled={stream.loading} onClick={() => resumeTurn(turn)}>继续处理</button>}
+                <CopilotCards cards={turn.cards} overall={turn.overall} loading={turn.loading} animate={turn.animate} stages={turn.stages}
+                  onEmergencyUpdate={turn.completed && active.turns.at(-1)?.id === turn.id
+                    ? (item, changes) => updateEmergency(active.id, turn.id, item, changes) : undefined}
+                  onFollowUp={text => void submit(undefined, text)} />
               </div>
             </section>)}
             <div ref={end} />
@@ -248,7 +294,7 @@ export default function App() {
                 : <button type="submit" className={styles.send} disabled={!question.trim() || !storeId || historyLoading || sending}>{sending ? '正在保存…' : '发送 ↑'}</button>}
             </div>
           </form>
-          <p className={styles.disclaimer}>核查结果供店员参考，最终由门店药师确认{mock ? ' · 当前为演示数据' : ''}</p>
+          <p className={styles.disclaimer}>商品信息与健康资料供参考{mock ? ' · 当前为演示数据' : ''}</p>
         </div>
       </>}
     </main>

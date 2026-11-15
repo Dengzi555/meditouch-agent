@@ -33,4 +33,6 @@ node_modules/
 Thumbs.db
 /rag_data/respiratory_reference/
 /HANDOFF.md
+/.workbuddy/
+/面试问答准备.md
 /vendor/claw-eval/

@@ -1,13 +1,27 @@
-import type { Card, Safety } from "./protocol";
+import type { Card, EmergencyUpdater, Safety } from "./protocol";
+import EmergencySupport from './EmergencySupport';
 import styles from "./CopilotCards.module.css";
+import HealthAnswer from './HealthAnswer';
+import { useStreamedCard } from './useStreamedCard';
 
-export function CardView({ item, overall }: { item: Card; overall: Safety }) {
+function StreamingCard(props: { item: Card; overall: Safety; loading: boolean; animate?: boolean; onFollowUp?: (text: string) => void; onEmergencyUpdate?: EmergencyUpdater }) {
+  const { displayed, writing } = useStreamedCard(props.item, props.loading, props.animate ?? props.loading);
+  return <div className={styles.streamedCard}>
+    <CardView {...props} item={displayed} loading={props.loading || writing} />
+    {writing && <span className={styles.cursor} aria-label="正在输出" />}
+  </div>;
+}
+
+export function CardView({ item, overall, loading = false, onFollowUp, onEmergencyUpdate }: { item: Card; overall: Safety; loading?: boolean; onFollowUp?: (text: string) => void; onEmergencyUpdate?: EmergencyUpdater }) {
+  if (item.type === 'emergency_support') return <EmergencySupport item={item} loading={loading} onUpdate={onEmergencyUpdate} />;
+  if (item.type === 'health_answer') return <HealthAnswer item={item} loading={loading} onFollowUp={onFollowUp} />;
   if (item.type === "intercept_warning") return <section data-card-type={item.type} className={`${styles.card} ${styles.red}`} role="alert">
     <h2>{item.title}</h2><ul>{item.items.map((drug, i) => <li key={`${drug.name}-${i}`}>
       <strong>{drug.name}</strong><span>{drug.reason}</span>
       {drug.inventory_details && <small>{drug.inventory_details}</small>}</li>)}</ul></section>;
-  if (item.type === "missing_information") return <aside data-card-type={item.type} className={styles.compactWarning}>
-    <strong>{item.id === 'missing' ? '请人工核对病史' : item.title}</strong><span>{item.reason || item.message}</span></aside>;
+  // Retired card type remains readable in persisted older chats, but is not displayed.
+  if (item.type === "missing_information") return null;
+  if (item.type === 'staff_script' && /人工核对|核对病史|我先帮您核对一下/.test(item.text)) return null;
   if (item.type === "staff_script") return <section data-card-type={item.type} className={`${styles.card} ${styles.gray}`}>
     <h2>{item.title}</h2><blockquote>{item.text}</blockquote></section>;
   if (item.type === "notice" && item.id === 'local-not-found') return <aside data-card-type={item.type} className={styles.compactNotice}>
@@ -18,9 +32,9 @@ export function CardView({ item, overall }: { item: Card; overall: Safety }) {
   if (overall === "unsafe" || item.safety_status === "unsafe") return null;
   const available = item.drug.stock > 0 && item.availability === "in_stock";
   const green = overall === "safe" && item.safety_status === "safe" && available;
-  return <section data-card-type={item.type} className={`${styles.card} ${green ? styles.green : available ? styles.yellow : styles.gray}`}>
+  return <section data-card-type={item.type} className={`${styles.card} ${green ? styles.green : styles.gray}`}>
     <div className={styles.cardTop}><h2>{item.drug.name}</h2>
-      <span>{!available ? "本店缺货" : green ? "本店有货 · 核查通过候选" : "本店有货 · 待核对"}</span></div>
+      <span>{!available ? "本店缺货" : green ? "本店有货 · 核查通过候选" : "本店有货"}</span></div>
     <dl><div><dt>货架</dt><dd>{item.drug.shelf_location}</dd></div>
       <div><dt>库存</dt><dd>{item.drug.stock}</dd></div>
       <div><dt>品牌</dt><dd>{item.drug.brand || "未录入"}</dd></div>
@@ -35,26 +49,27 @@ export function CardView({ item, overall }: { item: Card; overall: Safety }) {
         : item.name_match === 'fuzzy' && <p>模糊匹配，请核对完整通用名、成分和规格，不能视为同一药品。</p>}
     </details>
     {item.drug.is_rx && <p className={styles.rx}>处方药需药师审核</p>}
-    <small>{item.topic_only ? '仅目录匹配 · ' : ''}适用性待药师确认</small></section>;
+    {item.topic_only && <small>仅目录匹配，未验证适应症</small>}</section>;
 }
 
 
-export default function CopilotCards({ cards, overall, loading }: {
-  cards: Card[]; overall: Safety; loading: boolean;
+export default function CopilotCards({ cards, overall, loading, animate, stages = [], onFollowUp, onEmergencyUpdate }: {
+  cards: Card[]; overall: Safety; loading: boolean; animate?: boolean; stages?: string[]; onFollowUp?: (text: string) => void; onEmergencyUpdate?: EmergencyUpdater;
 }) {
   const detailsIds = new Set(['mock-data', 'topic-context', 'knowledge-source']);
   const metadata = cards.filter(item => item.type === 'notice' && detailsIds.has(item.id));
   const visible = cards.filter(item => !(item.type === 'notice' && detailsIds.has(item.id)));
-  const priority = (item: Card) => item.type === 'intercept_warning' ? 0
-    : item.type === 'drug_candidate' ? 1 : item.type === 'missing_information' ? 2
-    : item.type === 'staff_script' ? 4 : 3;
+  const priority = (item: Card) => item.type === 'intercept_warning' || item.type === 'emergency_support' ? 0
+    : item.type === 'health_answer' ? 1 : item.type === 'drug_candidate' ? 2 : item.type === 'missing_information' ? 3
+    : item.type === 'staff_script' ? 5 : 4;
   const ordered = [...visible].sort((left, right) => priority(left) - priority(right));
   return <div className={styles.cards} aria-busy={loading} aria-label="核查结果">
-    {loading && cards.length === 0 && <div role="status" className={styles.skeleton}>
-      正在查询本店库存并核对禁忌…<span /><span />
+    {loading && ordered.length === 0 && <div className={styles.liveProgress} role="log" aria-live="polite"
+      aria-relevant="additions" aria-label="实时处理进度">
+      <p>正在生成回答<span className={styles.cursor} aria-hidden="true" /></p>
     </div>}
     {metadata.some(item => item.id === 'mock-data') && <span className={styles.demoBadge}>演示数据</span>}
-    {ordered.map(item => <CardView key={item.id} item={item} overall={overall} />)}
+    {ordered.map(item => <StreamingCard key={item.id} item={item} overall={overall} loading={loading} animate={animate} onFollowUp={onFollowUp} onEmergencyUpdate={onEmergencyUpdate} />)}
     {metadata.length > 0 && <details className={styles.explanation}>
       <summary>查看来源与说明</summary>
       {metadata.map(item => item.type === 'notice' && <div key={item.id}>

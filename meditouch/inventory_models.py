@@ -66,8 +66,37 @@ class DrugDetails(DrugDetailsData, table=True):
     inventory: DrugInventory = Relationship(back_populates='details')
 
 
+class InventoryImportReceipt(SQLModel, table=True):
+    __tablename__ = 'inventory_import_receipt'
+    request_id: str = Field(primary_key=True)
+    payload_sha256: str
+    result_json: str
+
+
+class InventoryDeletion(SQLModel, table=True):
+    """Tombstone preserves SKU identity, stock and ledger references for historical audit."""
+    __tablename__ = 'inventory_deletion'
+    inventory_id: int = Field(primary_key=True, foreign_key='drug_inventory.id')
+    deleted_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    operator: str
+    snapshot_json: str
+
+
+def active_inventory_clause(session):
+    """Older read-only databases need no migration; writers create the additive tombstone table."""
+    from sqlalchemy import inspect, true
+    from sqlmodel import select
+    if not inspect(session.connection()).has_table(InventoryDeletion.__tablename__):
+        return true()
+    return DrugInventory.id.not_in(select(InventoryDeletion.inventory_id))
+
+
 def create_inventory_engine(database_url, **kwargs):
     """Create an engine without opening/mutating a database on module import."""
+    if str(database_url) in ('sqlite://', 'sqlite:///:memory:'):
+        from sqlalchemy.pool import StaticPool
+        kwargs.setdefault('poolclass', StaticPool)
+        kwargs['connect_args'] = {'check_same_thread': False, **kwargs.get('connect_args', {})}
     engine = create_engine(database_url, **kwargs)
     if engine.dialect.name == 'sqlite':
         @event.listens_for(engine, 'connect')
@@ -80,4 +109,4 @@ def create_inventory_engine(database_url, **kwargs):
 
 def create_inventory_tables(engine):
     """Explicit initialization; does not migrate existing schemas or load seed stock."""
-    SQLModel.metadata.create_all(engine, tables=[DrugInventory.__table__, DrugDetails.__table__])
+    SQLModel.metadata.create_all(engine, tables=[DrugInventory.__table__, DrugDetails.__table__, InventoryImportReceipt.__table__, InventoryDeletion.__table__])

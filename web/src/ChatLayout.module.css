@@ -44,6 +44,9 @@
 .answer { background: #fcfcff; border: 1px solid var(--line); border-radius: 7px 24px 24px; padding: 24px; }
 .process { color: #7176a5; font-size: 12px; margin-bottom: 18px; }
 .process summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+.resume { border: 1px solid #d6d0ed; border-radius: 8px; background: white; color: #5947bb; padding: 8px 14px; font: inherit; font-size: 13px; cursor: pointer; margin-bottom: 14px; }
+.resume:disabled { opacity: .5; cursor: default; }
+.answer:has([aria-label="正在输出"]) > details.process { display: none; }
 .process ol { line-height: 2; margin-bottom: 0; }
 .composerDock { flex-shrink: 0; width: min(960px, calc(100% - 60px)); margin: 0 auto; padding-top: 12px; }
 .composer { border: 1px solid #dcdcf1; background: white; border-radius: 24px; padding: 16px 20px 12px; box-shadow: 0 5px 22px #29234705; }

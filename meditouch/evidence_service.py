@@ -1,4 +1,4 @@
-"""Versioned, read-only evidence contract shared by HTTP, MCP and LangGraph.
+"""Versioned, read-only evidence contract shared by HTTP and LangGraph.
 
 No API keys, implicit approval, model calls, or database writes here.
 """

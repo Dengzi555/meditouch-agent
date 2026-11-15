@@ -13,14 +13,15 @@ class ModelError(Exception):
 
 
 class ModelGateway:
-    def __init__(self, timeout=35):
+    def __init__(self, timeout=35, max_tokens=1600):
         self.timeout = timeout
+        self.max_tokens = max_tokens
 
     def complete(self, messages, tools=None, tool_choice='auto'):
         key = os.getenv('MED_AGENT_API_KEY')
         if not key: raise ModelError('MODEL_NOT_CONFIGURED')
         payload = dict(model=os.getenv('MED_AGENT_MODEL','gpt-4.1-mini'),
-                       messages=messages, temperature=0, max_tokens=1600)
+                       messages=messages, temperature=0, max_tokens=self.max_tokens)
         if tools:
             payload.update(tools=tools, tool_choice=tool_choice, parallel_tool_calls=False)
         # This provider requires disabling thinking for bounded tool-use checks.
@@ -40,6 +41,55 @@ class ModelGateway:
             raise ModelError('MODEL_HTTP_'+str(exc.code)) from None
         except Exception:
             raise ModelError('MODEL_UNAVAILABLE_OR_INVALID_RESPONSE') from None
+
+    def stream(self, messages):
+        """Yield actual provider content deltas; never expose reasoning or tool arguments."""
+        key = os.getenv('MED_AGENT_API_KEY')
+        if not key:
+            raise ModelError('MODEL_NOT_CONFIGURED')
+        payload = dict(model=os.getenv('MED_AGENT_MODEL', 'gpt-4.1-mini'), messages=messages,
+                       temperature=0, max_tokens=self.max_tokens, stream=True)
+        if os.getenv('MED_AGENT_DISABLE_THINKING', '1') == '1' and 'deepseek' in payload['model'].lower():
+            payload['enable_thinking'] = False
+        url = os.getenv('MED_AGENT_BASE_URL', 'https://api.openai.com/v1').rstrip('/') + '/chat/completions'
+        req = urllib.request.Request(url, json.dumps(payload).encode(),
+            {'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json', 'Accept': 'text/event-stream'})
+        size, finished = 0, False
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as response:
+                for raw in response:
+                    size += len(raw)
+                    if len(raw) > 262144 or size > 2_000_000:
+                        raise ValueError('Oversized stream')
+                    line = raw.decode('utf-8').strip()
+                    if not line.startswith('data:'):
+                        continue
+                    data = line[5:].strip()
+                    if data == '[DONE]':
+                        finished = True
+                        break
+                    chunk = json.loads(data)
+                    if chunk.get('error'):
+                        raise ValueError('Provider stream error')
+                    for choice in chunk.get('choices', []):
+                        delta = choice.get('delta') or {}
+                        if delta.get('tool_calls'):
+                            raise ValueError('Unexpected tool call')
+                        text = delta.get('content')
+                        if text is not None:
+                            if not isinstance(text, str):
+                                raise ValueError('Invalid content')
+                            yield text
+                        if choice.get('finish_reason') == 'stop':
+                            finished = True
+                        elif choice.get('finish_reason'):
+                            raise ValueError('Incomplete completion')
+                if not finished:
+                    raise ValueError('Truncated stream')
+        except urllib.error.HTTPError as exc:
+            raise ModelError('MODEL_HTTP_' + str(exc.code)) from None
+        except Exception:
+            raise ModelError('MODEL_UNAVAILABLE_OR_INVALID_STREAM') from None
 
 
 def tool_schema(name, description, properties, required):

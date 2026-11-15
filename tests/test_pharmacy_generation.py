@@ -45,8 +45,9 @@ class PharmacyGenerationTests(unittest.TestCase):
         model = StaffModel()
         result = generate_staff_response(state(), model=model)
         self.assertEqual(result['generation_status'], 'validated')
-        self.assertIn('系统未收录该药禁忌数据，请务必询问顾客是否有相关病史。', result['answer'])
-        for text in ('【拿药指引】', '【店员话术】', '3排2号', '库存 2', '处方药需药师审核', '请人工核对病史'):
+        self.assertNotIn('【风险提示】', result['answer'])
+        self.assertIn('禁忌：未录入', result['answer'])
+        for text in ('【拿药指引】', '3排2号', '库存 2', '处方药需药师审核'):
             self.assertIn(text, result['answer'])
         self.assertEqual(model.messages[1]['role'], 'user')
 
@@ -54,16 +55,16 @@ class PharmacyGenerationTests(unittest.TestCase):
         result = generate_staff_response(state(safety_checks=[{'name': '演示药', 'status': 'no_match'}],
                                               safety_reason='未命中标签'), model=StaffModel())
         self.assertNotIn('系统未收录该药禁忌数据', result['answer'])
-        self.assertIn('未命中标签', result['answer'])
-        self.assertIn('请人工核对病史', result['answer'])
+        self.assertEqual(result['generation_branch'], 'unknown')
+        self.assertNotIn('请人工核对病史', result['answer'])
 
     def test_prior_exclusion_reason_is_preserved_for_retried_unknown_candidate(self):
         result = generate_staff_response(state(excluded_drugs=['演示旧药'],
                                               excluded_reasons={'演示旧药': '标签甲禁用'}),
                                          model=StaffModel({'script_id': 'recheck_alternative'}))
         self.assertIn('演示旧药：标签甲禁用', result['answer'])
-        self.assertIn('【候选替代（待核）】', result['answer'])
-        self.assertIn('请人工核对病史', result['answer'])
+        self.assertIn('【其他库存商品】', result['answer'])
+        self.assertNotIn('请人工核对病史', result['answer'])
 
     def test_current_unsafe_candidate_is_not_offered_as_alternative(self):
         result = generate_staff_response(state(safety_status='unsafe', excluded_drugs=['演示旧药']),
@@ -106,5 +107,5 @@ class PharmacyGenerationTests(unittest.TestCase):
                 raise RuntimeError('private provider credential')
         result = generate_staff_response(state(), model=Broken())
         self.assertEqual(result['generation_status'], 'host_fallback')
-        self.assertIn('请人工核对病史', result['answer'])
+        self.assertNotIn('请人工核对病史', result['answer'])
         self.assertNotIn('private provider credential', str(result))

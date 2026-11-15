@@ -77,6 +77,20 @@ class SeedDataTests(unittest.TestCase):
         with Session(engine) as session:
             self.assertEqual(session.exec(select(func.count()).select_from(DrugInventory)).one(), 1)
 
+    def test_repeat_seed_does_not_restore_deleted_product(self):
+        from meditouch.inventory_management import DeleteDrug, delete_drug, init_management
+        from meditouch.inventory_tools import search_inventory_batch
+        seed_database(self.path)
+        engine = create_inventory_engine('sqlite:///' + self.path.as_posix())
+        self.addCleanup(engine.dispose)
+        init_management(engine)
+        with Session(engine) as session:
+            drug = session.exec(select(DrugInventory).where(DrugInventory.brand == '芬必得')).one()
+            inventory_id = drug.id
+        delete_drug(engine, inventory_id, DeleteDrug(store_id='local', expected_version=0, expected_stock=15, confirmed=True))
+        self.assertEqual(seed_database(self.path)['inserted'], 0)
+        self.assertEqual(search_inventory_batch(engine, ['芬必得'])['items'], [])
+
     def test_mock_outcomes_remain_unknown_blocked_and_out_of_stock(self):
         seed_database(self.path)
         engine = create_inventory_engine('sqlite:///' + self.path.as_posix())

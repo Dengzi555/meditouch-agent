@@ -6,9 +6,11 @@ import time
 from pathlib import Path
 from typing import Literal
 from uuid import uuid4
+from contextlib import nullcontext
 
 import anyio
-from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile, Query
+from sqlmodel import Session
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -23,6 +25,7 @@ from meditouch.model_gateway import ModelGateway
 from meditouch.inventory_models import inventory_is_mock
 from meditouch.inventory_management import management_router
 from meditouch.chat_storage import ChatStore, ChatNotFound, ChatBusy
+from meditouch.emergency_support import EmergencyChanges
 from meditouch.pharmacy_context import validate_workspace
 from meditouch.pharmacy_graph import (
     build_pharmacy_graph, inventory_engine_for_store, inventory_write_engine_for_store, prepare_inventory_state,
@@ -30,7 +33,7 @@ from meditouch.pharmacy_graph import (
 from meditouch.pharmacy_ui import encode_sse, graph_ui_events, ui_event
 from meditouch.inventory_import import (
     ConfirmImport, DuplicateInventory, MAX_IMAGE_BYTES, VisionError, VisionGateway,
-    extract_prefill, import_confirmed, vision_configured as vision_is_configured,
+    extract_prefill, import_confirmed, matching_inventory, vision_configured as vision_is_configured,
 )
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -43,6 +46,13 @@ class HistoryMessage(BaseModel):
     content: str = Field(min_length=1, max_length=2000)
 
 
+class EmergencyUpdate(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    store_id: str = Field(min_length=1, max_length=100)
+    expected_revision: int = Field(ge=0, strict=True)
+    changes: EmergencyChanges
+
+
 class CopilotRequest(BaseModel):
     model_config = ConfigDict(extra='forbid')
     question: str = Field(min_length=1, max_length=20000)
@@ -50,6 +60,7 @@ class CopilotRequest(BaseModel):
     history: list[HistoryMessage] = Field(default_factory=list, max_length=20)
     session_id: str | None = Field(default=None, min_length=1, max_length=64)
     turn_id: str | None = Field(default=None, min_length=1, max_length=64)
+    resume: bool = False
 
     @field_validator('question')
     @classmethod
@@ -64,38 +75,80 @@ class CopilotRequest(BaseModel):
         return validate_workspace(value)
 
 
-def pharmacy_event_stream(body, engine, *, model, on_complete=None, data_mode='real'):
+def pharmacy_event_stream(body, engine, *, model, on_complete=None, data_mode='real', initial_state=None,
+                          health_evidence_loader=None, checkpoint_path=None, owner=None):
+    from meditouch.checkpoints import checkpoint_saver, thread_config
+    config = thread_config(owner, body.workspace['store_id'], body.session_id, body.turn_id) if checkpoint_path else None
+    seq, fallback_id = 0, uuid4().hex
+    try:
+        with checkpoint_saver(checkpoint_path) if checkpoint_path else nullcontext(None) as saver:
+            for frame in _pharmacy_event_stream(body, engine, model=model, on_complete=on_complete,
+                    data_mode=data_mode, initial_state=initial_state, health_evidence_loader=health_evidence_loader,
+                    checkpointer=saver, graph_config=config):
+                event = json.loads(next(line[6:] for line in frame.decode().splitlines() if line.startswith('data: ')))
+                seq, fallback_id = event['seq'], event['run_id']
+                yield frame
+    except Exception:
+        yield encode_sse(ui_event(fallback_id, seq + 1, 'error', {
+            'code': 'CHECKPOINT_UNAVAILABLE', 'message': '执行状态暂时无法保存，请稍后继续处理', 'retryable': True}))
+
+
+def _pharmacy_event_stream(body, engine, *, model, on_complete=None, data_mode='real', initial_state=None,
+                           health_evidence_loader=None, checkpointer=None, graph_config=None):
     """Blocking graph iterator, consumed in a worker thread by the async SSE route."""
     run_id, seq, started = uuid4().hex, 1, time.monotonic()
     yield encode_sse(ui_event(run_id, seq, 'progress', {
-        'stage': 'intake', 'phase': 'started', 'attempt': 0, 'label': '正在识别问题与顾客信息',
+        'stage': 'intake', 'phase': 'started', 'attempt': 0,
+        'label': '正在读取执行检查点' if body.resume else '正在识别问题与顾客信息',
         'inventory_data_mode': data_mode}))
     try:
-        initial = prepare_inventory_state(body.question, body.workspace, model=model,
-            history=[item.model_dump() for item in body.history])
+        compiled = build_pharmacy_graph(engine, model=model, deadline=started + 90,
+                                        health_evidence_loader=health_evidence_loader, checkpointer=checkpointer)
+        snapshot = compiled.get_state(graph_config) if body.resume and graph_config else None
+        recovered = bool(snapshot and snapshot.values)
+        initial = dict(snapshot.values) if recovered else initial_state or prepare_inventory_state(
+            body.question, body.workspace, model=model, history=[item.model_dump() for item in body.history])
+        if recovered:
+            seq += 1
+            yield encode_sse(ui_event(run_id, seq, 'progress', {'stage': 'recovery',
+                'label': '已恢复执行状态，重新核验库存与禁忌' if initial.get('needs_inventory') or initial.get('inventory_attempts')
+                         else '已恢复执行状态，继续未完成步骤'}))
+            awaiting_health = snapshot.next == ('health_node',) and not initial.get('health_card')
+            if not awaiting_health and (initial.get('needs_inventory') or initial.get('inventory_attempts')
+                                       or initial.get('intent') in ('find_drug', 'check_safety')):
+                from meditouch.pharmacy_graph import reset_inventory_for_resume
+                changes = reset_inventory_for_resume(initial)
+                compiled.update_state(graph_config, changes, as_node='resume_inventory_reset')
+                initial.update(changes)
         initial['inventory_data_mode'] = data_mode
         seq += 1
         yield encode_sse(ui_event(run_id, seq, 'progress', {
             'stage': 'understanding', 'phase': 'completed',
             'label': '已识别：' + {'find_drug': '找药咨询', 'check_safety': '用药风险核对',
-                'emergency': '急症风险', 'chitchat': '通用交流'}.get(initial.get('intent'), '待人工确认'),
+                'health_qa': '健康问答', 'emergency': '急症风险', 'chitchat': '通用交流'}.get(initial.get('intent'), '问题识别'),
             'intent': initial.get('intent'), 'symptoms': initial.get('symptoms', []),
             'medical_topics': initial.get('medical_topics', []),
             'target_drugs': initial.get('target_drugs', []),
             'denied_symptoms': initial.get('denied_symptoms', []),
+            'standalone_query': initial.get('standalone_query') or body.question,
+            'context_resolution': initial.get('context_resolution', 'standalone'),
         }))
-        compiled = build_pharmacy_graph(engine, model=model, deadline=started + 90)
-        for event in graph_ui_events(compiled, initial, run_id, seq_start=seq, on_complete=on_complete):
+        if initial.get('context_resolution') == 'resolved' and initial.get('standalone_query') != body.question:
+            seq += 1
+            yield encode_sse(ui_event(run_id, seq, 'progress', {'stage': 'query_rewrite', 'phase': 'completed',
+                'label': '已承接上下文：' + initial['standalone_query'][:160]}))
+        for event in graph_ui_events(compiled, initial, run_id, seq_start=seq, on_complete=on_complete,
+                                     graph_config=graph_config, resume=recovered):
             seq = event['seq']
             yield encode_sse(event)
     except Exception:
         yield encode_sse(ui_event(run_id, seq + 1, 'error', {
-            'code': 'RUN_FAILED', 'message': '处理未完成，请人工核对库存和病史', 'retryable': False}))
+            'code': 'RUN_FAILED', 'message': '处理未完成，请重新查询', 'retryable': False}))
 
 
 def create_app(*, engine_resolver=None, model_factory=None, static_dir=None,
                write_engine_resolver=None, vision_factory=None, settings_store=None,
-               chat_store=None, identity_resolver=None):
+               chat_store=None, identity_resolver=None, health_evidence_loader=None):
     app = FastAPI(title='医点通 · 药店 Copilot', version='0.3.0')
     app.include_router(settings_router(settings_store))
     resolve_engine = engine_resolver or inventory_engine_for_store
@@ -169,6 +222,20 @@ def create_app(*, engine_resolver=None, model_factory=None, static_dir=None,
         except ChatNotFound:
             raise HTTPException(404, '会话不存在或无权访问') from None
 
+    @app.post('/api/chats/{session_id}/turns/{turn_id}/emergency')
+    def update_emergency(session_id: str, turn_id: str, body: EmergencyUpdate, request: Request):
+        check_origin(request)
+        owner, store = chat_scope(request, body.store_id)
+        try:
+            return chats.update_emergency(session_id, owner, store, turn_id, body.expected_revision,
+                                          body.changes.model_dump(exclude_unset=True))
+        except ChatNotFound:
+            raise HTTPException(404, '会话不存在或无权访问') from None
+        except ChatBusy:
+            raise HTTPException(409, '记录已更新或当前轮次不能编辑，请重新打开会话') from None
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from None
+
     def store_engine(store_id, *, write=False):
         try:
             engine = (resolve_writer if write else resolve_engine)(store_id)
@@ -203,6 +270,17 @@ def create_app(*, engine_resolver=None, model_factory=None, static_dir=None,
         finally:
             await image.close()
 
+    @app.get('/api/pharmacy/import_matches')
+    def import_matches(store_id: str = Query(min_length=1, max_length=100),
+                       name: str = Query(min_length=1, max_length=200),
+                       brand: str = Query('', max_length=100)):
+        engine = store_engine(store_id)
+        try:
+            with Session(engine) as session:
+                return {'items': matching_inventory(session, name, brand)}
+        except SQLAlchemyError:
+            raise HTTPException(503, '已有商品检查失败，请稍后重试') from None
+
     @app.post('/api/pharmacy/confirm_import', status_code=201)
     def confirm_import(body: ConfirmImport, request: Request):
         """Explicit employee confirmation creates inventory and details together."""
@@ -210,8 +288,11 @@ def create_app(*, engine_resolver=None, model_factory=None, static_dir=None,
         engine = store_engine(body.store_id, write=True)
         try:
             return import_confirmed(engine, body)
-        except DuplicateInventory:
-            raise HTTPException(409, '同名、品牌、规格和货架的商品已存在，本次未重复入库；请人工核对库存') from None
+        except DuplicateInventory as exc:
+            raise HTTPException(409, {'code': 'DUPLICATE_INVENTORY', 'message': '仓库已有同名同品牌商品，请选择编辑已有商品或确认仍要新建。',
+                                      'items': exc.items}) from None
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from None
         except SQLAlchemyError:
             raise HTTPException(503, '数据库暂不可写，请稍后重试或核对权限；本次未完成入库') from None
 
@@ -223,36 +304,53 @@ def create_app(*, engine_resolver=None, model_factory=None, static_dir=None,
             raise HTTPException(422, '当前卡片入口支持接待、找药和安全核查任务')
         # Clear current risk must still be displayed when the inventory service is down.
         emergency = bool(risk_matches(body.question, {'symptoms': body.workspace['customer'].get('symptoms', '')}))
-        engine, data_mode, model = None, 'unconfigured', None
+        engine, data_mode, model, initial_state = None, 'unconfigured', None, None
         if not emergency:
             try:
                 engine = resolve_engine(body.workspace['store_id'])
             except ValueError:
                 raise HTTPException(403, '库存门店不匹配或数据库尚未初始化') from None
-            if engine is None:
-                raise HTTPException(503, '请先配置本店库存数据库和门店标识')
-            try:
-                data_mode = 'mock' if inventory_is_mock(engine) else 'real'
-            except SQLAlchemyError:
-                raise HTTPException(503, '库存数据库暂不可用，请人工核对') from None
             model = new_model()
+            if engine is not None:
+                try:
+                    data_mode = 'mock' if inventory_is_mock(engine) else 'real'
+                except SQLAlchemyError:
+                    engine = None
+            if engine is None and not body.resume:
+                # Missing stock must not suppress ordinary health education. No keyword bypass.
+                initial_state = prepare_inventory_state(body.question, body.workspace, model=model,
+                    history=[item.model_dump() for item in body.history])
+                if initial_state.get('intent') != 'health_qa' or initial_state.get('needs_inventory'):
+                    raise HTTPException(503, '本店库存暂不可用；查商品请先核对库存配置')
         if body.turn_id and not body.session_id:
             raise HTTPException(422, 'turn_id 必须关联 session_id')
+        if body.resume and (not body.session_id or not body.turn_id):
+            raise HTTPException(422, '继续处理需要原会话及轮次编号')
         owner, store, turn_id = None, body.workspace['store_id'], body.turn_id or uuid4().hex
         if body.session_id:
             owner, store = chat_scope(request, store)
             try:
-                history = chats.begin_turn(body.session_id, owner, store, turn_id, body.question, body.workspace['customer'])
-                body = body.model_copy(update={'history': [HistoryMessage(**item) for item in history]})
+                if body.resume:
+                    saved = chats.resume_turn(body.session_id, owner, store, turn_id)
+                    body = body.model_copy(update={'question': saved['question'],
+                        'workspace': {**body.workspace, 'customer': saved['customer']}})
+                    history = saved['history']
+                else:
+                    history = chats.begin_turn(body.session_id, owner, store, turn_id, body.question, body.workspace['customer'])
+                body = body.model_copy(update={'history': [HistoryMessage(**item) for item in history], 'turn_id': turn_id})
+                initial_state = None  # Re-evaluate with the server-owned conversation history.
             except ChatNotFound:
                 raise HTTPException(404, '会话不存在或无权访问') from None
             except ChatBusy:
-                raise HTTPException(409, '该请求已提交或上轮尚未结束，请重新打开会话查看') from None
+                raise HTTPException(409, '请求正在执行、已完成或不可恢复，请重新打开会话查看；每轮最多恢复3次') from None
             except sqlite3.Error:
                 raise HTTPException(503, '聊天记录暂时无法保存，本次未发送') from None
         final_state = {}  # Per request only; not global, not sent to the browser.
         iterator = pharmacy_event_stream(body, engine, model=model, on_complete=final_state.update,
-                                         data_mode=data_mode)
+                                         data_mode=data_mode, initial_state=initial_state,
+                                         health_evidence_loader=health_evidence_loader,
+                                         checkpoint_path=chats.path.with_suffix('.checkpoints.sqlite') if body.session_id else None,
+                                         owner=owner)
 
         def persisted_events():
             completed, failed, stages = False, False, []

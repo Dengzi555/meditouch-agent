@@ -62,7 +62,7 @@ export default function ApiSettings({ onClose, onSaved }: { onClose: () => void;
   return <dialog ref={dialog} className={styles.dialog} aria-labelledby="settings-title"
     onCancel={event => { event.preventDefault(); if (!busy) onClose(); }} onClose={onClose}>
     <form onSubmit={save}>
-      <header className={styles.header}><div><h2 id="settings-title">API 配置</h2><p>统一管理本机使用的模型与外部接口</p></div>
+      <header className={styles.header}><div><h2 id="settings-title">API 配置</h2></div>
         <button type="button" className={styles.close} aria-label="关闭 API 配置" onClick={onClose} disabled={busy}>×</button></header>
       <div className={styles.body}>
         {!snapshot && !error && <p role="status">正在读取配置…</p>}
@@ -72,10 +72,6 @@ export default function ApiSettings({ onClose, onSaved }: { onClose: () => void;
             <legend>{group}</legend><p className={styles.hint}>{group === '文本模型' ? '识别顾客需求与整理店员话术' : '独立配置支持图片输入的模型，用于药盒识别'}</p>
             {snapshot.fields.filter(item => item.group === group).map(field)}
           </fieldset>)}
-          <details className={styles.advanced}><summary>公开知识与搜索 · 可选</summary>
-            <p className={styles.hint}>{snapshot.note}</p>
-            {snapshot.fields.filter(item => item.group === '公开知识与搜索').map(field)}
-          </details>
         </>}
         {error && <p role="alert" className={styles.error}>{error}</p>}
         {message && <p role="status" className={styles.success}>{message}</p>}

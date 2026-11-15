@@ -43,7 +43,7 @@ def seed_database(database=DEFAULT_DATABASE):
     engine = create_inventory_engine('sqlite:///' + path.as_posix())
     inserted, skipped, details_inserted = 0, 0, 0
     try:
-        if set(inspect(engine).get_table_names()) - {'drug_inventory', 'drug_details', 'inventory_control', 'stock_movement'}:
+        if set(inspect(engine).get_table_names()) - {'drug_inventory', 'drug_details', 'inventory_control', 'stock_movement', 'inventory_import_receipt', 'inventory_deletion'}:
             raise ValueError('目标不是独立库存库，请使用独立的演示数据库')
         create_inventory_tables(engine)
         with Session(engine) as session, session.begin():

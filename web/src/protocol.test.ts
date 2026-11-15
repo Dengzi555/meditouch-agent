@@ -21,4 +21,14 @@ describe('SSE card protocol', () => {
     expect(card({ ...value, sale_authorized: true })).toBe(false);
     expect(card({ ...value, drug: { ...value.drug, stock: -1 } })).toBe(false);
   });
+  it('validates health citations and rejects invented sources or unsafe links', () => {
+    const source = { id: 'one', title: '资料', publisher: '测试', url: 'https://medlineplus.gov/fever.html', quote: '原文' };
+    const point = { text: '测量体温', highlights: ['体温'], source_ids: ['one'] };
+    const health = { id: 'health-answer', type: 'health_answer', title: '健康问答', basis: 'public', disclaimer: '',
+      sources: [source], sections: [{ title: '先做什么', items: [point] }], follow_up: null };
+    expect(card(health)).toBe(true);
+    expect(card({ ...health, sources: [{ ...source, url: 'javascript:alert(1)' }] })).toBe(false);
+    expect(card({ ...health, sections: [{ title: '错误', items: [{ ...point, source_ids: ['fake'] }] }] })).toBe(false);
+    expect(card({ ...health, sections: [{ title: '错误', items: [{ ...point, highlights: ['原文没有的词'] }] }] })).toBe(false);
+  });
 });

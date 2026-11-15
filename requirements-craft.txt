@@ -1,2 +1,0 @@
-# Optional connector only; server.py still needs only the Python standard library.
-mcp==1.30.0

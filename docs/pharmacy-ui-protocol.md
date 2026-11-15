@@ -32,17 +32,18 @@
 | `progress` | `stage`、`phase`、`attempt`、`label` | 显示实际完成的节点和轮次 |
 | `cards.snapshot` | `safety_status`、完整 `cards` 数组 | 整体替换旧卡片；空数组也必须清空 |
 | `done` | `status="completed"`、`sale_authorized=false` | 正常结束，不代表可售药 |
-| `error` | `code`、安全处理过的 `message`、`retryable` | 清除候选，显示人工核对提示 |
+| `error` | `code`、安全处理过的 `message`、`retryable` | 清除候选，显示查询错误与重试提示 |
 
-`seq` 在同一 run 内递增；重复或旧序号忽略，不同 run 不混用。当前不支持断点续传、历史事件重放或自动重试 POST；断线提示未完成，人工重新发起。序号不等于已经实现业务幂等或取消所有后端调用。
+`seq` 在同一 run 内递增；重复或旧序号忽略，不同 run 不混用。不支持SSE事件重放或从某个token继续；当前支持[节点级检查点恢复](checkpoint-recovery.md)，通过原会话及轮次继续未完成请求，库存任务重新核验库存与禁忌。序号不等于业务幂等或取消所有后端调用。
 
 ## 卡片类型
 
 | type | 关键字段 | 呈现 |
 | --- | --- | --- |
 | `intercept_warning` | `items=[{name,reason}]` | 红色拦截警告；排除名单非空时显示 |
-| `drug_candidate` | `drug={inventory_id,name,shelf_location,stock,is_rx,specification}`、`safety_status`、`availability` | 明确核查通过且有货才绿色；未知黄色待核；缺货灰色 |
-| `missing_information` | `message`、`reason` | 黄色，包含“请人工核对病史” |
+| `emergency_support` | `severity`、`actions`、`facts`、`handover`、`revision`、`sources` | 应急动作立即完整展示；点选现场情况并保存，可复制交接记录；不播放逐字动画 |
+| `drug_candidate` | `drug={inventory_id,name,shelf_location,stock,is_rx,specification}`、`safety_status`、`availability` | 展示本店商品、货架和库存；未知不会标为安全，缺货明确显示 |
+| `missing_information` | 旧会话兼容类型 | 已退役；后端不再生成，前端不显示 |
 | `staff_script` | `text` | 灰色话术框，仅展示宿主已确认话术 |
 | `notice` | `message` | 查询异常、无匹配或仍不安全的状态提示 |
 
@@ -100,7 +101,7 @@ for event in graph_ui_events(compiled, initial_state, uuid4().hex):
     response_writer.flush()
 ```
 
-适配器从 `compiled.stream(..., stream_mode="updates")` 读取节点真实完成结果。inventory、安全、生成和人工交接节点各自输出进度和卡片快照。中间节点不发送店员话术；生成节点完成后才发送。异常仅发清理过的错误事件，不泄露数据库路径。断开连接后应停止写入；这不等于可立即取消已经运行的 SQL 或模型请求。
+适配器从 `compiled.stream(..., stream_mode=["updates", "custom"])` 同时读取节点完成与节点内增量。模型网关使用真实 `stream=true`：普通回复逐增量推送；健康解释解析完整小节，检查引用和内容支撑后立即通过 `get_stream_writer` 发出 `cards.snapshot`，不等待健康节点全部结束。只推送可展示正文，不推送原始JSON、推理内容或工具参数。流中断时清除未完成展示，最终完整结构再校验并保存。库存、安全和生成节点继续提供确定性的进度与商品卡。异常不泄露数据库路径；断线不等于立即取消已开始的SQL或模型调用。
 
 ## React / Next.js 示例
 
@@ -120,7 +121,7 @@ for event in graph_ui_events(compiled, initial_state, uuid4().hex):
 
 ## FastAPI 路由与验证
 
-完整路由：`meditouch/api.py`。`StreamingResponse` 返回 `text/event-stream`，逐节点写入标准 SSE 帧。同步 SQL/图步骤在线程池运行，不阻塞 ASGI 事件循环；断线后停止继续拉取节点，已运行的模型/SQL 不能强制终止。最终 State 只保留在请求内，响应结束后释放。
+完整路由：`meditouch/api.py`。`StreamingResponse` 返回 `text/event-stream`，节点与正文增量写入标准 SSE 帧。同步SQL/图步骤在线程池运行；断线后停止继续拉取，已运行的模型/SQL不能强制终止。有会话的图状态保存到SQLite Checkpointer，中断轮次通过 `resume: true` 继续；恢复库存任务必须重新查询并核查。检查点、线程标识和内部State不直接发给前端。详见[节点级恢复](checkpoint-recovery.md)。
 
 配置错误或参数错误在发送 SSE 头之前返回 HTTP JSON 错误；流中异常使用 `event: error`，不会伪装 `done`。前端遇到错误或缺失 done 会清空候选，禁止自动重试 POST。
 

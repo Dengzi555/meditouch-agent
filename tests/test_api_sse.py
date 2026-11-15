@@ -70,8 +70,8 @@ class FastApiSseTests(unittest.TestCase):
         final = [event for event in events if event['event'] == 'cards.snapshot'][-1]['payload']
         self.assertEqual(final['safety_status'], 'unknown')
         self.assertEqual([card['type'] for card in final['cards']], [
-            'intercept_warning', 'missing_information', 'drug_candidate', 'staff_script'])
-        self.assertEqual(final['cards'][2]['drug']['name'], '演示药乙')
+            'intercept_warning', 'drug_candidate', 'staff_script'])
+        self.assertEqual(final['cards'][1]['drug']['name'], '演示药乙')
         self.assertEqual(events[-1]['event'], 'done')
         self.assertEqual(events[-1]['payload']['inventory_attempts'], 2)
         self.assertNotIn('system', response.text)
@@ -102,7 +102,7 @@ class FastApiSseTests(unittest.TestCase):
                 response = self.client.post('/api/agent/stream', json={**self.body, 'question': question})
                 events = self.events(response)
                 snapshot = next(event for event in events if event['event'] == 'cards.snapshot')
-                self.assertEqual(snapshot['payload']['cards'][0]['type'], 'intercept_warning')
+                self.assertEqual(snapshot['payload']['cards'][0]['type'], 'emergency_support')
                 self.assertTrue(any(event['payload'].get('stage') == 'emergency' for event in events))
                 self.assertFalse(any(event['payload'].get('stage') == 'inventory' for event in events))
         response = self.client.post('/api/agent/stream', json=self.body, headers={'Origin': 'https://untrusted.example'})

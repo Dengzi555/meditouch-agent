@@ -20,9 +20,34 @@ from meditouch.inventory_models import DrugInventory, DrugDetails, create_invent
 
 
 class ScriptedModel:
+    def stream(self, messages):
+        """Test-only delayed chunks verify actual partial UI before graph completion."""
+        response = self.complete(messages)
+        value = json.loads(messages[1]['content'])
+        if 'source_mode' in value:
+            answer = json.loads(response['content'])
+            first = answer['sections'][0]
+            yield '{"sections":[' + json.dumps(first, ensure_ascii=False) + ','
+            time.sleep(1.5)
+            yield json.dumps({**first, 'title': '继续了解'}, ensure_ascii=False)
+            yield '],"follow_up":' + json.dumps(answer['follow_up'], ensure_ascii=False) + '}'
+        else:
+            yield response['content']
+
     def complete(self, messages):
         time.sleep(0.5)  # Test-only latency to exercise loading and cancellation.
         data = json.loads(messages[1]['content'])
+        if 'claims' in data:
+            return {'role': 'assistant', 'content': json.dumps({'supported': [True] * len(data['claims'])})}
+        if 'source_mode' in data:
+            result = {'sections': [{'title': '先确认已知信息', 'items': [{'text': '合成测试：先记录已知信息，再继续核对。',
+                'highlights': ['记录已知信息'], 'citations': [{'source_id': 'qa-health', 'quote': '先记录已知信息，再继续核对。'}]}]}],
+                'follow_up': {'question': '是否记录了测量结果？', 'options': ['已经记录', '尚未记录']}}
+            return {'role': 'assistant', 'content': json.dumps(result, ensure_ascii=False)}
+        if 'query' in data and ('健康问答测试' in data['query'] or data['query'].startswith('补充信息：')):
+            result = {'intent': 'health_qa', 'symptoms': [], 'medical_topics': ['健康测试'],
+                      'needs_inventory': False, 'knowledge_queries': []}
+            return {'role': 'assistant', 'content': json.dumps(result, ensure_ascii=False)}
         result = ({'drug_name': data['query'], 'customer_tags': []} if 'query' in data else
                   {'script_id': next(iter(data['approved_scripts']))})
         return {'role': 'assistant', 'content': json.dumps(result)}
@@ -63,6 +88,10 @@ def main():
                 'MED_AGENT_MODEL': 'scripted-text', 'MED_AGENT_API_KEY': 'fixture-only-key',
                 'MED_AGENT_VISION_MODEL': 'scripted-vision'})
             uvicorn.run(create_app(model_factory=ScriptedModel, vision_factory=ScriptedVision,
+                                  health_evidence_loader=lambda *args, **kwargs: ([{'id': 'qa-health',
+                                      'title': '合成健康问答夹具', 'publisher': '仅供工程测试，非医学资料',
+                                      'url': 'https://medlineplus.gov/health-fixture.html', 'kind': 'public',
+                                      'text': '先记录已知信息，再继续核对。'}], []),
                                   settings_store=settings, chat_store=ChatStore(Path(directory) / 'qa-chats.db')),
                         host='127.0.0.1', port=8767, log_level='warning')
         finally:

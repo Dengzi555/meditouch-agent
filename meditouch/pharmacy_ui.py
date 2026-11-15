@@ -15,7 +15,7 @@ def inventory_summary(item):
 
 def build_ui_cards(state, *, staff_script=''):
     """Fail closed: green requires a positive per-SKU check and positive stock."""
-    cards = []
+    cards = [state['health_card']] if state.get('health_card') else []
     if state.get('inventory_data_mode') == 'mock':
         cards.append({'id': 'mock-data', 'type': 'notice', 'title': '演示数据',
                       'message': '当前库存和禁忌来自 Mock 测试库，未核实真实说明书，不得用于真实接待或售药。'})
@@ -30,10 +30,6 @@ def build_ui_cards(state, *, staff_script=''):
                       'message': ('已检索本地医学资料，结果仅作找药线索，适用性仍需药师核对。' if source == 'retrieval' else
                           '未取得可核对的实时医学依据，以下药名基于模型通用知识，仅作库存检索候选，请以说明书和药师判断为准。'
                           if source == 'llm_knowledge' else '知识检索未获得可用依据，或当前使用测试适配器；不得据此认定药品适用。')})
-    if state.get('combination_status') == 'unknown':
-        cards.append({'id': 'combination', 'type': 'missing_information', 'title': '联合用药尚未确认',
-                      'message': '单药禁忌筛查不能证明可以一起用，请交药师核对成分与相互作用。',
-                      'reason': state.get('safety_reason', '')})
     if state.get('stockout_results'):
         cards.append({'id': 'stockout', 'type': 'notice', 'title': '本轮缺货记录',
                       'message': '\n'.join(inventory_summary(item) for item in state['stockout_results'])
@@ -53,12 +49,6 @@ def build_ui_cards(state, *, staff_script=''):
                                     if name in local_items else None}
                                 for name in dict.fromkeys(excluded)]})
     status = state.get('safety_status', 'unknown')
-    if status == 'unknown':
-        missing_data = any(check.get('status') == 'missing_data' for check in state.get('safety_checks', []))
-        cards.append({'id': 'missing', 'type': 'missing_information', 'title': '需要人工核对',
-                      'message': ('系统未收录该药禁忌数据，请务必询问顾客是否有相关病史。请人工核对病史。'
-                                  if missing_data else '请人工核对病史'),
-                      'reason': state.get('safety_reason') or '核查尚未完成，不能确认安全'})
     checks = {item.get('inventory_id'): item for item in state.get('safety_checks', [])}
     # Unsafe or incomplete/truncated queries must not expose recommended candidates.
     if status != 'unsafe' and not state.get('inventory_truncated'):
@@ -71,7 +61,7 @@ def build_ui_cards(state, *, staff_script=''):
             safe = status == 'safe' and check.get('is_safe') is True
             cards.append({
                 'id': f"drug:{item['inventory_id']}", 'type': 'drug_candidate',
-                'title': '核查通过候选 · 药师确认' if safe and item['stock'] > 0 else '库存候选 · 待核对',
+                'title': '核查通过候选' if safe and item['stock'] > 0 else '本店商品',
                 'drug': {key: item.get(key) for key in
                          ('inventory_id', 'name', 'brand', 'specification', 'dosage_form', 'ingredients',
                           'contraindications', 'shelf_location', 'stock', 'is_rx')},
@@ -85,12 +75,12 @@ def build_ui_cards(state, *, staff_script=''):
             })
     if status == 'unsafe' or not state.get('inventory_results') or state.get('inventory_truncated'):
         query_status = state.get('inventory_status', 'unknown')
-        message = ('当前仍存在风险，停止拿药并交药师确认。' if status == 'unsafe' else
+        message = ('当前候选存在禁忌风险，已停止推荐。' if status == 'unsafe' else
                    '查询结果过多，请补充药名、品牌或规格。' if state.get('inventory_truncated') else
                    '本轮尚未获得该咨询主题对应的在库候选，请补充具体症状；不能据此断定本店没有相关药品。'
                         if query_status == 'not_found' and state.get('medical_topics') else
                    '本店库存目录中没有查到匹配药品。' if query_status == 'not_found' else
-                   '查询未完成或暂无可用候选，请人工核对库存。')
+                   '库存查询未完成，请稍后重试。')
         cards.append({'id': 'notice', 'type': 'notice', 'title': '当前处理状态', 'message': message})
     if staff_script:
         cards.append({'id': 'staff-script', 'type': 'staff_script', 'title': '店员话术', 'text': staff_script})
@@ -114,7 +104,8 @@ def encode_sse(event):
             + 'data: ' + json.dumps(validated, ensure_ascii=False) + '\n\n').encode('utf-8')
 
 
-def graph_ui_events(compiled_graph, initial_state, run_id, *, seq_start=0, on_complete=None):
+def graph_ui_events(compiled_graph, initial_state, run_id, *, seq_start=0, on_complete=None,
+                    graph_config=None, resume=False):
     """Adapt actual LangGraph node updates to UI events; never expose message/trace contents.
 
     Progress events mean node completion, not hidden reasoning or a fabricated timer.
@@ -122,17 +113,35 @@ def graph_ui_events(compiled_graph, initial_state, run_id, *, seq_start=0, on_co
     """
     state, seq, terminal = dict(initial_state), seq_start, False
     labels = {'inventory_node': ('inventory', '批量库存查询已完成'),
+              'health_node': ('health', '健康问题已解释'),
               'rag_node': ('rag', '知识候选检索已完成，准备回查库存'),
               'emergency_node': ('emergency', '急症风险已拦截，停止查药'),
               'chitchat_node': ('general', '通用回复已生成'),
               'safety_node': ('safety', '本轮禁忌核查已完成'),
               'generator_node': ('generation', '店员话术已整理'),
-              'fallback_node': ('handoff', '已转交人工核对')}
+              'fallback_node': ('fallback', '本轮查询已结束')}
     # Validate the run identifier before any graph work starts.
     ui_event(run_id, 1, 'progress', {})
     try:
-        for update in compiled_graph.stream(initial_state, stream_mode='updates',
-                                             config={'recursion_limit': 16}):
+        config = {'recursion_limit': 16, **(graph_config or {})}
+        if resume and not compiled_graph.get_state(config).next:
+            terminal = True
+            seq += 1
+            yield ui_event(run_id, seq, 'cards.snapshot', {'safety_status': state.get('safety_status', 'unknown'),
+                                                         'cards': state.get('ui_cards', [])})
+        for update in (() if terminal else compiled_graph.stream(None if resume else initial_state,
+                stream_mode=['updates', 'custom'], config=config,
+                **({'durability': 'sync'} if graph_config else {}))):
+            # Scripted test graphs may still return bare updates.
+            if isinstance(update, tuple):
+                kind, update = update
+                if kind == 'custom':
+                    if isinstance(update, dict) and ('health_card' in update or 'answer_cards' in update):
+                        seq += 1
+                        yield ui_event(run_id, seq, 'cards.snapshot', {'safety_status': 'unknown',
+                            'cards': update['answer_cards'] if 'answer_cards' in update else
+                                     [update['health_card']] if update['health_card'] else []})
+                    continue
             for node, changes in update.items():
                 if node not in labels:
                     continue
@@ -146,8 +155,9 @@ def graph_ui_events(compiled_graph, initial_state, run_id, *, seq_start=0, on_co
                 visible = state if node != 'inventory_node' else {
                     **state, 'safety_status': 'unknown', 'safety_checks': [],
                     'safety_reason': '等待本轮禁忌核查'}
-                terminal = node in ('generator_node', 'fallback_node', 'emergency_node', 'chitchat_node')
-                cards = (state.get('ui_cards', []) if node in ('emergency_node', 'chitchat_node') else
+                terminal = (node in ('generator_node', 'fallback_node', 'emergency_node', 'chitchat_node')
+                            or node == 'health_node' and not state.get('needs_inventory'))
+                cards = (state.get('ui_cards', []) if node in ('emergency_node', 'chitchat_node', 'health_node') else
                          build_ui_cards(visible, staff_script=state.get('staff_script', '') if terminal else ''))
                 seq += 1
                 yield ui_event(run_id, seq, 'cards.snapshot', {
@@ -159,11 +169,11 @@ def graph_ui_events(compiled_graph, initial_state, run_id, *, seq_start=0, on_co
                        {'status': 'completed', 'sale_authorized': False,
                         'safety_status': state.get('safety_status', 'unknown'),
                         'inventory_attempts': state.get('inventory_attempts', 0)} if terminal else
-                       {'code': 'INCOMPLETE_RUN', 'message': '任务未完成，请人工核对', 'retryable': False})
+                       {'code': 'INCOMPLETE_RUN', 'message': '任务未完成，请重新查询', 'retryable': False})
     except Exception:
         seq += 1
         yield ui_event(run_id, seq, 'error', {'code': 'GRAPH_FAILED',
-                       'message': '处理未完成，请人工核对库存和病史', 'retryable': False})
+                       'message': '处理未完成，请重新查询', 'retryable': False})
 
 
 def simulated_events():
@@ -179,5 +189,5 @@ def simulated_events():
     yield ui_event(run_id, 1, 'progress', {'stage': 'inventory', 'attempt': 1, 'label': '查询本店库存'})
     yield ui_event(run_id, 2, 'progress', {'stage': 'safety', 'attempt': 1, 'label': '逐项核对禁忌'})
     yield ui_event(run_id, 3, 'cards.snapshot', {'safety_status': 'unknown',
-        'cards': build_ui_cards(state, staff_script='我先帮您核对病史，再请药师确认。')})
+        'cards': build_ui_cards(state)})
     yield ui_event(run_id, 4, 'done', {'status': 'completed', 'sale_authorized': False})

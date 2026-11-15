@@ -44,16 +44,9 @@
           ]
         },
         {
-          "id": "missing",
-          "type": "missing_information",
-          "title": "需要人工核对",
-          "message": "请人工核对病史",
-          "reason": "缺乏禁忌数据，建议咨询药师"
-        },
-        {
           "id": "drug:2",
           "type": "drug_candidate",
-          "title": "库存候选 · 待核对",
+          "title": "本店商品",
           "drug": {
             "inventory_id": 2,
             "name": "演示药乙",
@@ -73,7 +66,7 @@
           "id": "staff-script",
           "type": "staff_script",
           "title": "店员话术",
-          "text": "我先帮您核对病史，再请药师确认。"
+          "text": "以下是本店查询到的商品信息。"
         }
       ]
     }

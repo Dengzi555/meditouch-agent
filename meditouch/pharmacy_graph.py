@@ -24,18 +24,21 @@ def route_start(state):
         return 'chitchat_node'
     if state.get('intake_status') in ('unavailable', 'needs_clarification'):
         return 'fallback_node'
+    if state.get('intent') == 'health_qa' or state.get('needs_health_answer'):
+        return 'health_node'
     return 'inventory_node'
 
 
 def emergency_node(state):
-    answer = '顾客可能存在需要紧急评估的危险表现。请停止推荐或换药，立即联系门店药师，并协助联系当地急救服务或前往急诊；不要等待库存查询。此提示不构成确诊。'
+    from meditouch.emergency_support import build_emergency_card
+    card = build_emergency_card(state.get('user_query', ''), symptoms=state.get('symptoms', []))
+    answer = '\n'.join(card['actions']) + '\n\n' + card['handover']
     return {'inventory_results': [], 'inventory_status': 'not_queried', 'safety_checks': [],
             'safety_status': 'unsafe', 'safety_reason': '急症风险，禁止进入查药流程',
             'answer': answer, 'staff_script': '', 'generation_status': 'host_emergency',
             'generation_branch': 'emergency', 'outcome': 'risk_alert',
-            'ui_cards': [{'id': 'risk', 'type': 'intercept_warning', 'title': '优先处理急症风险',
-                          'items': [{'name': '顾客当前情况', 'reason': answer}]}],
-            'trace': state['trace'] + [{'node': 'emergency_node', 'status': 'stopped'}]}
+            'ui_cards': [card],
+            'trace': state.get('trace', []) + [{'node': 'emergency_node', 'status': 'emergency_support'}]}
 
 
 def can_retry_rag(state):
@@ -75,9 +78,24 @@ def route_after_safety(state):
 
 
 def build_pharmacy_graph(engine, *, tool_factory=build_inventory_tools, on_progress=None,
-                         deadline=None, model=None, rag_tool=None):
+                         deadline=None, model=None, rag_tool=None, health_evidence_loader=None, checkpointer=None):
     """Build a fresh graph. The authorized engine is injected only through closures."""
     from langgraph.graph import START, END, StateGraph
+
+    def health_node(state):
+        from meditouch.pharmacy_health import generate_health_answer
+        from langgraph.config import get_stream_writer
+        writer = get_stream_writer()
+        result = generate_health_answer(state, model=model, deadline=deadline,
+                                        evidence_loader=health_evidence_loader,
+                                        on_update=lambda card: writer({'health_card': card}))
+        return {**result, 'answer': result['health_answer'], 'ui_cards': [result['health_card']],
+                'outcome': 'health_answer', 'staff_script': '', 'generation_status': result['health_status'],
+                'inventory_status': 'not_queried'}
+
+    def after_health(state):
+        # A health explanation is useful even when personal medication suitability is unknown.
+        return ('fallback_node' if engine is None else 'inventory_node') if state.get('needs_inventory') else END
 
     def inventory_node(state):
         if on_progress:
@@ -177,10 +195,13 @@ def build_pharmacy_graph(engine, *, tool_factory=build_inventory_tools, on_progr
                     'customer_tags': state.get('customer_tags', []), 'excluded_drugs': excluded}
                 if state.get('medical_topics'):
                     rag_args['medical_topics'] = state['medical_topics']
+                if state.get('standalone_query') and state['standalone_query'] != state['user_query']:
+                    rag_args['standalone_query'] = state['standalone_query']
                 raw = (rag_tool or build_medical_rag_tool(model=model)).invoke(rag_args)
-                source, evidence = 'injected', []
+                source, evidence, admission = 'injected', [], []
                 if isinstance(raw, dict):
                     source, evidence = raw.get('source', 'none'), raw.get('evidence', [])
+                    admission = raw.get('evidence_admission', [])
                     raw = raw.get('recommended_drugs', [])
                 if (not isinstance(raw, list) or len(raw) > 5
                         or any(not isinstance(name, str) or not name.strip() or len(name) > 200 for name in raw)):
@@ -201,7 +222,8 @@ def build_pharmacy_graph(engine, *, tool_factory=build_inventory_tools, on_progr
                 'rag_excluded_drugs': excluded, 'retained_drugs': retained,
                 'tool_calls': state['tool_calls'] + executed,
                 'trace': state['trace'] + [{'node': 'rag_node', 'status': status,
-                                          'source': source if executed and status in ('ok', 'not_found') else 'none', 'drugs': names}]}
+                                          'source': source if executed and status in ('ok', 'not_found') else 'none', 'drugs': names,
+                                          'evidence_admission': admission if executed and status in ('ok', 'not_found') else []}]}
 
     def safety_node(state):
         if on_progress:
@@ -222,7 +244,7 @@ def build_pharmacy_graph(engine, *, tool_factory=build_inventory_tools, on_progr
             # A name-only safety tool can resolve a different SKU if stock changed.
             if (result.get('inventory_id') not in (None, item['inventory_id'])
                     or result.get('is_safe') is True and result.get('inventory_id') != item['inventory_id']):
-                result = {'is_safe': 'unknown', 'reason': '商品身份不一致，请人工核对病史和具体规格'}
+                result = {'is_safe': 'unknown', 'reason': '商品身份不一致，无法确认具体规格'}
             checks.append({'inventory_id': item['inventory_id'], 'name': item['name'], **result})
             if result.get('is_safe') is False and item['name'] not in excluded:
                 excluded.append(item['name'])
@@ -275,7 +297,7 @@ def build_pharmacy_graph(engine, *, tool_factory=build_inventory_tools, on_progr
         from meditouch.pharmacy_generation import generate_staff_response
         result = generate_staff_response(state, use_llm=False)
         if state.get('intake_status') == 'needs_clarification':
-            text = '请补充想咨询的症状、疾病主题或药名；目前还没有足够的查询条件，尚未查询本店库存。'
+            text = state.get('clarification_question') or '请补充想咨询的症状、疾病主题或药名；目前还没有足够的查询条件，尚未查询本店库存。'
             result.update(answer=text, staff_script=text, ui_cards=[{
                 'id': 'clarify-query', 'type': 'notice', 'title': '需要明确查询内容', 'message': text}])
         return {**result, 'outcome': 'inventory_fallback',
@@ -286,9 +308,19 @@ def build_pharmacy_graph(engine, *, tool_factory=build_inventory_tools, on_progr
         calls = 0
         try:
             calls = 1
-            response = (model or ModelGateway(timeout=15)).complete([
+            gateway = model or ModelGateway(timeout=15)
+            messages = [
                 {'role': 'system', 'content': '你是医点通药店助手，简短回答普通闲聊。不诊断、开药或编造本店数据。'},
-                {'role': 'user', 'content': state['user_query']}])
+                {'role': 'user', 'content': state['user_query']}]
+            if callable(getattr(gateway, 'stream', None)):
+                from langgraph.config import get_stream_writer
+                writer, content = get_stream_writer(), ''
+                for delta in gateway.stream(messages):
+                    content = (content + delta)[:2000]
+                    writer({'answer_cards': [{'id': 'chat', 'type': 'notice', 'title': '医点通', 'message': content}]})
+                response = {'role': 'assistant', 'content': content}
+            else:
+                response = gateway.complete(messages)
             if response.get('role') == 'assistant' and not response.get('tool_calls') and isinstance(response.get('content'), str):
                 text = response['content'][:2000]
         except Exception:
@@ -307,8 +339,12 @@ def build_pharmacy_graph(engine, *, tool_factory=build_inventory_tools, on_progr
     graph.add_node('fallback_node', fallback_node)
     graph.add_node('emergency_node', emergency_node)
     graph.add_node('chitchat_node', chitchat_node)
+    graph.add_node('health_node', health_node)
+    graph.add_node('resume_inventory_reset', lambda state: reset_inventory_for_resume(state))
+    graph.add_edge('resume_inventory_reset', 'inventory_node')
     graph.add_conditional_edges(START, route_start, {name: name for name in
-        ('inventory_node', 'emergency_node', 'chitchat_node', 'fallback_node')})
+        ('inventory_node', 'emergency_node', 'chitchat_node', 'fallback_node', 'health_node')})
+    graph.add_conditional_edges('health_node', after_health, {'inventory_node': 'inventory_node', 'fallback_node': 'fallback_node', END: END})
     graph.add_conditional_edges('inventory_node', route_after_inventory, {
         'rag_node': 'rag_node', 'safety_node': 'safety_node',
     })
@@ -322,7 +358,19 @@ def build_pharmacy_graph(engine, *, tool_factory=build_inventory_tools, on_progr
     graph.add_edge('fallback_node', END)
     graph.add_edge('emergency_node', END)
     graph.add_edge('chitchat_node', END)
-    return graph.compile()
+    return graph.compile(checkpointer=checkpointer)
+
+
+def reset_inventory_for_resume(state):
+    """Keep semantic intent/knowledge, discard all volatile stock and safety conclusions."""
+    return {'inventory_results': [], 'inventory_lookup_records': {}, 'stockout_results': [],
+            'retained_drugs': [], 'unmatched_terms': [], 'catalog_discovered_names': [],
+            'safety_checks': [], 'safety_status': 'unknown', 'safety_reason': '恢复后重新查询库存并核查',
+            'excluded_drugs': [], 'excluded_reasons': {}, 'rag_excluded_drugs': [],
+            'inventory_attempts': 0, 'rag_attempts': 0, 'inventory_truncated': False,
+            'inventory_status': 'not_queried', 'combination_status': 'unknown',
+            'answer': '', 'staff_script': '', 'ui_cards': [], 'outcome': '',
+            'trace': state.get('trace', []) + [{'node': 'resume_inventory_reset', 'status': 'invalidated'}]}
 
 
 def prepare_entities(question, customer, model=None, *, history=None):
@@ -340,7 +388,9 @@ def prepare_inventory_state(question, workspace, *, model=None, history=None):
     if intake['symptoms']:
         entities['symptom'] = intake['symptoms'][0]
     tags = intake['customer_tags']
-    trace = [{'node': 'query_understanding', 'status': status}]
+    trace = [{'node': 'query_understanding', 'status': status, 'original_query': question,
+              'standalone_query': intake.get('standalone_query') or question,
+              'context_resolution': intake.get('context_resolution', 'standalone')}]
     return {**intake, 'history': history or [], 'intake_status': status,
                           'rag_attempts': 0, 'rag_source': 'none', 'rag_evidence': [], 'catalog_discovered_names': [],
                           'rag_excluded_drugs': [], 'retained_drugs': [], 'stockout_results': [],
@@ -351,6 +401,7 @@ def prepare_inventory_state(question, workspace, *, model=None, history=None):
                           'safety_status': 'unknown', 'safety_reason': '尚未核查',
                           'excluded_drugs': [], 'inventory_attempts': 0,
                           'trace': trace, 'tool_calls': 0, 'model_calls': model_calls,
+                          'health_card': {}, 'health_answer': '', 'health_sources': [], 'health_status': 'not_requested',
                           'excluded_reasons': {}}
 
 
@@ -373,6 +424,8 @@ def run_inventory_workflow(question, workspace, engine, *, model=None, on_progre
     return dict(id=uuid4().hex, question=question, status=state['outcome'], answer=state['answer'],
                 intent=state['intent'], symptoms=state['symptoms'],
                 medical_topics=state.get('medical_topics', []),
+                standalone_query=state.get('standalone_query', question),
+                context_resolution=state.get('context_resolution', 'standalone'),
                 target_drugs=state['target_drugs'], denied_symptoms=state['denied_symptoms'],
                 intake_status=state['intake_status'], rag_source=state.get('rag_source', 'none'),
                 rag_attempts=state.get('rag_attempts', 0),
@@ -384,7 +437,7 @@ def run_inventory_workflow(question, workspace, engine, *, model=None, on_progre
                 safety_reason=state['safety_reason'], excluded_drugs=state['excluded_drugs'],
                 excluded_reasons=state['excluded_reasons'],
                 inventory_attempts=state['inventory_attempts'], safety_checks=state.get('safety_checks', []),
-                sources=[], citations=[], missing_context=[], error=None,
+                sources=state.get('health_sources', []), citations=[], missing_context=[], error=None,
                 trace=state['trace'], model_calls=state['model_calls'], tool_calls=state['tool_calls'],
                 generation_status=state['generation_status'],
                 ui_cards=state['ui_cards'], staff_script=state['staff_script'],

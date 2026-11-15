@@ -30,6 +30,9 @@
 .badge { color: #7e7898; background: #f1eff8; border-radius: 5px; font-size: 10px; padding: 4px 7px; }
 .rowActions { display: flex; gap: 12px; }
 .rowActions button { border: 0; background: transparent; padding: 4px 0; color: #6656b5; font-size: 12px; }
+.rowActions .deleteLink { color: #be3c34; }
+.page .danger { color: white; background: #c9362d; border-color: #c9362d; border-radius: 22px; padding: 10px 22px; }
+.deleteDescription { font-size: 14px; line-height: 1.8; color: #655d70; }
 .empty { padding: 60px 24px; text-align: center; color: #8c879f; font-size: 13px; }
 .pagination { display: flex; align-items: center; justify-content: space-between; color: #888299; font-size: 12px; margin-top: 18px; }
 .pagination > div { display: flex; align-items: center; gap: 15px; }

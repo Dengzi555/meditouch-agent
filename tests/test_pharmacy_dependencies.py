@@ -57,7 +57,7 @@ class PharmacyDependencyTests(unittest.TestCase):
                     frames = [json.loads(line[6:]) for line in response.text.splitlines()
                               if line.startswith('data: ')]
                     snapshot = next(frame for frame in frames if frame['event'] == 'cards.snapshot')
-                    assert snapshot['payload']['cards'][0]['type'] == 'intercept_warning'
+                    assert snapshot['payload']['cards'][0]['type'] == 'emergency_support'
                     assert frames[-1]['event'] == 'done'
                 assert not blocked.intersection(sys.modules)
             finally:

@@ -11,9 +11,11 @@ from sqlmodel import Session, select
 from meditouch.api import create_app
 from meditouch.inventory_management import (
     EditDrug, MoveStock, StockMovement, InventoryProblem, edit_drug, move_stock, init_management,
+    DeleteDrug, delete_drug,
 )
-from meditouch.inventory_models import DrugInventory, create_inventory_engine, create_inventory_tables
-from meditouch.inventory_tools import search_inventory_batch
+from meditouch.inventory_models import DrugInventory, InventoryDeletion, create_inventory_engine, create_inventory_tables
+from meditouch.inventory_tools import search_inventory_batch, build_inventory_tools
+from meditouch.inventory_import import matching_inventory
 
 
 class InventoryManagementTests(unittest.TestCase):
@@ -51,6 +53,74 @@ class InventoryManagementTests(unittest.TestCase):
     def stock(self):
         with Session(self.engine) as session:
             return session.get(DrugInventory, self.drug_id).stock
+
+    def test_delete_removes_active_results_preserves_history_and_is_idempotent(self):
+        edit_drug(self.engine, self.drug_id, self.edit())
+        move_stock(self.engine, self.drug_id, self.movement())
+        body = DeleteDrug(store_id='A', expected_version=2, expected_stock=8, confirmed=True)
+        url = f'/api/pharmacy/inventory/{self.drug_id}/delete'
+        response = self.client.post(url, json=body.model_dump())
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertFalse(response.json()['replayed'])
+        self.assertTrue(self.client.post(url, json=body.model_dump()).json()['replayed'])
+        self.assertEqual(self.client.get('/api/pharmacy/inventory', params={'store_id': 'A'}).json()['total'], 0)
+        self.assertEqual(self.client.get(f'/api/pharmacy/inventory/{self.drug_id}', params={'store_id': 'A'}).status_code, 404)
+        self.assertEqual(search_inventory_batch(self.engine, ['演示感冒药'])['items'], [])
+        search, safety = build_inventory_tools(self.engine)
+        self.assertEqual(search.invoke({'drug_name': '演示感冒药'})['items'], [])
+        self.assertEqual(safety.invoke({'drug_name': '演示感冒药', 'customer_tags': ['孕妇']})['is_safe'], 'unknown')
+        ledger = self.client.get('/api/pharmacy/inventory/movements', params={'store_id': 'A'}).json()
+        self.assertEqual(ledger['total'], 1)
+        self.assertEqual(ledger['items'][0]['after_stock'], 8)
+        self.assertEqual(self.stock(), 8)  # Deletion does not fake a sale or erase the archived quantity.
+        with Session(self.engine) as session:
+            self.assertIsNotNone(session.get(InventoryDeletion, self.drug_id))
+            self.assertEqual(matching_inventory(session, '演示感冒药', '演示牌'), [])
+        self.assertEqual(self.client.post(f'/api/pharmacy/inventory/{self.drug_id}/edit',
+                                         json=self.edit(expected_version=2).model_dump()).status_code, 404)
+        self.assertEqual(self.client.post(f'/api/pharmacy/inventory/{self.drug_id}/movements',
+                                         json=self.movement(expected_version=2, expected_stock=8).model_dump()).status_code, 404)
+
+    def test_delete_requires_confirmation_fresh_snapshot_and_scope(self):
+        url = f'/api/pharmacy/inventory/{self.drug_id}/delete'
+        body = dict(store_id='A', expected_version=0, expected_stock=10, confirmed=True)
+        for value in [False, 1, 'true', None]:
+            self.assertEqual(self.client.post(url, json={**body, 'confirmed': value}).status_code, 422)
+        self.assertEqual(self.client.post(url, json={k: v for k, v in body.items() if k != 'confirmed'}).status_code, 422)
+        for change, status in [({'expected_stock': 9}, 409), ({'expected_version': 1}, 409), ({'store_id': 'B'}, 403)]:
+            self.assertEqual(self.client.post(url, json={**body, **change}).status_code, status)
+        self.assertEqual(self.client.post(url, json=body, headers={'origin': 'https://other.example'}).status_code, 403)
+        self.assertEqual(self.client.get('/api/pharmacy/inventory', params={'store_id': 'A'}).json()['total'], 1)
+
+    def test_delete_and_sale_cannot_both_use_same_snapshot(self):
+        edit_drug(self.engine, self.drug_id, self.edit())
+        def action(kind):
+            try:
+                if kind == 'delete':
+                    delete_drug(self.engine, self.drug_id, DeleteDrug(store_id='A', expected_version=1, expected_stock=10, confirmed=True))
+                else:
+                    move_stock(self.engine, self.drug_id, self.movement())
+                return 200
+            except InventoryProblem as exc:
+                return exc.status
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            codes = list(pool.map(action, ['delete', 'sale']))
+        self.assertEqual(codes.count(200), 1)
+        self.assertTrue(any(code in (404, 409) for code in codes))
+
+    def test_delete_failure_rolls_back_and_legacy_readonly_database_still_works(self):
+        def fail(connection, cursor, statement, parameters, context, executemany):
+            if statement.lstrip().upper().startswith('INSERT INTO INVENTORY_DELETION'):
+                raise RuntimeError('synthetic archive failure')
+        event.listen(self.engine, 'before_cursor_execute', fail)
+        try:
+            with self.assertRaises(RuntimeError):
+                delete_drug(self.engine, self.drug_id, DeleteDrug(store_id='A', expected_version=0, expected_stock=10, confirmed=True))
+        finally:
+            event.remove(self.engine, 'before_cursor_execute', fail)
+        self.assertEqual(len(search_inventory_batch(self.engine, ['演示感冒药'])['items']), 1)
+        InventoryDeletion.__table__.drop(self.engine)
+        self.assertEqual(len(search_inventory_batch(self.engine, ['演示感冒药'])['items']), 1)
 
     def test_existing_stock_is_preserved_and_unit_must_be_confirmed(self):
         data = self.client.get('/api/pharmacy/inventory', params={'store_id': 'A'}).json()

@@ -1,4 +1,4 @@
-"""Read-only domain tools shared by MCP and tests. No model or write access."""
+"""Read-only domain tools for evidence analysis and tests. No model or write access."""
 import json
 import sqlite3
 from contextlib import closing

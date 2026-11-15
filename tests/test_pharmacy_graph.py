@@ -125,7 +125,7 @@ class PharmacyGraphTests(unittest.TestCase):
         self.assertEqual(state['inventory_attempts'], 2)
         self.assertEqual([item['name'] for item in state['inventory_results']], ['演示乙'])
         self.assertEqual(state['safety_status'], 'unknown')
-        self.assertIn('请人工核对病史', state['answer'])
+        self.assertNotIn('请人工核对病史', state['answer'])
         self.assertEqual([event['node'] for event in state['trace']], [
             'inventory_node', 'safety_node', 'inventory_node', 'safety_node', 'generator_node'])
 
@@ -196,7 +196,7 @@ class PharmacyGraphTests(unittest.TestCase):
         state['extracted_entities'] = {'symptom': '演示症状'}
         result = build_pharmacy_graph(self.engine, tool_factory=factory).invoke(state)
         self.assertIn('缺货，不可作为可售候选', result['answer'])
-        self.assertIn('请人工核对病史', result['answer'])
+        self.assertNotIn('请人工核对病史', result['answer'])
 
     def test_existing_run_graph_dispatches_to_inventory_flow(self):
         from meditouch.agent_graph import run_graph

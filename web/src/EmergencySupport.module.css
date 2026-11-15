@@ -1,0 +1,15 @@
+.card { border: 1px solid #e4aaa5; border-left: 4px solid #c9332c; border-radius: 16px; padding: 24px; background: #fffafa; color: #252b42; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.top h2, .top h3 { margin: 0; }
+.top > a { padding: 10px 20px; border-radius: 9px; background: #b72b25; color: white; font-weight: 700; white-space: nowrap; text-decoration: none; }
+.actions { padding-left: 24px; line-height: 1.9; }
+.actions li { padding-left: 5px; margin-bottom: 10px; }
+.actions li:first-child { font-weight: 700; }
+.fields { border: 0; padding: 12px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+.fields label { display: grid; gap: 7px; font-size: 14px; }
+.fields select, .fields input { width: 100%; padding: 11px; border: 1px solid #c8cbd7; border-radius: 8px; background: #fff; color: #252b42; font: inherit; box-sizing: border-box; }
+.card button { padding: 9px 15px; border: 1px solid #c8cbd7; border-radius: 8px; background: white; cursor: pointer; font: inherit; }
+.card button:disabled { opacity: .5; cursor: default; }
+.card summary { padding: 12px 0; cursor: pointer; }
+.card .top { margin-top: 12px; }
+.report { padding: 16px; background: #f2f3f7; border-radius: 9px; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; line-height: 1.9; }

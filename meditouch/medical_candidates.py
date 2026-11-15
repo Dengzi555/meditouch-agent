@@ -2,6 +2,7 @@
 import json
 import os
 
+from meditouch.evidence_admission import select_evidence
 from meditouch.model_gateway import ModelGateway
 
 CANDIDATE_PROMPT = '''你只为药店库存查询产生通用药名候选，不向顾客开药。
@@ -17,16 +18,20 @@ medical_topics是用户咨询主题，不等于已确诊；不能从主题臆造
 不确定则recommended_drugs=[]。'''
 
 
-def query_candidates(symptoms, tags, excluded, *, model=None, service=None, medical_topics=None):
+def query_candidates(symptoms, tags, excluded, *, model=None, service=None, medical_topics=None, standalone_query=None):
     medical_topics = medical_topics or []
     if not (symptoms or medical_topics) or len(symptoms) > 12 or len(medical_topics) > 12 or len(tags) > 20 or len(excluded) > 60:
         return {'recommended_drugs': [], 'status': 'invalid_input', 'source': 'none', 'evidence': []}
-    evidence, retrieval_status = [], 'ok'
+    evidence, retrieval_status, admission = [], 'ok', []
     try:
         from meditouch.evidence_service import EvidenceService
-        response = (service or EvidenceService()).search('、'.join(symptoms + medical_topics + tags) + ' 用药 禁忌', k=3, corpus='real')
+        query = ' '.join(filter(None, [standalone_query, '、'.join(symptoms + medical_topics + tags), '用药 禁忌']))
+        response = (service or EvidenceService()).search(query, k=3, corpus='real')
+        items, admission = select_evidence(response.get('items', []), {
+            'user_query': standalone_query or query, 'symptoms': symptoms,
+            'medical_topics': medical_topics, 'customer_tags': tags}, purpose='candidate_search')
         evidence = [{'id': item['id'], 'text': item.get('text', '')[:1800],
-                     'source': item.get('source', {})} for item in response.get('items', []) if not item.get('demo')]
+                     'source': item.get('source', {})} for item in items]
     except Exception:
         retrieval_status = 'unavailable'
     allowed = os.getenv('MED_AGENT_ALLOW_KNOWLEDGE_CANDIDATES', '1') == '1'
@@ -35,7 +40,7 @@ def query_candidates(symptoms, tags, excluded, *, model=None, service=None, medi
         gateway.timeout = min(gateway.timeout, 15)
     response = gateway.complete([
         {'role': 'system', 'content': CANDIDATE_PROMPT},
-        {'role': 'user', 'content': json.dumps({'symptoms': symptoms, 'medical_topics': medical_topics, 'customer_tags': tags,
+        {'role': 'user', 'content': json.dumps({'standalone_query': standalone_query, 'symptoms': symptoms, 'medical_topics': medical_topics, 'customer_tags': tags,
           'excluded_drugs': excluded, 'evidence': evidence, 'allow_knowledge': allowed}, ensure_ascii=False)},
     ])
     if response.get('role') != 'assistant' or response.get('tool_calls'):
@@ -51,7 +56,7 @@ def query_candidates(symptoms, tags, excluded, *, model=None, service=None, medi
     chosen = [item for item in evidence if item['id'] in ids]
     if not names and not ids and source in ('retrieval', 'llm_knowledge', 'none'):
         return {'recommended_drugs': [], 'source': 'none', 'evidence': [],
-                'status': 'not_found', 'retrieval_status': retrieval_status}
+                'status': 'not_found', 'retrieval_status': retrieval_status, 'evidence_admission': admission}
     if source == 'retrieval':
         if not chosen or set(ids) != {item['id'] for item in chosen}:
             raise ValueError('Invalid evidence IDs')
@@ -62,4 +67,5 @@ def query_candidates(symptoms, tags, excluded, *, model=None, service=None, medi
         raise ValueError('Invalid candidate source')
     names = list(dict.fromkeys(name.strip() for name in names if name.strip() not in excluded))
     return {'recommended_drugs': names, 'source': source, 'evidence': chosen if source == 'retrieval' else [],
-            'status': 'ok' if names else 'not_found', 'retrieval_status': retrieval_status}
+            'status': 'ok' if names else 'not_found', 'retrieval_status': retrieval_status,
+            'evidence_admission': admission}

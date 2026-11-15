@@ -16,14 +16,14 @@ def state():
 
 
 class PharmacyUiTests(unittest.TestCase):
-    def test_four_card_types_are_structured_and_not_extracted_from_markdown(self):
+    def test_cards_omit_review_panel_and_preserve_safety(self):
         cards = build_ui_cards(state(), staff_script='演示话术')
         self.assertEqual([card['type'] for card in cards], [
-            'intercept_warning', 'missing_information', 'drug_candidate', 'staff_script'])
+            'intercept_warning', 'drug_candidate', 'staff_script'])
         self.assertEqual(cards[0]['items'][0]['reason'], '标签甲禁用')
-        self.assertEqual(cards[2]['safety_status'], 'unknown')
-        self.assertEqual(cards[2]['warning'], '处方药需药师审核')
-        self.assertFalse(cards[2]['sale_authorized'])
+        self.assertEqual(cards[1]['safety_status'], 'unknown')
+        self.assertEqual(cards[1]['warning'], '处方药需药师审核')
+        self.assertFalse(cards[1]['sale_authorized'])
 
     def test_green_requires_explicit_matching_check_and_stock(self):
         value = state()
@@ -38,11 +38,14 @@ class PharmacyUiTests(unittest.TestCase):
         self.assertEqual(cards[1]['availability'], 'out_of_stock')
         self.assertNotIn('核查通过候选', cards[1]['title'])
 
-    def test_missing_data_warning_reaches_cards_without_markdown(self):
+    def test_missing_data_has_no_review_panel_or_false_safety_clearance(self):
         value = state()
         value['safety_checks'] = [{'inventory_id': 2, 'name': '演示乙', 'status': 'missing_data'}]
-        warning = next(card for card in build_ui_cards(value) if card['type'] == 'missing_information')
-        self.assertIn('系统未收录该药禁忌数据，请务必询问顾客是否有相关病史。', warning['message'])
+        cards = build_ui_cards(value)
+        self.assertFalse(any(c['type'] == 'missing_information' for c in cards))
+        drug = next(c for c in cards if c['type'] == 'drug_candidate')
+        self.assertEqual(drug['safety_status'], 'unknown')
+        self.assertFalse(drug['sale_authorized'])
 
     def test_unsafe_and_excluded_candidates_are_never_recommended(self):
         value = state()
@@ -51,6 +54,18 @@ class PharmacyUiTests(unittest.TestCase):
         value['safety_status'] = 'unknown'
         value['excluded_drugs'].append('演示乙')
         self.assertFalse(any(card['type'] == 'drug_candidate' for card in build_ui_cards(value)))
+
+    def test_unknown_combination_does_not_generate_review_cards(self):
+        value = {**state(), 'combination_status': 'unknown'}
+        self.assertFalse(any(c['type'] == 'missing_information' for c in build_ui_cards(value)))
+
+    def test_fallback_progress_does_not_claim_a_human_received_the_task(self):
+        class Graph:
+            def stream(self, *args, **kwargs):
+                yield {'fallback_node': {**state(), 'inventory_results': []}}
+        events = list(graph_ui_events(Graph(), {}, 'fallback-no-handoff'))
+        self.assertEqual(events[0]['payload']['stage'], 'fallback')
+        self.assertNotIn('已转交', json.dumps(events, ensure_ascii=False))
 
     def test_sse_is_utf8_json_in_complete_frames(self):
         events = list(simulated_events())
@@ -126,4 +141,5 @@ class PharmacyUiTests(unittest.TestCase):
         events = list(graph_ui_events(build_pharmacy_graph(engine, model=Model()), initial, 'real-graph-fixture'))
         self.assertEqual(events[-1]['event'], 'done')
         snapshots = [event['payload']['cards'] for event in events if event['event'] == 'cards.snapshot']
-        self.assertEqual(snapshots[-1][-1]['type'], 'staff_script')
+        self.assertTrue(any(c['type'] == 'drug_candidate' for c in snapshots[-1]))
+        self.assertFalse(any(c['type'] == 'missing_information' for c in snapshots[-1]))

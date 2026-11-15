@@ -8,6 +8,7 @@ type Form = { name: string; brand: string; is_rx: '' | 'true' | 'false'; shelf_l
 const blank = (): Form => ({ name: '', brand: '', is_rx: '', shelf_location: '', stock: '',
   ingredients: '', contraindications: '', dosage_form: '', specification: '' });
 const MAX_BYTES = 5 * 1024 * 1024;
+type Existing = { id: number; name: string; brand: string | null; specification: string | null; shelf_location: string; stock: number };
 
 async function responseData(response: Response) {
   const data = await response.json().catch(() => null);
@@ -15,7 +16,9 @@ async function responseData(response: Response) {
   return data;
 }
 
-export default function InventoryImport({ storeId, visionReady }: { storeId: string; visionReady: boolean }) {
+export default function InventoryImport({ storeId, visionReady, onEditExisting }: {
+  storeId: string; visionReady: boolean; onEditExisting?: (id: number) => void;
+}) {
   const [drafts, setDrafts] = useState<Form[]>([blank()]);
   const [active, setActive] = useState(0);
   const form = drafts[active] ?? blank();
@@ -32,6 +35,11 @@ export default function InventoryImport({ storeId, visionReady }: { storeId: str
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [prefilled, setPrefilled] = useState(false);
+  const [matches, setMatches] = useState<Existing[]>([]);
+  const [matchError, setMatchError] = useState('');
+  const [checking, setChecking] = useState(false);
+  const [duplicateConsent, setDuplicateConsent] = useState(false);
+  const importOperation = useRef({ signature: '', id: '' });
   const picker = useRef<HTMLInputElement>(null);
   const camera = useRef<HTMLInputElement>(null);
   const ocrAbort = useRef<AbortController | null>(null);
@@ -45,6 +53,21 @@ export default function InventoryImport({ storeId, visionReady }: { storeId: str
     const url = URL.createObjectURL(file); setPreview(url);
     return () => URL.revokeObjectURL(url);
   }, [file]);
+
+  useEffect(() => {
+    const abort = new AbortController();
+    setMatches([]); setDuplicateConsent(false); setMatchError('');
+    if (!storeId || !form.name.trim()) { setChecking(false); return; }
+    setChecking(true);
+    const timer = window.setTimeout(() => {
+      const params = new URLSearchParams({ store_id: storeId, name: form.name.trim(), brand: form.brand.trim() });
+      fetch(`/api/pharmacy/import_matches?${params}`, { signal: abort.signal }).then(responseData)
+        .then(result => { if (!abort.signal.aborted) setMatches(result.items); })
+        .catch(cause => { if (!abort.signal.aborted) setMatchError(cause.message); })
+        .finally(() => { if (!abort.signal.aborted) setChecking(false); });
+    }, 300);
+    return () => { window.clearTimeout(timer); abort.abort(); };
+  }, [storeId, form.name, form.brand, active]);
 
   function update(key: keyof Form, value: string) {
     setForm(current => ({ ...current, [key]: value })); setError(''); setSuccess('');
@@ -98,7 +121,8 @@ export default function InventoryImport({ storeId, visionReady }: { storeId: str
   }
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (saving || recognizing || !storeId) return;
+    if (saving || recognizing || checking || !storeId) return;
+    if (matches.length && !duplicateConsent) { setError('仓库已有该药品，请先选择编辑已有商品或勾选仍要新建。'); return; }
     const stock = Number(form.stock);
     if (!form.stock.trim() || !Number.isSafeInteger(stock) || stock < 0 || !['true', 'false'].includes(form.is_rx)) {
       setError('请手动填写非负整数库存，并确认处方属性'); return;
@@ -106,15 +130,30 @@ export default function InventoryImport({ storeId, visionReady }: { storeId: str
     setSaving(true); setError(''); setSuccess('');
     try {
       const optional = (value: string) => value.trim() || null;
-      const data = await responseData(await fetch('/api/pharmacy/confirm_import', {
+      const payload = { store_id: storeId, name: form.name.trim(), brand: optional(form.brand),
+        shelf_location: form.shelf_location.trim(), stock, is_rx: form.is_rx === 'true',
+        ingredients: optional(form.ingredients), contraindications: optional(form.contraindications),
+        dosage_form: optional(form.dosage_form), specification: optional(form.specification),
+        acknowledged_inventory_ids: duplicateConsent ? matches.map(item => item.id) : [] };
+      const signature = JSON.stringify(payload);
+      if (importOperation.current.signature !== signature) importOperation.current = { signature, id: crypto.randomUUID() };
+      const response = await fetch('/api/pharmacy/confirm_import', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ store_id: storeId, name: form.name.trim(), brand: optional(form.brand),
-          shelf_location: form.shelf_location.trim(), stock, is_rx: form.is_rx === 'true',
-          ingredients: optional(form.ingredients), contraindications: optional(form.contraindications),
-          dosage_form: optional(form.dosage_form), specification: optional(form.specification) }),
-      }));
+        body: JSON.stringify({ ...payload, request_id: importOperation.current.id }),
+      });
+      if (response.status === 409) {
+        const conflict = await response.json();
+        if (conflict.detail?.code === 'DUPLICATE_INVENTORY') {
+          setMatches(conflict.detail.items); setDuplicateConsent(false);
+          throw new Error(conflict.detail.message);
+        }
+        throw new Error(typeof conflict.detail === 'string' ? conflict.detail : '记录已变化，请重新检查');
+      }
+      const data = await responseData(response);
       if (!mounted.current) return;
       if (data?.status !== 'imported') throw new Error('尚未确认入库成功，请核对记录');
+      importOperation.current = { signature: '', id: '' };
+      setMatches([]); setDuplicateConsent(false);
       const remaining = drafts.filter((_, index) => index !== active);
       setDrafts(remaining.length ? remaining : [blank()]); setActive(Math.min(active, Math.max(0, remaining.length - 1)));
       setOcrError('');
@@ -133,8 +172,7 @@ export default function InventoryImport({ storeId, visionReady }: { storeId: str
   const readonly = recognizing || saving;
   return <section className={styles.layout} aria-label="拍照入库">
     <div className={styles.uploadPanel}>
-      <span className={styles.step}>01 / 药盒图片</span>
-      <h2>拖入照片，或直接拍摄</h2>
+      <h2>药盒图片</h2>
       <div className={styles.dropzone} onDragOver={event => event.preventDefault()} onDrop={drop}
         role="button" tabIndex={0} aria-label="拖拽或选择药盒图片" aria-disabled={saving}
         onClick={() => { if (!saving) picker.current?.click(); }}
@@ -177,7 +215,19 @@ export default function InventoryImport({ storeId, visionReady }: { storeId: str
       </div>
     </div>
     <form className={styles.formPanel} onSubmit={submit}>
-      <span className={styles.step}>02 / 人工确认 · 第 {active + 1} / {drafts.length} 条</span><h2>核对后再入库</h2>
+      <h2>药品信息{drafts.length > 1 ? `（${active + 1}/${drafts.length}）` : ''}</h2>
+      {checking && <p role="status">正在检查仓库已有商品…</p>}
+      {matchError && <p role="alert" className={styles.error}>{matchError}；提交时仍会检查重复记录。</p>}
+      {matches.length > 0 && <aside className={styles.duplicate} aria-label="仓库已有商品">
+        <strong>仓库已有同药名、同品牌商品</strong>
+        <p>可以编辑已有记录；仍要单独建档时，请明确确认。补货请在库存管理中登记出入库。</p>
+        {matches.map(item => <div key={item.id}>
+          <span>{item.name} · {item.brand || '品牌未录入'} · {item.specification || '规格未录入'} · {item.shelf_location} · 库存 {item.stock}</span>
+          {onEditExisting && <button type="button" disabled={saving} onClick={() => onEditExisting(item.id)}>编辑已有商品 #{item.id}</button>}
+        </div>)}
+        <label><input type="checkbox" checked={duplicateConsent} disabled={saving}
+          onChange={event => setDuplicateConsent(event.target.checked)} /> 我已知仓库有该药品，仍要新建一条记录</label>
+      </aside>}
       <div className={styles.fields}>
         <label>药名 *<input value={form.name} onChange={e => update('name', e.target.value)} required maxLength={200} disabled={readonly} placeholder="通用名 / 商品名" /></label>
         <label>品牌<input value={form.brand} onChange={e => update('brand', e.target.value)} maxLength={100} disabled={readonly} placeholder="选填" /></label>
@@ -194,7 +244,7 @@ export default function InventoryImport({ storeId, visionReady }: { storeId: str
       <p className={styles.caption}>识别成功不会写库。只有点击下方按钮，才提交右侧最终表单并写入当前门店库存。</p>
       {error && <p role="alert" className={styles.error}>{error}</p>}
       {success && <p role="status" className={styles.success}>{success}</p>}
-      <button className={styles.confirm} type="submit" disabled={readonly || !storeId}>{saving ? '正在入库…' : '确认入库'}</button>
+      <button className={styles.confirm} type="submit" disabled={readonly || checking || !storeId || (matches.length > 0 && !duplicateConsent)}>{saving ? '正在入库…' : '确认入库'}</button>
     </form>
   </section>;
 }

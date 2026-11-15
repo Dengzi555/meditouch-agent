@@ -24,6 +24,11 @@
 .error { color: #9b3731; background: #fff3f1; padding: 12px; font-size: 12px; line-height: 1.8; border-radius: 6px; }
 .success, .prefilled { color: #356b41; background: #eff7ed; padding: 12px; font-size: 12px; line-height: 1.8; border-radius: 6px; }
 .progress { font-size: 13px; color: #5b7757; }
+.duplicate { margin: 16px 0; padding: 14px; border: 1px solid #e7ce8c; border-radius: 10px; background: #fffaf0; color: #75581e; font-size: 13px; line-height: 1.8; }
+.duplicate p { margin: 6px 0; }
+.duplicate > div { display: flex; flex-wrap: wrap; gap: 8px 12px; padding: 8px 0; border-bottom: 1px solid #eee0c0; }
+.duplicate button { background: white; border: 1px solid #d5bd83; border-radius: 6px; padding: 5px 8px; color: inherit; cursor: pointer; }
+.duplicate > label { display: block; margin-top: 12px; }
 .draftList { display: grid; gap: 8px; margin-top: 18px; max-height: 360px; overflow: auto; }
 .draftList button { text-align: left; border: 1px solid #d9dce9; border-radius: 10px; background: #fafaff; padding: 12px; color: #34385a; cursor: pointer; }
 .draftList button[aria-pressed="true"] { background: #eeecff; border-color: #8981d6; }

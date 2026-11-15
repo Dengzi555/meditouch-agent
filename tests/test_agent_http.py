@@ -89,7 +89,7 @@ class AgentHttpTests(unittest.TestCase):
             inventory_engine_for_store('store-A').dispose()
         self.assertEqual(result['status'], 'inventory_candidates')
         self.assertEqual(result['safety_status'], 'unknown')
-        self.assertIn('请人工核对病史', result['answer'])
+        self.assertNotIn('请人工核对病史', result['answer'])
         self.assertEqual([event['node'] for event in result['trace']],
                          ['query_understanding', 'inventory_node', 'safety_node', 'generator_node'])
 

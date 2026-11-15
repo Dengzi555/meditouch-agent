@@ -60,8 +60,7 @@ function CardView({ item, overall }: { item: Card; overall: Safety }) {
   if (item.type === "intercept_warning") return <section className={`${styles.card} ${styles.red}`} role="alert">
     <h2>{item.title}</h2><ul>{item.items.map((drug, i) => <li key={`${drug.name}-${i}`}>
       <strong>{drug.name}</strong><span>{drug.reason}</span></li>)}</ul></section>;
-  if (item.type === "missing_information") return <section className={`${styles.card} ${styles.yellow}`}>
-    <h2>{item.title}</h2><strong>{item.message}</strong><p>{item.reason}</p></section>;
+  if (item.type === "missing_information") return null; // Retired legacy card.
   if (item.type === "staff_script") return <section className={`${styles.card} ${styles.gray}`}>
     <h2>{item.title}</h2><blockquote>{item.text}</blockquote></section>;
   if (item.type === "notice") return <section className={`${styles.card} ${styles.gray}`}>
@@ -70,14 +69,14 @@ function CardView({ item, overall }: { item: Card; overall: Safety }) {
   if (overall === "unsafe" || item.safety_status === "unsafe") return null;
   const available = item.drug.stock > 0 && item.availability === "in_stock";
   const green = overall === "safe" && item.safety_status === "safe" && available;
-  return <section className={`${styles.card} ${green ? styles.green : available ? styles.yellow : styles.gray}`}>
+  return <section className={`${styles.card} ${green ? styles.green : styles.gray}`}>
     <div className={styles.cardTop}><h2>{item.drug.name}</h2>
-      <span>{!available ? "缺货" : green ? "核查通过候选" : "待核对候选"}</span></div>
+      <span>{!available ? "缺货" : green ? "核查通过候选" : "本店有货"}</span></div>
     <dl><div><dt>货架</dt><dd>{item.drug.shelf_location}</dd></div>
       <div><dt>库存</dt><dd>{item.drug.stock}</dd></div>
       <div><dt>规格</dt><dd>{item.drug.specification ?? "未录入"}</dd></div></dl>
     {item.drug.is_rx && <p className={styles.rx}>处方药需药师审核</p>}
-    <small>仍需药师确认 · 不自动放行售药</small></section>;
+</section>;
 }
 
 export default function CopilotCards({ endpoint = "http://127.0.0.1:8766/events" }: { endpoint?: string }) {
