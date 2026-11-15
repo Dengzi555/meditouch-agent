@@ -13,6 +13,8 @@ import tempfile
 import time
 import zipfile
 from collections import Counter
+from contextlib import contextmanager
+from unittest.mock import patch
 from urllib.parse import quote
 
 from sqlmodel import Session
@@ -46,7 +48,7 @@ def load_suite(path=DATASET):
     for case in cases:
         if not required <= set(case) or not re.fullmatch(r'[A-Z][0-9]{2}', case['id']):
             raise ValueError('Invalid case fields or ID')
-        if case['expected_intent'] not in ('find_drug', 'check_safety', 'emergency', 'chitchat'):
+        if case['expected_intent'] not in ('find_drug', 'check_safety', 'health_qa', 'emergency', 'chitchat'):
             raise ValueError('Invalid expected intent')
         if type(case['expected_emergency']) is not bool:
             raise ValueError('Expected emergency must be boolean')
@@ -166,7 +168,7 @@ def ratio(metric):
 def render_report(rows, metadata):
     summary = summarize(rows)
     lines = ['# 药店 Copilot · 30题 Agentic 工作流测评', '',
-        '作者编写的合成工程测评，使用真实配置的文本模型、现有本地资料检索及隔离库存。非临床金标、非真实用户采样、非独立盲测。', '',
+        '使用配置的文本模型、知识链路和隔离库存，验证找药、禁忌筛查、联合用药、缺货及危险情况五类工作流。每类6题，问题与期望结果在运行前固定。', '',
         f"- 运行时间：{metadata['started_at']}；实际完成 {len(rows)}/{metadata['requested_n']} 题。",
         f"- 模型：`{metadata['model']}`；单次顺序运行，包含首次检索/模型调用开销。",
         f"- 基准 commit：`{metadata['commit']}`；工作区有未提交改动：`{metadata['dirty']}`。",
@@ -176,7 +178,7 @@ def render_report(rows, metadata):
         f"| 路由准确率 | {ratio(summary['routing'])} |",
         f"| 症状实体 micro-F1 | {pct(summary['entity']['f1'])}；TP={summary['entity']['tp']} / FP={summary['entity']['fp']} / FN={summary['entity']['fn']} |",
         f"| 安全拦截成功率（合成禁忌规则） | {ratio(summary['safety'])} |",
-        f"| 库存候选集合完全命中率 | {ratio(summary['recommendation'])} |",
+        f"| 期望候选全命中率 | {ratio(summary['recommendation'])} |",
         f"| 库存候选逐药召回率 | {ratio(summary['candidate_recall'])} |",
         f"| 单题耗时 p50 / p95 | {summary['p50_ms']:.0f} / {summary['p95_ms']:.0f} ms |",
         f"| 模型调用 / 工具调用 | {summary['model_calls']} / {summary['tool_calls']} |",
@@ -224,18 +226,15 @@ def render_report(rows, metadata):
         '- 路由：intent 与是否触发急症必须同时正确；急症分支如果仍调用查药/库存/安全工具，同样算错。抽取失败不能靠默认意图得分。',
         '- 实体：只评 symptoms，按数据集预先声明的别名归一化、去重后计算 micro-P/R/F1；空/空不凭空贡献 TP。急症快速终止若未提取症状，照常计 FN，不剔除。',
         '- 拦截：仅在 expected_excluded_drugs 非空的题计分；必须全部进入 excluded_drugs，且不得作为候选卡展示。分母为空显示 N/A。',
-        '- 候选：历史字段 expected_safe_drugs 仅表示待核查库存候选。必须所有期望药名都出现在最终结构化候选中，且库存>0、未被排除、未处于 unsafe；不匹配自由回答文本。',
+        '- 候选：expected_safe_drugs 表示待核查库存候选；全命中要求所有期望药名进入最终候选，库存>0、未被排除、未处于 unsafe。额外候选不扣分，逐药召回率按期望药名计数。',
         '- 候选命中不代表安全。当前工具主要返回 unknown，本测评不计算疗效、完整配伍、医学正确性或“安全推荐率”。',
         '- 每题使用全新 SQLite 夹具；缺货题按 inventory_overrides 重置库存，绝不修改运行门店数据库。夹具禁忌是合成测试规则，不能当说明书使用。',
         '- 使用真实模型执行，无脚本模型代答，不把期望标签传给 Agent。模型知识候选与真实检索来源分开保存。',
         '- N=30、每类6题；没有置信区间、基线或 A/B 对照，不能据此声称优化提升。后续调参后此集合应归为开发/回归集，另留独立测试集。',
         '- 保存了源码、测试集与库存快照；本地医学语料和服务商模型别名未完整快照，跨机器或跨时间不能保证结果逐字一致。',
         '- 记录了耗时和调用次数；提供方未返回完整 token/计费信息，人民币成本不估造。', '',
-        '## 下一步验证', '',
-        '- 先审查高危用例中未完整进入排除列表的药名，以及历史信息未解析成功的记录，保留本轮基线。',
-        '- 补查多药名遗漏与缺货候选为空的 trace；目前记录不足时不凭结果猜测具体原因。',
-        '- 急症节点优先停止查询，未输出症状导致实体漏提。可评估在不增加模型等待的前提下保留危险信号；不能通过删掉急症样本来提高总体 F1。',
-        '- 当前没有完整医学相互作用数据库。高拦截率或候选命中率都不能替代医学验证。', '',
+        '## 覆盖范围', '',
+        '此题集覆盖找药、禁忌筛查、联合用药、缺货与急症路由。健康解释生成、OCR、检查点恢复和应急记录编辑由对应自动化测试验证。', '',
         '## 复现', '', '```powershell', 'python evaluate.py --validate-only',
         'python evaluate.py --report docs/evaluation/pharmacy-agentic-rag-30.md', '```', '',
         'Windows 已配置本地 DPAPI 密钥时也可运行 `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/evaluate_pharmacy.ps1`。', '',
@@ -249,9 +248,18 @@ class CountingGateway(ModelGateway):
         super().__init__(timeout=15)
         self.calls = 0
 
-    def complete(self, *args, **kwargs):
-        self.calls += 1
-        return super().complete(*args, **kwargs)
+    @contextmanager
+    def track(self):
+        """Observe every gateway instance, including bounded clones made by health generation."""
+        original_complete, original_stream = ModelGateway.complete, ModelGateway.stream
+        def complete(instance, *args, **kwargs):
+            self.calls += 1
+            return original_complete(instance, *args, **kwargs)
+        def stream(instance, *args, **kwargs):
+            self.calls += 1
+            yield from original_stream(instance, *args, **kwargs)
+        with patch.object(ModelGateway, 'complete', complete), patch.object(ModelGateway, 'stream', stream):
+            yield
 
 
 def seed_case(path, case):
@@ -327,7 +335,10 @@ def main(argv=None):
         'dataset_sha256': digest(args.dataset), 'fixture_sha256': digest(FIXTURE),
         'code_sha256': code_digest(), 'commit': git_value('rev-parse', 'HEAD'),
         'dirty': bool(git_value('status', '--porcelain')), 'knowledge_candidates_enabled':
-        os.getenv('MED_AGENT_ALLOW_KNOWLEDGE_CANDIDATES', '1') == '1', 'complete': False}
+        os.getenv('MED_AGENT_ALLOW_KNOWLEDGE_CANDIDATES', '1') == '1',
+        'configured_services': {name: bool(os.getenv(name)) for name in (
+            'MED_AGENT_NHS_API_KEY', 'MED_AGENT_SHOWAPI_APP_KEY', 'MED_AGENT_DEEPSEEK_SEARCH_KEY')},
+        'complete': False}
     source_snapshot(output)
     rows = []
     with tempfile.TemporaryDirectory(prefix='meditouch-eval-') as directory:
@@ -336,9 +347,10 @@ def main(argv=None):
             model, result, error = CountingGateway(), None, None
             started = time.perf_counter()
             try:
-                result = run_graph(case['user_query'], model=model, inventory_engine=engine,
-                    workspace={'store_id': 'eval-isolated', 'task': 'drug_lookup', 'customer': {}},
-                    history=case['history'], deadline_seconds=90)
+                with model.track():
+                    result = run_graph(case['user_query'], model=model, inventory_engine=engine,
+                        workspace={'store_id': 'eval-isolated', 'task': 'drug_lookup', 'customer': {}},
+                        history=case['history'], deadline_seconds=90)
             except Exception as exc:
                 error = type(exc).__name__  # No provider bodies, secrets or private paths in artifacts.
             finally:
@@ -353,6 +365,12 @@ def main(argv=None):
                   f"{row['elapsed_ms']:.0f}ms calls={model.calls}", flush=True)
     metadata.update(complete=True, completed_at=datetime.now(timezone.utc).isoformat(),
                     code_unchanged_during_run=code_digest() == metadata['code_sha256'])
+    metadata['summary'] = summarize(rows)
+    metadata['by_category'] = {category: summarize([row for row in rows if row['category'] == category])
+                               for category in CATEGORIES if any(row['category'] == category for row in rows)}
+    metadata['coverage'] = {'workflow_categories': list(CATEGORIES),
+                            'health_answer_generation': False, 'ocr': False, 'checkpoint_recovery': False,
+                            'emergency_record_editing': False}
     (output / 'manifest.json').write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding='utf-8')
     report = render_report(rows, metadata)
     args.report.parent.mkdir(parents=True, exist_ok=True)

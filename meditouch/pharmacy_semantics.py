@@ -135,6 +135,9 @@ def understand_intake(question, customer, *, history=None, model=None):
             intake.needs_health_answer = True
         if intake.intent == 'find_drug':
             intake.needs_inventory = True
+        if intake.intent == 'check_safety' and intake.target_drugs:
+            # A named-drug safety task always checks store records, regardless of optional model flags.
+            intake.needs_inventory = True
         if risk_matches('', {'symptoms': '、'.join(intake.symptoms)}):
             intake.intent = 'emergency'
         if intake.context_resolution == 'ambiguous' and intake.intent != 'emergency':

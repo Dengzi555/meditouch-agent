@@ -95,7 +95,8 @@ def build_pharmacy_graph(engine, *, tool_factory=build_inventory_tools, on_progr
 
     def after_health(state):
         # A health explanation is useful even when personal medication suitability is unknown.
-        return ('fallback_node' if engine is None else 'inventory_node') if state.get('needs_inventory') else END
+        needs_inventory = state.get('needs_inventory') or state.get('intent') == 'check_safety' and bool(state.get('target_drugs'))
+        return ('fallback_node' if engine is None else 'inventory_node') if needs_inventory else END
 
     def inventory_node(state):
         if on_progress:

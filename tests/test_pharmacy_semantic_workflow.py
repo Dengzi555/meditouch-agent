@@ -37,6 +37,28 @@ class Rag:
 
 
 class SemanticWorkflowTests(unittest.TestCase):
+    def test_named_safety_request_cannot_skip_store_checks_after_health_explanation(self):
+        self.seed('演示甲', contraindications='标签甲禁用')
+        model = Model({'intent': 'check_safety', 'target_drugs': ['演示甲'], 'customer_tags': ['标签甲'],
+                       'needs_health_answer': True, 'needs_inventory': False})
+        state = prepare_inventory_state('请核查演示甲能不能用', self.workspace, model=model)
+        self.assertTrue(state['needs_inventory'])
+        # Defense in depth even if a direct graph caller supplies inconsistent flags.
+        state['needs_inventory'] = False
+        result = build_pharmacy_graph(self.engine, model=model,
+            health_evidence_loader=lambda *a, **k: ([], [])).invoke(state)
+        nodes = [item['node'] for item in result['trace']]
+        self.assertIn('health_node', nodes)
+        self.assertIn('inventory_node', nodes)
+        self.assertIn('safety_node', nodes)
+        self.assertIn('演示甲', result['excluded_drugs'])
+
+    def test_drug_education_keeps_inventory_optional(self):
+        model = Model({'intent': 'health_qa', 'target_drugs': ['演示甲'],
+                       'needs_health_answer': True, 'needs_inventory': False})
+        state = prepare_inventory_state('演示甲有什么作用', self.workspace, model=model)
+        self.assertFalse(state['needs_inventory'])
+
     def setUp(self):
         self.engine = create_inventory_engine('sqlite://')
         create_inventory_tables(self.engine)

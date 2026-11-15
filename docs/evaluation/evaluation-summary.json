@@ -1,0 +1,141 @@
+{
+  "retrieval_100": {
+    "completed_utc": "2026-11-15T11:44:18.695947+00:00",
+    "summary": [
+      {
+        "arm": "lexical",
+        "questions": 100,
+        "timed_requests": 300,
+        "hit_at_1": 15,
+        "hit_at_3": 36,
+        "hit_at_5": 52,
+        "hit5_wilson95": [
+          0.4232,
+          0.6154
+        ],
+        "mrr5": 0.2755,
+        "p50_ms": 7.83,
+        "p95_ms": 10.92
+      },
+      {
+        "arm": "hybrid",
+        "questions": 100,
+        "timed_requests": 300,
+        "hit_at_1": 23,
+        "hit_at_3": 47,
+        "hit_at_5": 69,
+        "hit5_wilson95": [
+          0.5937,
+          0.7722
+        ],
+        "mrr5": 0.3822,
+        "p50_ms": 11.75,
+        "p95_ms": 15.26
+      },
+      {
+        "arm": "rerank",
+        "questions": 100,
+        "timed_requests": 300,
+        "hit_at_1": 56,
+        "hit_at_3": 68,
+        "hit_at_5": 69,
+        "hit5_wilson95": [
+          0.5937,
+          0.7722
+        ],
+        "mrr5": 0.622,
+        "p50_ms": 334.29,
+        "p95_ms": 1282.16
+      }
+    ]
+  },
+  "retrieval_200": {
+    "completed_utc": "2026-11-15T11:46:02.303666+00:00",
+    "summary": [
+      {
+        "arm": "lexical",
+        "questions": 200,
+        "timed_requests": 600,
+        "hit_at_1": 104,
+        "hit_at_3": 126,
+        "hit_at_5": 141,
+        "hit5_wilson95": [
+          0.6384,
+          0.7639
+        ],
+        "mrr5": 0.5876,
+        "p50_ms": 1.62,
+        "p95_ms": 2.62
+      },
+      {
+        "arm": "hybrid",
+        "questions": 200,
+        "timed_requests": 600,
+        "hit_at_1": 115,
+        "hit_at_3": 134,
+        "hit_at_5": 155,
+        "hit5_wilson95": [
+          0.7123,
+          0.8274
+        ],
+        "mrr5": 0.6397,
+        "p50_ms": 5.08,
+        "p95_ms": 7.19
+      },
+      {
+        "arm": "rerank",
+        "questions": 200,
+        "timed_requests": 600,
+        "hit_at_1": 131,
+        "hit_at_3": 152,
+        "hit_at_5": 155,
+        "hit5_wilson95": [
+          0.7123,
+          0.8274
+        ],
+        "mrr5": 0.7041,
+        "p50_ms": 99.11,
+        "p95_ms": 131.69
+      }
+    ]
+  },
+  "pharmacy_30": {
+    "completed_utc": "2026-11-15T11:55:56.922684+00:00",
+    "summary": {
+      "n": 30,
+      "routing": {
+        "numerator": 29,
+        "denominator": 30,
+        "value": 0.9666666666666667
+      },
+      "entity": {
+        "tp": 23,
+        "fp": 0,
+        "fn": 9,
+        "precision": 1.0,
+        "recall": 0.71875,
+        "f1": 0.8363636363636363
+      },
+      "safety": {
+        "numerator": 4,
+        "denominator": 6,
+        "value": 0.6666666666666666
+      },
+      "recommendation": {
+        "numerator": 16,
+        "denominator": 18,
+        "value": 0.8888888888888888
+      },
+      "candidate_recall": {
+        "numerator": 22,
+        "denominator": 24,
+        "value": 0.9166666666666666
+      },
+      "p50_ms": 3386.4449999999997,
+      "p95_ms": 11418.568499999998,
+      "model_calls": 87,
+      "tool_calls": 113,
+      "runtime_errors": 0
+    }
+  }
+}

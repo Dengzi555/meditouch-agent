@@ -1,108 +1,116 @@
-"""Retrieval regression on 200 synthetic questions with paragraph-level gold labels."""
+"""Serial, warmed retrieval regression with frozen synthetic corpus and paragraph gold."""
 import argparse
+import csv
+import importlib.metadata
 import json
-import statistics
+import platform
+import random
+import subprocess
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
+from scripts.eval_retrieval_ab import digest, rank, report_table, summarize
+
 ROOT = Path(__file__).resolve().parent.parent
-CORPUS = ROOT / 'eval_corpus' / 'symptom_retrieval_200' / 'documents.json'
-SUITE = ROOT / 'eval_data' / 'retrieval_suite_200.json'
-
-
-def p95(values):
-    if len(values) < 2:
-        return values[0] if values else 0.0
-    ordered = sorted(values)
-    return ordered[min(len(ordered) - 1, max(0, round(0.95 * (len(ordered) - 1))))]
+CORPUS = ROOT / 'eval_corpus/symptom_retrieval_200/documents.json'
+SUITE = ROOT / 'eval_data/retrieval_suite_200.json'
 
 
 def load_chunks():
     corpus = json.loads(CORPUS.read_text(encoding='utf-8'))
-    chunks = []
-    for document in corpus['documents']:
-        for paragraph in document['paragraphs']:
-            chunks.append(dict(id=paragraph['id'], text=paragraph['text'],
-                               symptom=document['symptom'], document_id=document['id']))
-    return chunks
+    return [dict(id=paragraph['id'], text=paragraph['text'], symptom=document['symptom'], document_id=document['id'])
+            for document in corpus['documents'] for paragraph in document['paragraphs']]
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--skip-rerank', action='store_true')
-    parser.add_argument('--out', type=Path, default=ROOT / 'eval_results' / 'retrieval_symptom_200.csv')
+    parser.add_argument('--repeats', type=int, default=3)
+    parser.add_argument('--seed', type=int, default=20261115)
+    parser.add_argument('--out', type=Path, default=ROOT / 'eval_results/retrieval_symptom_200.csv')
     args = parser.parse_args()
-    from meditouch.hybrid_retrieval import hybrid_search
+    if args.repeats < 1:
+        parser.error('--repeats must be positive')
+    from meditouch.hybrid_retrieval import hybrid_search, MODEL_NAME as EMBEDDING
     from meditouch.rag_pipeline import search
-    from meditouch.reranking import rerank
+    from meditouch.reranking import rerank, MODEL_NAME as RERANKER
 
     chunks = load_chunks()
     questions = json.loads(SUITE.read_text(encoding='utf-8'))['questions']
-    hybrid_search(questions[0]['question'], chunks, 5)
-
-    def rank(hits, gold):
-        for position, item in enumerate(hits, 1):
-            if item['id'] in gold:
-                return position
-        return None
-
-    rows = []
-    for case in questions:
-        started = time.perf_counter()
-        lexical = search(case['question'], chunks, 5)
-        lexical_ms = (time.perf_counter() - started) * 1000
-        started = time.perf_counter()
-        hybrid, mode = hybrid_search(case['question'], chunks, 5)
-        hybrid_ms = (time.perf_counter() - started) * 1000
-        reranked = []
-        rerank_ms = 0.0
-        if not args.skip_rerank:
-            started = time.perf_counter()
-            reranked = rerank(case['question'], hybrid)
-            rerank_ms = (time.perf_counter() - started) * 1000
-        gold = set(case['gold'])
-        rows.append(dict(id=case['id'], symptom=case['symptom'], variant=case['variant'],
-                         split=case['split'], mode=mode,
-                         lexical=rank(lexical, gold), hybrid=rank(hybrid, gold),
-                         rerank=rank(reranked, gold) if reranked else None,
-                         lexical_ms=round(lexical_ms, 1), hybrid_ms=round(hybrid_ms, 1),
-                         rerank_ms=round(rerank_ms, 1)))
-
-    def summarize(subset):
-        output = []
-        for arm in ('lexical', 'hybrid', 'rerank'):
-            if arm == 'rerank' and args.skip_rerank:
-                continue
-            ranks = [row[arm] for row in subset]
-            hits = [sum(value is not None and value <= k for value in ranks) for k in (1, 3, 5)]
-            mrr = sum(1 / value for value in ranks if value) / len(ranks)
-            latencies = [row['lexical_ms'] if arm == 'lexical'
-                         else row['hybrid_ms'] + (row['rerank_ms'] if arm == 'rerank' else 0)
-                         for row in subset]
-            output.append(dict(arm=arm, n=len(subset), hit1=hits[0], hit3=hits[1], hit5=hits[2],
-                               mrr=round(mrr, 3), p50=round(statistics.median(latencies), 1),
-                               p95=round(p95(latencies), 1)))
-        return output
-
-    def emit(title, subset):
-        print(f'--- {title}（N={len(subset)}）')
-        print('| arm | Hit@1 | Hit@3 | Hit@5 | MRR@5 | p50 ms | p95 ms |')
-        print('| --- | --- | --- | --- | --- | --- | --- |')
-        for record in summarize(subset):
-            print(f"| {record['arm']} | {record['hit1']} | {record['hit3']} | {record['hit5']} | "
-                  f"{record['mrr']} | {record['p50']} | {record['p95']} |")
-
-    for split in ('development', 'regression', 'all'):
-        emit(split, [row for row in rows if split in (row['split'], 'all')])
-    for variant in ('standard', 'colloquial', 'long_tail'):
-        emit(variant, [row for row in rows if row['variant'] == variant])
-
+    if len(questions) != 200 or len({case['id'] for case in questions}) != 200:
+        raise ValueError('Expected 200 unique questions')
+    if any(not set(case['gold']) <= {item['id'] for item in chunks} for case in questions):
+        raise ValueError('Invalid paragraph gold')
     args.out.parent.mkdir(parents=True, exist_ok=True)
+    code_paths = ['scripts/eval_retrieval_symptom_200.py', 'scripts/eval_retrieval_ab.py',
+                  'meditouch/hybrid_retrieval.py', 'meditouch/rag_pipeline.py', 'meditouch/reranking.py']
+    manifest = {
+        'started_utc': datetime.now(timezone.utc).isoformat(), 'questions': len(questions), 'chunks': len(chunks),
+        'suite_sha256': digest(SUITE.read_bytes()), 'corpus_sha256': digest(CORPUS.read_bytes()),
+        'git_head': subprocess.check_output(['rtk', 'proxy', 'git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
+        'runtime_code_sha256': {name: digest((ROOT / name).read_bytes()) for name in code_paths},
+        'python': platform.python_version(), 'platform': platform.platform(),
+        'versions': {name: importlib.metadata.version(name) for name in ('fastembed', 'numpy', 'onnxruntime')},
+        'embedding': EMBEDDING, 'reranker': RERANKER, 'repeats': args.repeats, 'seed': args.seed, 'k': 5,
+        'scope': '10类症状，120段合成工程夹具，200题段落级检索回归。',
+        'query_preprocessing': 'raw question shared by all arms',
+        'rerank_pool': 'same hybrid top-5; no extra recall',
+        'timing': 'warmed models/corpus, serial requests, shuffled each round; rerank_ms includes hybrid_ms',
+        'complete': False,
+    }
+    manifest_path = args.out.with_suffix('.manifest.json')
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
+    warmed, mode = hybrid_search(questions[0]['question'], chunks, 5)
+    if mode != 'hybrid':
+        raise RuntimeError(f'Expected actual hybrid retrieval, got {mode}')
+    rerank(questions[0]['question'], warmed)
+    rows = []
     with args.out.open('w', encoding='utf-8-sig', newline='') as stream:
-        writer = __import__('csv').DictWriter(stream, fieldnames=list(rows[0]))
-        writer.writeheader()
-        writer.writerows(rows)
-    print(args.out)
+        writer = None
+        for repeat in range(1, args.repeats + 1):
+            order = list(questions)
+            random.Random(args.seed + repeat).shuffle(order)
+            for index, case in enumerate(order, 1):
+                started = time.perf_counter()
+                lexical = search(case['question'], chunks, 5)
+                lexical_ms = (time.perf_counter() - started) * 1000
+                started = time.perf_counter()
+                hybrid, mode = hybrid_search(case['question'], chunks, 5)
+                hybrid_ms = (time.perf_counter() - started) * 1000
+                if mode != 'hybrid':
+                    raise RuntimeError(f"Unexpected retrieval mode for {case['id']}: {mode}")
+                started = time.perf_counter()
+                reranked = rerank(case['question'], hybrid)
+                elapsed = (time.perf_counter() - started) * 1000
+                row = dict(id=case['id'], repeat=repeat, symptom=case['symptom'], variant=case['variant'],
+                           split=case['split'], mode=mode,
+                           lexical=rank(lexical, case['gold']), hybrid=rank(hybrid, case['gold']),
+                           rerank=rank(reranked, case['gold']), lexical_ms=round(lexical_ms, 3),
+                           hybrid_ms=round(hybrid_ms, 3), rerank_ms=round(hybrid_ms + elapsed, 3))
+                if writer is None:
+                    writer = csv.DictWriter(stream, fieldnames=list(row))
+                    writer.writeheader()
+                writer.writerow(row); stream.flush(); rows.append(row)
+                if index % 50 == 0:
+                    print(f'round {repeat}/{args.repeats}: {index}/200', flush=True)
+    manifest.update(complete=True, completed_utc=datetime.now(timezone.utc).isoformat(), summary=summarize(rows))
+    manifest['by_variant'] = {variant: summarize([row for row in rows if row['variant'] == variant])
+                               for variant in ('standard', 'colloquial', 'long_tail')}
+    manifest['by_split'] = {split: summarize([row for row in rows if row['split'] == split])
+                             for split in ('development', 'regression')}
+    manifest['by_symptom'] = {symptom: summarize([row for row in rows if row['symptom'] == symptom])
+                               for symptom in sorted({row['symptom'] for row in rows})}
+    manifest['code_unchanged_during_run'] = all(digest((ROOT / name).read_bytes()) == checksum
+                                               for name, checksum in manifest['runtime_code_sha256'].items())
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
+    report = '# 合成检索回归：200题\n\n'
+    report += f"运行完成：{manifest['completed_utc']}。源码版本：`{manifest['git_head']}`。\n\n"
+    report += report_table(manifest['summary'])
+    report += f'\n\n10类症状、120段合成夹具、200道不同问题。预热后顺序执行{args.repeats}轮，每组{len(rows)}次计时请求；命中率分母为200。重排使用同一混合Top-5候选池。\n'
+    for variant, values in manifest['by_variant'].items():
+        report += '\n## ' + variant + '\n\n' + report_table(values) + '\n'
+    args.out.with_suffix('.md').write_text(report, encoding='utf-8')
+    print(report, flush=True)
 
 
 if __name__ == '__main__':

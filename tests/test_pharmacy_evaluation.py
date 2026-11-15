@@ -3,11 +3,22 @@ import unittest
 import tempfile
 from pathlib import Path
 import zipfile
+from unittest.mock import patch
 
-from scripts.evaluate_pharmacy import load_suite, evaluate_case, summarize, percentile, source_snapshot
+from scripts.evaluate_pharmacy import CountingGateway, load_suite, evaluate_case, summarize, percentile, source_snapshot
+from meditouch.model_gateway import ModelGateway
 
 
 class PharmacyEvaluationTests(unittest.TestCase):
+    def test_model_counter_includes_stream_and_complete_requests(self):
+        gateway = CountingGateway()
+        with patch.object(ModelGateway, 'complete', return_value={'role': 'assistant', 'content': 'ok'}), \
+             patch.object(ModelGateway, 'stream', return_value=iter(['a', 'b'])):
+            with gateway.track():
+                gateway.complete([])
+                self.assertEqual(list(ModelGateway(timeout=12).stream([])), ['a', 'b'])
+        self.assertEqual(gateway.calls, 2)
+
     def setUp(self):
         self.suite = load_suite()
         self.case = self.suite['cases'][0]

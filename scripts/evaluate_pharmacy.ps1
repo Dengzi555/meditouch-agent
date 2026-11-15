@@ -5,6 +5,7 @@ $projectRoot = Split-Path -Parent $PSScriptRoot
 $keyFile = Join-Path $projectRoot 'data\model-key.dpapi'
 $configFile = Join-Path $projectRoot 'data\model-config.json'
 $loadedKey = $false
+$loadedSearchKey = $false
 $secureKey = $null
 try {
     if (-not $env:MED_AGENT_API_KEY -and (Test-Path -LiteralPath $keyFile) -and (Test-Path -LiteralPath $configFile)) {
@@ -16,6 +17,15 @@ try {
         $env:MED_AGENT_MODEL = $config.model
         $loadedKey = $true
     }
+    $searchKeyFile = Join-Path $projectRoot 'data\deepseek-search-key.dpapi'
+    if (-not $env:MED_AGENT_DEEPSEEK_SEARCH_KEY -and (Test-Path -LiteralPath $searchKeyFile)) {
+        Import-Module (Join-Path $PSHOME 'Modules\Microsoft.PowerShell.Security\Microsoft.PowerShell.Security.psd1') -Force
+        $searchKey = ConvertTo-SecureString (Get-Content -LiteralPath $searchKeyFile -Raw).Trim()
+        try {
+            $env:MED_AGENT_DEEPSEEK_SEARCH_KEY = [System.Net.NetworkCredential]::new('', $searchKey).Password
+            $loadedSearchKey = $true
+        } finally { $searchKey.Dispose() }
+    }
     Push-Location -LiteralPath $projectRoot
     try {
         & (Join-Path $projectRoot '.venv-agent\Scripts\python.exe') (Join-Path $projectRoot 'evaluate.py') --limit $Limit
@@ -24,6 +34,7 @@ try {
         Pop-Location
     }
 } finally {
+    if ($loadedSearchKey) { Remove-Item Env:MED_AGENT_DEEPSEEK_SEARCH_KEY -ErrorAction SilentlyContinue }
     if ($secureKey) { $secureKey.Dispose() }
     if ($loadedKey) {
         Remove-Item Env:MED_AGENT_API_KEY -ErrorAction SilentlyContinue
